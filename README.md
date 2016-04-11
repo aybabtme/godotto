@@ -4,7 +4,28 @@ Exposes `digitalocean/godo` in a `robertkrimen/otto` javascript VM.
 
 ## repl
 
-A DigitalOcean runtime!
+A DigitalOcean repl!
+
+```javascript
+> cloud.droplets.list();
+[]
+> cloud.droplets.create({"name":"lol","image":{"slug":"debian-8-x64"},"region":"nyc3","size":"1gb"});
+{
+  "created_at": "2016-04-11T05:39:19Z",
+  "disk": 30,
+  "id": 13190234,
+  "name": "lol",
+  ...
+}
+> var d = cloud.droplets.get(droplets[0].id);
+> d.status;
+"active"
+> cloud.droplets.delete(d);
+> cloud.droplets.list();
+[]
+```
+
+Or use the REPL as a runtime:
 
 ```javascript
 #!/usr/bin/env dorepl

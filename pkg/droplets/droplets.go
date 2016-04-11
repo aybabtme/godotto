@@ -62,11 +62,6 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "object must contain an 'image' field")
 	}
 
-	sshArgs := ottoutil.GetObject(vm, arg, "ssh_keys").Object()
-	if sshArgs == nil {
-		ottoutil.Throw(vm, "object must contain an 'ssh_keys' field")
-	}
-
 	opts := &godo.DropletCreateRequest{
 		Name:   ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
 		Region: ottoutil.String(vm, ottoutil.GetObject(vm, arg, "region")),
@@ -81,15 +76,18 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size")),
 	}
 
-	for _, k := range sshArgs.Keys() {
-		sshArg := ottoutil.GetObject(vm, sshArgs, k).Object()
-		if sshArg == nil {
-			ottoutil.Throw(vm, "'ssh_keys' field must be an object")
+	sshArgs := ottoutil.GetObject(vm, arg, "ssh_keys").Object()
+	if sshArgs != nil {
+		for _, k := range sshArgs.Keys() {
+			sshArg := ottoutil.GetObject(vm, sshArgs, k).Object()
+			if sshArg == nil {
+				ottoutil.Throw(vm, "'ssh_keys' field must be an object")
+			}
+			opts.SSHKeys = append(opts.SSHKeys, godo.DropletCreateSSHKey{
+				ID:          int(ottoutil.Int(vm, ottoutil.GetObject(vm, sshArg, "id"))),
+				Fingerprint: ottoutil.String(vm, ottoutil.GetObject(vm, sshArg, "fingerprint")),
+			})
 		}
-		opts.SSHKeys = append(opts.SSHKeys, godo.DropletCreateSSHKey{
-			ID:          int(ottoutil.Int(vm, ottoutil.GetObject(vm, sshArg, "id"))),
-			Fingerprint: ottoutil.String(vm, ottoutil.GetObject(vm, sshArg, "fingerprint")),
-		})
 	}
 
 	d, _, err := svc.svc.Create(opts)
