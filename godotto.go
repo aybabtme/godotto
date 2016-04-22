@@ -11,6 +11,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/images"
 	"github.com/aybabtme/godotto/pkg/keys"
 	"github.com/aybabtme/godotto/pkg/regions"
+	"github.com/aybabtme/godotto/pkg/sizes"
 
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
@@ -36,6 +37,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 		{"keys", keys.Apply},
 		{"regions", regions.Apply},
 		{"floating_ips", floatingips.Apply},
+		{"sizes", sizes.Apply},
 	} {
 		svc, err := applier.Apply(vm, client)
 		if err != nil {
