@@ -3,6 +3,10 @@ package floatingips
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 
 	"github.com/digitalocean/godo"
@@ -11,14 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := floatingIPSvc{
-		svc: client.FloatingIPs,
+		svc: client.FloatingIPs(),
 	}
 
 	for _, applier := range []struct {
@@ -39,7 +43,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type floatingIPSvc struct {
-	svc godo.FloatingIPsService
+	svc floatingips.Client
 }
 
 func (svc *floatingIPSvc) argCreateFloatingIP(all otto.FunctionCall, i int) *godo.FloatingIPCreateRequest {
@@ -62,11 +66,11 @@ func (svc *floatingIPSvc) create(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	req := svc.argCreateFloatingIP(all, 0)
-	fip, _, err := svc.svc.Create(req)
+	fip, err := svc.svc.Create(req.Region, floatingips.UseGodoFloatingIP(req))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.floatingIPToVM(vm, *fip)
+	v, err := svc.floatingIPToVM(vm, fip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -76,12 +80,12 @@ func (svc *floatingIPSvc) create(all otto.FunctionCall) otto.Value {
 func (svc *floatingIPSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
-	id := svc.argFloatingIP(all, 0)
-	fip, _, err := svc.svc.Get(id)
+	ip := svc.argFloatingIP(all, 0)
+	fip, err := svc.svc.Get(ip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.floatingIPToVM(vm, *fip)
+	v, err := svc.floatingIPToVM(vm, fip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -90,9 +94,9 @@ func (svc *floatingIPSvc) get(all otto.FunctionCall) otto.Value {
 
 func (svc *floatingIPSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	id := svc.argFloatingIP(all, 0)
+	ip := svc.argFloatingIP(all, 0)
 
-	_, err := svc.svc.Delete(id)
+	err := svc.svc.Delete(ip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -100,31 +104,21 @@ func (svc *floatingIPSvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *floatingIPSvc) list(all otto.FunctionCall) otto.Value {
-
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
-	var floatingIPs  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
+	var floatingIPs = make([]otto.Value, 0)
+	floatingIPc, errc := svc.svc.List(ctx)
+	for d := range floatingIPc {
+		v, err := svc.floatingIPToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, d := range items {
-			v, err := svc.floatingIPToVM(vm, d)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			floatingIPs = append(floatingIPs, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		floatingIPs = append(floatingIPs, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(floatingIPs)
@@ -134,8 +128,9 @@ func (svc *floatingIPSvc) list(all otto.FunctionCall) otto.Value {
 	return v
 }
 
-func (svc *floatingIPSvc) floatingIPToVM(vm *otto.Otto, g godo.FloatingIP) (otto.Value, error) {
+func (svc *floatingIPSvc) floatingIPToVM(vm *otto.Otto, v floatingips.FloatingIP) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

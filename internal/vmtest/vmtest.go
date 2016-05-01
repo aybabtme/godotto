@@ -8,6 +8,8 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/aybabtme/godotto"
+	"github.com/aybabtme/godotto/internal/do"
+	"github.com/aybabtme/godotto/internal/do/cloud"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
@@ -28,13 +30,28 @@ var defaultToken = func() string {
 	return ""
 }()
 
-var apiToken = flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
+var (
+	apiToken = flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
+)
 
 // Run the JS source against godotto.
 func Run(t testing.TB, src string) {
-	client := godo.NewClient(oauth2.NewClient(oauth2.NoContext,
-		oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *apiToken}),
-	))
+
+	u, done := do.Stub()
+	defer done()
+
+	var gc *godo.Client
+	if *apiToken != "" {
+		gc = godo.NewClient(oauth2.NewClient(oauth2.NoContext,
+			oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *apiToken}),
+		))
+	} else {
+		gc = godo.NewClient(nil)
+		gc.BaseURL = u
+	}
+
+	client := cloud.New(cloud.UseGodo(gc))
+
 	vm := otto.New()
 
 	pkg, err := godotto.Apply(vm, client)

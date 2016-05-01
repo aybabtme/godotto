@@ -3,6 +3,10 @@ package droplets
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/droplets"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 
 	"github.com/digitalocean/godo"
@@ -11,14 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := dropletSvc{
-		svc: client.Droplets,
+		svc: client.Droplets(),
 	}
 
 	for _, applier := range []struct {
@@ -47,7 +51,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type dropletSvc struct {
-	svc godo.DropletsService
+	svc droplets.Client
 }
 
 func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
@@ -62,14 +66,14 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "object must contain an 'image' field")
 	}
 
+	var (
+		name   = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name"))
+		region = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "region"))
+		size   = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size"))
+		image  = ottoutil.String(vm, ottoutil.GetObject(vm, imgArg, "slug"))
+	)
+
 	opts := &godo.DropletCreateRequest{
-		Name:   ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
-		Region: ottoutil.String(vm, ottoutil.GetObject(vm, arg, "region")),
-		Size:   ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size")),
-		Image: godo.DropletCreateImage{
-			ID:   int(ottoutil.Int(vm, ottoutil.GetObject(vm, imgArg, "id"))),
-			Slug: ottoutil.String(vm, ottoutil.GetObject(vm, imgArg, "slug")),
-		},
 		Backups:           ottoutil.Bool(vm, ottoutil.GetObject(vm, imgArg, "backups")),
 		IPv6:              ottoutil.Bool(vm, ottoutil.GetObject(vm, imgArg, "ipv6")),
 		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, imgArg, "private_networking")),
@@ -90,12 +94,12 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		}
 	}
 
-	d, _, err := svc.svc.Create(opts)
+	d, err := svc.svc.Create(name, region, size, image, droplets.UseGodoCreate(opts))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	v, err := svc.dropletToVM(vm, *d)
+	v, err := svc.dropletToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -116,11 +120,11 @@ func (svc *dropletSvc) get(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
 	}
 
-	d, _, err := svc.svc.Get(did)
+	d, err := svc.svc.Get(did)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.dropletToVM(vm, *d)
+	v, err := svc.dropletToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -141,7 +145,7 @@ func (svc *dropletSvc) delete(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
 	}
 
-	_, err := svc.svc.Delete(did)
+	err := svc.svc.Delete(did)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -149,30 +153,22 @@ func (svc *dropletSvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *dropletSvc) list(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
 	var droplets = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
+	dropletc, errc := svc.svc.List(ctx)
+	for d := range dropletc {
+		v, err := svc.dropletToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, d := range items {
-			v, err := svc.dropletToVM(vm, d)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			droplets = append(droplets, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		droplets = append(droplets, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(droplets)
@@ -184,8 +180,9 @@ func (svc *dropletSvc) list(all otto.FunctionCall) otto.Value {
 
 // helpers
 
-func (svc *dropletSvc) dropletToVM(vm *otto.Otto, g godo.Droplet) (otto.Value, error) {
+func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

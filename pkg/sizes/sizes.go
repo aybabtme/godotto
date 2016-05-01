@@ -3,21 +3,24 @@ package sizes
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/sizes"
 	"github.com/aybabtme/godotto/internal/ottoutil"
-	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := sizeSvc{
-		svc: client.Sizes,
+		svc: client.Sizes(),
 	}
 
 	for _, applier := range []struct {
@@ -35,34 +38,25 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type sizeSvc struct {
-	svc godo.SizesService
+	svc sizes.Client
 }
 
 func (svc *sizeSvc) list(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
-	var sizes  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
+	var sizes = make([]otto.Value, 0)
+	sizec, errc := svc.svc.List(ctx)
+	for d := range sizec {
+		v, err := svc.sizeToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, a := range items {
-			v, err := svc.sizeToVM(vm, a)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			sizes = append(sizes, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		sizes = append(sizes, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(sizes)
@@ -72,8 +66,9 @@ func (svc *sizeSvc) list(all otto.FunctionCall) otto.Value {
 	return v
 }
 
-func (svc *sizeSvc) sizeToVM(vm *otto.Otto, g godo.Size) (otto.Value, error) {
+func (svc *sizeSvc) sizeToVM(vm *otto.Otto, v sizes.Size) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

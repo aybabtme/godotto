@@ -3,21 +3,24 @@ package actions
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/actions"
 	"github.com/aybabtme/godotto/internal/ottoutil"
-	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := actionSvc{
-		svc: client.Actions,
+		svc: client.Actions(),
 	}
 
 	for _, applier := range []struct {
@@ -36,7 +39,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type actionSvc struct {
-	svc godo.ActionsService
+	svc actions.Client
 }
 
 func (svc *actionSvc) get(all otto.FunctionCall) otto.Value {
@@ -53,11 +56,11 @@ func (svc *actionSvc) get(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be an Action or an ActionID")
 	}
 
-	a, _, err := svc.svc.Get(aid)
+	a, err := svc.svc.Get(aid)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.actionToVM(vm, *a)
+	v, err := svc.actionToVM(vm, a)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -65,30 +68,17 @@ func (svc *actionSvc) get(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *actionSvc) list(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
-
-	var actions  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
-		if err != nil {
-			ottoutil.Throw(vm, err.Error())
-		}
-
-		for _, a := range items {
-			v, err := svc.actionToVM(vm, a)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			actions = append(actions, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+	actions := []actions.Action{}
+	actionc, errc := svc.svc.List(ctx)
+	for action := range actionc {
+		actions = append(actions, action)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(actions)
@@ -98,8 +88,9 @@ func (svc *actionSvc) list(all otto.FunctionCall) otto.Value {
 	return v
 }
 
-func (svc *actionSvc) actionToVM(vm *otto.Otto, g godo.Action) (otto.Value, error) {
+func (svc *actionSvc) actionToVM(vm *otto.Otto, a actions.Action) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := a.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

@@ -13,13 +13,13 @@ import (
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
 
-	"github.com/digitalocean/godo"
+	"github.com/aybabtme/godotto/internal/do/cloud"
 	"github.com/robertkrimen/otto"
 )
 
 var q = otto.NullValue()
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
@@ -27,7 +27,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 
 	for _, applier := range []struct {
 		Name  string
-		Apply func(*otto.Otto, *godo.Client) (otto.Value, error)
+		Apply func(*otto.Otto, cloud.Client) (otto.Value, error)
 	}{
 		{"accounts", accounts.Apply},
 		{"actions", actions.Apply},

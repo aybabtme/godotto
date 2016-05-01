@@ -3,6 +3,10 @@ package keys
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/keys"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 
 	"github.com/digitalocean/godo"
@@ -11,14 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := keySvc{
-		svc: client.Keys,
+		svc: client.Keys(),
 	}
 
 	for _, applier := range []struct {
@@ -40,7 +44,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type keySvc struct {
-	svc godo.KeysService
+	svc keys.Client
 }
 
 func (svc *keySvc) argKeyID(all otto.FunctionCall, i int) int {
@@ -102,11 +106,11 @@ func (svc *keySvc) create(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	req := svc.argKeyCreate(all, 0)
-	key, _, err := svc.svc.Create(req)
+	key, err := svc.svc.Create(req.Name, req.PublicKey)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.keyToVM(vm, *key)
+	v, err := svc.keyToVM(vm, key)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -117,22 +121,22 @@ func (svc *keySvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	var (
-		key *godo.Key
+		key keys.Key
 		err error
 	)
 	arg := all.Argument(0)
 	switch {
 	case arg.IsNumber():
 		id := svc.argKeyID(all, 0)
-		key, _, err = svc.svc.GetByID(id)
+		key, err = svc.svc.GetByID(id)
 	case arg.IsString():
 		fp := svc.argKeyFingerprint(all, 0)
-		key, _, err = svc.svc.GetByFingerprint(fp)
+		key, err = svc.svc.GetByFingerprint(fp)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.keyToVM(vm, *key)
+	v, err := svc.keyToVM(vm, key)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -143,23 +147,23 @@ func (svc *keySvc) update(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
 	var (
-		key *godo.Key
+		key keys.Key
 		err error
 	)
 	switch {
 	case arg.IsNumber():
 		id := svc.argKeyID(all, 0)
 		req := svc.argKeyUpdate(all, 1)
-		key, _, err = svc.svc.UpdateByID(id, req)
+		key, err = svc.svc.UpdateByID(id, keys.UseGodoKey(req))
 	case arg.IsString():
 		fp := svc.argKeyFingerprint(all, 0)
 		req := svc.argKeyUpdate(all, 1)
-		key, _, err = svc.svc.UpdateByFingerprint(fp, req)
+		key, err = svc.svc.UpdateByFingerprint(fp, keys.UseGodoKey(req))
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.keyToVM(vm, *key)
+	v, err := svc.keyToVM(vm, key)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -173,10 +177,10 @@ func (svc *keySvc) delete(all otto.FunctionCall) otto.Value {
 	switch {
 	case arg.IsNumber():
 		id := svc.argKeyID(all, 0)
-		_, err = svc.svc.DeleteByID(id)
+		err = svc.svc.DeleteByID(id)
 	case arg.IsString():
 		fp := svc.argKeyFingerprint(all, 0)
-		_, err = svc.svc.DeleteByFingerprint(fp)
+		err = svc.svc.DeleteByFingerprint(fp)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -185,30 +189,21 @@ func (svc *keySvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *keySvc) list(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
-	var keys  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
+	var keys = make([]otto.Value, 0)
+	keyc, errc := svc.svc.List(ctx)
+	for d := range keyc {
+		v, err := svc.keyToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, d := range items {
-			v, err := svc.keyToVM(vm, d)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			keys = append(keys, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		keys = append(keys, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(keys)
@@ -218,8 +213,9 @@ func (svc *keySvc) list(all otto.FunctionCall) otto.Value {
 	return v
 }
 
-func (svc *keySvc) keyToVM(vm *otto.Otto, g godo.Key) (otto.Value, error) {
+func (svc *keySvc) keyToVM(vm *otto.Otto, v keys.Key) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

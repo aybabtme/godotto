@@ -7,8 +7,7 @@ import (
 
 func stubClient() (cloud.Client, func()) {
 	u, done := Stub()
-	return cloud.New(cloud.UseGodoOpts(func(c *godo.Client) {
-		c.BaseURL = u
-	})), done
-
+	client := godo.NewClient(nil)
+	client.BaseURL = u
+	return cloud.New(cloud.UseGodo(client)), done
 }

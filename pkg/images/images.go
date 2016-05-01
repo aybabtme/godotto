@@ -3,6 +3,10 @@ package images
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/images"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 
 	"github.com/digitalocean/godo"
@@ -11,14 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := imageSvc{
-		svc: client.Images,
+		svc: client.Images(),
 	}
 
 	for _, applier := range []struct {
@@ -42,7 +46,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type imageSvc struct {
-	svc godo.ImagesService
+	svc images.Client
 }
 
 func (svc *imageSvc) argImageID(all otto.FunctionCall, i int) int {
@@ -92,22 +96,22 @@ func (svc *imageSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	var (
-		img *godo.Image
+		img images.Image
 		err error
 	)
 	arg := all.Argument(0)
 	switch {
 	case arg.IsNumber():
 		id := svc.argImageID(all, 0)
-		img, _, err = svc.svc.GetByID(id)
+		img, err = svc.svc.GetByID(id)
 	case arg.IsString():
 		slug := svc.argImageSlug(all, 0)
-		img, _, err = svc.svc.GetBySlug(slug)
+		img, err = svc.svc.GetBySlug(slug)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.imageToVM(vm, *img)
+	v, err := svc.imageToVM(vm, img)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -122,11 +126,11 @@ func (svc *imageSvc) update(all otto.FunctionCall) otto.Value {
 		id  = svc.argImageID(all, 0)
 		req = svc.argImageUpdate(all, 0)
 	)
-	img, _, err := svc.svc.Update(id, req)
+	img, err := svc.svc.Update(id, images.UseGodoImage(req))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.imageToVM(vm, *img)
+	v, err := svc.imageToVM(vm, img)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -137,7 +141,7 @@ func (svc *imageSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	id := svc.argImageID(all, 0)
 
-	_, err := svc.svc.Delete(id)
+	err := svc.svc.Delete(id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -160,33 +164,24 @@ func (svc *imageSvc) listUser(all otto.FunctionCall) otto.Value {
 	return svc.listCommon(all, svc.svc.ListUser)
 }
 
-type listfunc func(*godo.ListOptions) ([]godo.Image, *godo.Response, error)
+type listfunc func(context.Context) (<-chan images.Image, <-chan error)
 
 func (svc *imageSvc) listCommon(all otto.FunctionCall, listfn listfunc) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
-	var images  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := listfn(opt)
+	var images = make([]otto.Value, 0)
+	imagec, errc := listfn(ctx)
+	for d := range imagec {
+		v, err := svc.imageToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, d := range items {
-			v, err := svc.imageToVM(vm, d)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			images = append(images, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		images = append(images, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(images)
@@ -194,10 +189,12 @@ func (svc *imageSvc) listCommon(all otto.FunctionCall, listfn listfunc) otto.Val
 		ottoutil.Throw(vm, err.Error())
 	}
 	return v
+
 }
 
-func (svc *imageSvc) imageToVM(vm *otto.Otto, g godo.Image) (otto.Value, error) {
+func (svc *imageSvc) imageToVM(vm *otto.Otto, v images.Image) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

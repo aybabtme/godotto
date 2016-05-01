@@ -3,6 +3,10 @@ package domains
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/domains"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 
 	"github.com/digitalocean/godo"
@@ -11,14 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := domainSvc{
-		svc: client.Domains,
+		svc: client.Domains(),
 	}
 
 	for _, applier := range []struct {
@@ -45,7 +49,7 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type domainSvc struct {
-	svc godo.DomainsService
+	svc domains.Client
 }
 
 func (svc *domainSvc) argDomainName(all otto.FunctionCall, i int) string {
@@ -91,17 +95,15 @@ func (svc *domainSvc) create(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be a object")
 	}
 
-	opts := &godo.DomainCreateRequest{
-		Name:      ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
-		IPAddress: ottoutil.String(vm, ottoutil.GetObject(vm, arg, "ip_address")),
-	}
-
-	d, _, err := svc.svc.Create(opts)
+	d, err := svc.svc.Create(
+		ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
+		ottoutil.String(vm, ottoutil.GetObject(vm, arg, "ip_address")),
+	)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	v, err := svc.domainToVM(vm, *d)
+	v, err := svc.domainToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -112,11 +114,11 @@ func (svc *domainSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	name := svc.argDomainName(all, 0)
 
-	d, _, err := svc.svc.Get(name)
+	d, err := svc.svc.Get(name)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.domainToVM(vm, *d)
+	v, err := svc.domainToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -127,7 +129,7 @@ func (svc *domainSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	name := svc.argDomainName(all, 0)
 
-	_, err := svc.svc.Delete(name)
+	err := svc.svc.Delete(name)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -135,30 +137,22 @@ func (svc *domainSvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *domainSvc) list(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
-	var domains  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
+	var domains = make([]otto.Value, 0)
+	domainc, errc := svc.svc.List(ctx)
+	for d := range domainc {
+		v, err := svc.domainToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, d := range items {
-			v, err := svc.domainToVM(vm, d)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			domains = append(domains, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		domains = append(domains, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(domains)
@@ -173,12 +167,12 @@ func (svc *domainSvc) createRecord(all otto.FunctionCall) otto.Value {
 	name := svc.argDomainName(all, 0)
 	record := svc.argDomainRecord(all, 1)
 
-	d, _, err := svc.svc.CreateRecord(name, record)
+	d, err := svc.svc.CreateRecord(name, domains.UseGodoRecord(record))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	v, err := svc.domainRecordToVM(vm, *d)
+	v, err := svc.domainRecordToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -191,12 +185,12 @@ func (svc *domainSvc) record(all otto.FunctionCall) otto.Value {
 		name = svc.argDomainName(all, 0)
 		id   = svc.argRecordID(all, 1)
 	)
-	d, _, err := svc.svc.Record(name, id)
+	d, err := svc.svc.GetRecord(name, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	v, err := svc.domainRecordToVM(vm, *d)
+	v, err := svc.domainRecordToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -210,12 +204,12 @@ func (svc *domainSvc) editRecord(all otto.FunctionCall) otto.Value {
 		id     = svc.argRecordID(all, 1)
 		record = svc.argDomainRecord(all, 2)
 	)
-	d, _, err := svc.svc.EditRecord(name, id, record)
+	d, err := svc.svc.UpdateRecord(name, id, domains.UseGodoRecord(record))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	v, err := svc.domainRecordToVM(vm, *d)
+	v, err := svc.domainRecordToVM(vm, d)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -228,7 +222,7 @@ func (svc *domainSvc) deleteRecord(all otto.FunctionCall) otto.Value {
 		name = svc.argDomainName(all, 0)
 		id   = svc.argRecordID(all, 1)
 	)
-	_, err := svc.svc.DeleteRecord(name, id)
+	err := svc.svc.DeleteRecord(name, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -236,33 +230,25 @@ func (svc *domainSvc) deleteRecord(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *domainSvc) records(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	vm := all.Otto
-	name := svc.argDomainName(all, 0)
+	var (
+		vm   = all.Otto
+		name = svc.argDomainName(all, 0)
+	)
 
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
-
-	var records  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.Records(name, opt)
+	var records = make([]otto.Value, 0)
+	recordc, errc := svc.svc.ListRecord(ctx, name)
+	for d := range recordc {
+		v, err := svc.domainRecordToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, d := range items {
-			v, err := svc.domainRecordToVM(vm, d)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			records = append(records, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		records = append(records, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(records)
@@ -272,8 +258,9 @@ func (svc *domainSvc) records(all otto.FunctionCall) otto.Value {
 	return v
 }
 
-func (svc *domainSvc) domainToVM(vm *otto.Otto, g godo.Domain) (otto.Value, error) {
+func (svc *domainSvc) domainToVM(vm *otto.Otto, v domains.Domain) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}
@@ -293,8 +280,9 @@ func (svc *domainSvc) domainToVM(vm *otto.Otto, g godo.Domain) (otto.Value, erro
 	return d.Value(), nil
 }
 
-func (svc *domainSvc) domainRecordToVM(vm *otto.Otto, g godo.DomainRecord) (otto.Value, error) {
+func (svc *domainSvc) domainRecordToVM(vm *otto.Otto, v domains.Record) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

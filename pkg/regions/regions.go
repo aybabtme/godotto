@@ -3,21 +3,24 @@ package regions
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/regions"
 	"github.com/aybabtme/godotto/internal/ottoutil"
-	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := regionSvc{
-		svc: client.Regions,
+		svc: client.Regions(),
 	}
 
 	for _, applier := range []struct {
@@ -35,34 +38,25 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type regionSvc struct {
-	svc godo.RegionsService
+	svc regions.Client
 }
 
 func (svc *regionSvc) list(all otto.FunctionCall) otto.Value {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	vm := all.Otto
-	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 
-	var regions  = make([]otto.Value, 0)
-
-	for {
-		items, resp, err := svc.svc.List(opt)
+	var regions = make([]otto.Value, 0)
+	regionc, errc := svc.svc.List(ctx)
+	for d := range regionc {
+		v, err := svc.regionToVM(vm, d)
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-
-		for _, a := range items {
-			v, err := svc.regionToVM(vm, a)
-			if err != nil {
-				ottoutil.Throw(vm, err.Error())
-			}
-			regions = append(regions, v)
-		}
-
-		if resp.Links != nil && !resp.Links.IsLastPage() {
-			opt.Page++
-		} else {
-			break
-		}
+		regions = append(regions, v)
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
 	}
 
 	v, err := vm.ToValue(regions)
@@ -72,8 +66,9 @@ func (svc *regionSvc) list(all otto.FunctionCall) otto.Value {
 	return v
 }
 
-func (svc *regionSvc) regionToVM(vm *otto.Otto, g godo.Region) (otto.Value, error) {
+func (svc *regionSvc) regionToVM(vm *otto.Otto, v regions.Region) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
+	g := v.Struct()
 	for _, field := range []struct {
 		name string
 		v    interface{}

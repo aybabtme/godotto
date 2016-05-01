@@ -3,22 +3,23 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/do/cloud/accounts"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
-	_ "github.com/robertkrimen/otto/underscore"
 )
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := accountSvc{
-		svc: client.Account,
+		svc: client.Accounts(),
 	}
 
 	for _, applier := range []struct {
@@ -36,17 +37,17 @@ func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
 }
 
 type accountSvc struct {
-	svc godo.AccountService
+	svc accounts.Client
 }
 
 func (svc *accountSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
-	a, _, err := svc.svc.Get()
+	a, err := svc.svc.Get()
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.accountToVM(vm, *a)
+	v, err := svc.accountToVM(vm, *a.Struct())
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

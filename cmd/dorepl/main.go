@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/aybabtme/godotto"
+	"github.com/aybabtme/godotto/internal/do/cloud"
 	"github.com/aybabtme/godotto/internal/repl"
 
 	"github.com/digitalocean/godo"
@@ -50,13 +51,15 @@ func main() {
 		log.Fatalf("At this time, the REPL requires you to provide an API token")
 	}
 
-	client := godo.NewClient(oauth2.NewClient(oauth2.NoContext,
+	gc := godo.NewClient(oauth2.NewClient(oauth2.NoContext,
 		oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *apiToken}),
 	))
-	acc, _, err := client.Account.Get()
+	acc, _, err := gc.Account.Get()
 	if err != nil {
 		log.Fatalf("can't query DigitalOcean account, is your token valid?\n%v", err)
 	}
+
+	client := cloud.New(cloud.UseGodo(gc))
 
 	vm := otto.New()
 	pkg, err := godotto.Apply(vm, client)
