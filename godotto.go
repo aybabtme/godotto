@@ -6,6 +6,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/accounts"
 	"github.com/aybabtme/godotto/pkg/actions"
 	"github.com/aybabtme/godotto/pkg/domains"
+	"github.com/aybabtme/godotto/pkg/drives"
 	"github.com/aybabtme/godotto/pkg/droplets"
 	"github.com/aybabtme/godotto/pkg/floatingips"
 	"github.com/aybabtme/godotto/pkg/images"
@@ -38,6 +39,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 		{"regions", regions.Apply},
 		{"floating_ips", floatingips.Apply},
 		{"sizes", sizes.Apply},
+		{"drives", drives.Apply},
 	} {
 		svc, err := applier.Apply(vm, client)
 		if err != nil {

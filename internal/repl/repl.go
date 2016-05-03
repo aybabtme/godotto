@@ -8,7 +8,6 @@ package repl
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/robertkrimen/otto"
@@ -92,7 +91,6 @@ func Run(vm *otto.Otto, prompt, prelude string) error {
 						io.Copy(rl.Stdout(), strings.NewReader(err.Error()))
 					} else {
 						data, _ := json.MarshalIndent(gov, "", "  ")
-						log.Printf("%#v", gov)
 						rl.Stdout().Write(append(data, "\n"...))
 					}
 				}
