@@ -8,6 +8,7 @@ package repl
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/robertkrimen/otto"
@@ -85,11 +86,13 @@ func Run(vm *otto.Otto, prompt, prelude string) error {
 
 				if !v.IsDefined() {
 				} else {
-					gov, err := v.Export()
+
+					gov, err := toGo(v)
 					if err != nil {
 						io.Copy(rl.Stdout(), strings.NewReader(err.Error()))
 					} else {
 						data, _ := json.MarshalIndent(gov, "", "  ")
+						log.Printf("%#v", gov)
 						rl.Stdout().Write(append(data, "\n"...))
 					}
 				}
@@ -101,4 +104,43 @@ func Run(vm *otto.Otto, prompt, prelude string) error {
 	}
 
 	return rl.Close()
+}
+
+func toGo(v otto.Value) (interface{}, error) {
+	gov, err := v.Export()
+	if err != nil {
+		return nil, err
+	}
+
+	var recurseType func(gov interface{}) (interface{}, error)
+	recurseType = func(gov interface{}) (interface{}, error) {
+		switch tgov := gov.(type) {
+
+		case map[string]interface{}:
+			out := make(map[string]interface{}, len(tgov))
+			for k, v := range tgov {
+				outel, err := recurseType(v)
+				if err != nil {
+					return nil, err
+				}
+				out[k] = outel
+			}
+			return out, nil
+
+		case []otto.Value:
+			var out []interface{}
+			for _, el := range tgov {
+				outel, err := toGo(el)
+				if err != nil {
+					return nil, err
+				}
+				out = append(out, outel)
+			}
+			return out, nil
+
+		default:
+			return tgov, nil
+		}
+	}
+	return recurseType(gov)
 }

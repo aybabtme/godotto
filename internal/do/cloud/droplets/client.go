@@ -90,8 +90,9 @@ func (svc *client) List(ctx context.Context) (<-chan Droplet, <-chan error) {
 		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
 			r, resp, err := svc.g.Droplets.List(opt)
 			for _, d := range r {
+				dd := d // copy ranged over variable
 				select {
-				case outc <- &droplet{g: svc.g, d: &d}:
+				case outc <- &droplet{g: svc.g, d: &dd}:
 				case <-ctx.Done():
 					return resp, err
 				}

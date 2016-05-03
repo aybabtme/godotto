@@ -113,8 +113,9 @@ func (svc *client) listCommon(ctx context.Context, listFn listfunc) (<-chan Imag
 		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
 			r, resp, err := listFn(opt)
 			for _, d := range r {
+				dd := d // copy ranged over variable
 				select {
-				case outc <- &image{g: svc.g, d: &d}:
+				case outc <- &image{g: svc.g, d: &dd}:
 				case <-ctx.Done():
 					return resp, err
 				}

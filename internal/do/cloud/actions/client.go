@@ -47,8 +47,9 @@ func (svc *client) List(ctx context.Context) (<-chan Action, <-chan error) {
 		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
 			r, resp, err := svc.g.Actions.List(opt)
 			for _, d := range r {
+				dd := d // copy ranged over variable
 				select {
-				case outc <- &action{g: svc.g, d: &d}:
+				case outc <- &action{g: svc.g, d: &dd}:
 				case <-ctx.Done():
 					return resp, err
 				}
