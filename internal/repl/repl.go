@@ -23,7 +23,10 @@ func Run(vm *otto.Otto, prompt, prelude string) error {
 	prompt = strings.Trim(prompt, " ")
 	prompt += " "
 
-	rl, err := readline.New(prompt)
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt:       prompt,
+		AutoComplete: &autoCompleter{vm},
+	})
 	if err != nil {
 		return err
 	}

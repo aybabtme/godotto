@@ -11,6 +11,7 @@ import (
 
 	"github.com/aybabtme/godotto"
 	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/internal/ottoutil/jsvendor/corejs"
 	"github.com/aybabtme/godotto/internal/repl"
 
 	"github.com/digitalocean/godo"
@@ -62,6 +63,9 @@ func main() {
 	client := cloud.New(cloud.UseGodo(gc))
 
 	vm := otto.New()
+	if err := corejs.Load(vm); err != nil {
+		log.Fatal(err)
+	}
 	pkg, err := godotto.Apply(vm, client)
 	if err != nil {
 		log.Fatal(err)

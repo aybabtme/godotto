@@ -34,8 +34,11 @@ var (
 	apiToken = flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
 )
 
+// A RunOption is applied on the otto VM before the test begins.
+type RunOption func(vm *otto.Otto) error
+
 // Run the JS source against godotto.
-func Run(t testing.TB, src string) {
+func Run(t testing.TB, src string, opts ...RunOption) {
 
 	u, done := do.Stub()
 	defer done()
@@ -82,6 +85,12 @@ func Run(t testing.TB, src string) {
 	script, err := vm.Compile("", src)
 	if err != nil {
 		t.Fatalf("invalid code: %v", err)
+	}
+
+	for _, opt := range opts {
+		if err := opt(vm); err != nil {
+			t.Fatalf("can't apply option: %v", err)
+		}
 	}
 
 	if _, err := vm.Run(script); err != nil {

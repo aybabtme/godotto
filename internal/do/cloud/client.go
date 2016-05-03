@@ -1,8 +1,6 @@
 package cloud
 
 import (
-	"log"
-
 	"github.com/aybabtme/godotto/internal/do/cloud/accounts"
 	"github.com/aybabtme/godotto/internal/do/cloud/actions"
 	"github.com/aybabtme/godotto/internal/do/cloud/domains"
@@ -50,11 +48,11 @@ func New(opts ...ClientOpt) Client {
 	opt := &clientOpts{
 		g: godo.NewClient(nil),
 	}
-	log.Printf("before %#v", opt)
+
 	for _, fn := range opts {
 		fn(opt)
 	}
-	log.Printf("after %#v", opt)
+
 	c := &client{
 		g:           opt.g,
 		droplets:    droplets.New(opt.g),
