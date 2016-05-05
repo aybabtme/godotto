@@ -13,6 +13,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/keys"
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
+	"github.com/digitalocean/godo"
 
 	"github.com/aybabtme/godotto/internal/do/cloud"
 	"github.com/robertkrimen/otto"
@@ -20,7 +21,8 @@ import (
 
 var q = otto.NullValue()
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(vm *otto.Otto, client *godo.Client) (otto.Value, error) {
+	c := cloud.New(cloud.UseGodo(client))
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
@@ -41,7 +43,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 		{"sizes", sizes.Apply},
 		{"drives", drives.Apply},
 	} {
-		svc, err := applier.Apply(vm, client)
+		svc, err := applier.Apply(vm, c)
 		if err != nil {
 			return q, fmt.Errorf("preparing godo %s service: %v", applier.Name, err)
 		}
