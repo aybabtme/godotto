@@ -13,7 +13,7 @@ type Client interface {
 	DeleteDrive(string) error
 	ListDrives(context.Context) (<-chan Drive, <-chan error)
 
-	CreateSnapshot(driveID, name, region string, opts ...SnapshotOpt) (Snapshot, error)
+	CreateSnapshot(driveID, name string, opts ...SnapshotOpt) (Snapshot, error)
 	GetSnapshot(string) (Snapshot, error)
 	DeleteSnapshot(string) error
 	ListSnapshots(ctx context.Context, driveID string) (<-chan Snapshot, <-chan error)
