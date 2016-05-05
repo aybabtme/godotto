@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/aybabtme/godotto"
-	"github.com/aybabtme/godotto/internal/do/cloud"
 	"github.com/aybabtme/godotto/internal/ottoutil/jsvendor/corejs"
 	"github.com/aybabtme/godotto/internal/repl"
 
@@ -60,13 +59,11 @@ func main() {
 		log.Fatalf("can't query DigitalOcean account, is your token valid?\n%v", err)
 	}
 
-	client := cloud.New(cloud.UseGodo(gc))
-
 	vm := otto.New()
 	if err := corejs.Load(vm); err != nil {
 		log.Fatal(err)
 	}
-	pkg, err := godotto.Apply(vm, client)
+	pkg, err := godotto.Apply(vm, gc)
 	if err != nil {
 		log.Fatal(err)
 	}
