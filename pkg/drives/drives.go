@@ -171,7 +171,6 @@ func (svc *driveSvc) createSnapshot(all otto.FunctionCall) otto.Value {
 	var (
 		driveID = svc.argDriveID(all, 0)
 		name    = ottoutil.String(vm, ottoutil.GetObject(vm, snapArg, "name"))
-		region  = ottoutil.String(vm, ottoutil.GetObject(vm, snapArg, "region"))
 		desc    = ottoutil.String(vm, ottoutil.GetObject(vm, snapArg, "desc"))
 		opt     []drives.SnapshotOpt
 	)
@@ -179,7 +178,7 @@ func (svc *driveSvc) createSnapshot(all otto.FunctionCall) otto.Value {
 		opt = append(opt, drives.SetSnapshotDescription(desc))
 	}
 
-	d, err := svc.svc.CreateSnapshot(driveID, name, region, opt...)
+	d, err := svc.svc.CreateSnapshot(driveID, name, opt...)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

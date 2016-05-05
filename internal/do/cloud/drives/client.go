@@ -140,7 +140,7 @@ func (svc *client) defaultSnapshotOpts() *snapshotOpt {
 	}
 }
 
-func (svc *client) CreateSnapshot(driveID, name, region string, opts ...SnapshotOpt) (Snapshot, error) {
+func (svc *client) CreateSnapshot(driveID, name string, opts ...SnapshotOpt) (Snapshot, error) {
 
 	opt := svc.defaultSnapshotOpts()
 	for _, fn := range opts {
@@ -148,7 +148,6 @@ func (svc *client) CreateSnapshot(driveID, name, region string, opts ...Snapshot
 	}
 	opt.req.DriveID = driveID
 	opt.req.Name = name
-	opt.req.Region = region
 	d, _, err := svc.g.Storage.CreateSnapshot(opt.req)
 	if err != nil {
 		return nil, err
