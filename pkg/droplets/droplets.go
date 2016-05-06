@@ -193,7 +193,8 @@ func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Valu
 		{"vcpus", g.Vcpus},
 		{"disk", g.Disk},
 		{"region", g.Region.Slug},
-		{"image", g.Image.ID},
+		{"image_id", g.Image.ID},
+		{"image_slug", g.Image.Slug},
 		{"size", g.Size},
 		{"size_slug", g.SizeSlug},
 		{"backup_ids", g.BackupIDs},
@@ -201,6 +202,7 @@ func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Valu
 		{"locked", g.Locked},
 		{"status", g.Status},
 		{"networks", g.Networks},
+		{"public_ipv4", g.Networks.V4[0].IPAddress},
 		{"created_at", g.Created},
 		{"kernel", g.Kernel},
 	} {
