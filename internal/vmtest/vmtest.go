@@ -8,8 +8,9 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/aybabtme/godotto"
-	"github.com/aybabtme/godotto/internal/do"
 	"github.com/aybabtme/godotto/internal/ottoutil"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
+	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )
@@ -39,22 +40,20 @@ type RunOption func(vm *otto.Otto) error
 // Run the JS source against godotto.
 func Run(t testing.TB, src string, opts ...RunOption) {
 
-	u, done := do.Stub()
-	defer done()
+	var c cloud.Client
 
-	var gc *godo.Client
 	if *apiToken != "" {
-		gc = godo.NewClient(oauth2.NewClient(oauth2.NoContext,
+		gc := godo.NewClient(oauth2.NewClient(oauth2.NoContext,
 			oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *apiToken}),
 		))
+		c = cloud.New(cloud.UseGodo(gc))
 	} else {
-		gc = godo.NewClient(nil)
-		gc.BaseURL = u
+		c = mockcloud.Client(nil)
 	}
 
 	vm := otto.New()
 
-	pkg, err := godotto.Apply(vm, gc)
+	pkg, err := godotto.Apply(vm, c)
 	if err != nil {
 		t.Fatal(err)
 	}

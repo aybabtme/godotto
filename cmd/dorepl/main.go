@@ -8,10 +8,13 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/aybabtme/godotto"
 	"github.com/aybabtme/godotto/internal/ottoutil/jsvendor/corejs"
 	"github.com/aybabtme/godotto/internal/repl"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
+	"github.com/aybabtme/godotto/pkg/extra/do/spycloud"
 
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
@@ -63,7 +66,11 @@ func main() {
 	if err := corejs.Load(vm); err != nil {
 		log.Fatal(err)
 	}
-	pkg, err := godotto.Apply(vm, gc)
+
+	cloud, spy := spycloud.Client(cloud.New(cloud.UseGodo(gc)))
+	defer enumerateLeftover(spy)
+
+	pkg, err := godotto.Apply(vm, cloud)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -108,4 +115,41 @@ func main() {
 			}
 		}
 	}
+}
+
+func enumerateLeftover(spy func(...spycloud.Spy)) {
+	var once sync.Once
+	print := func() {
+		log.Print("quitting! the following resources were created")
+	}
+	spy(
+		spycloud.Droplets(func(v *godo.Droplet) {
+			once.Do(print)
+			log.Printf("- Droplet: %d", v.ID)
+		}),
+		spycloud.Drives(func(v *godo.Drive) {
+			once.Do(print)
+			log.Printf("- Drive: %q", v.ID)
+		}),
+		spycloud.Snapshots(func(v *godo.Snapshot) {
+			once.Do(print)
+			log.Printf("- Snapshot: %q", v.ID)
+		}),
+		spycloud.Domains(func(v *godo.Domain) {
+			once.Do(print)
+			log.Printf("- Domain: %q", v.Name)
+		}),
+		spycloud.Records(func(v *godo.DomainRecord) {
+			once.Do(print)
+			log.Printf("- DomainRecord: %q", v.ID)
+		}),
+		spycloud.FloatingIPs(func(v *godo.FloatingIP) {
+			once.Do(print)
+			log.Printf("- FloatingIP: %q", v.IP)
+		}),
+		spycloud.Keys(func(v *godo.Key) {
+			once.Do(print)
+			log.Printf("- Key: %q", v.ID)
+		}),
+	)
 }
