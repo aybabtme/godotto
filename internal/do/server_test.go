@@ -1,7 +1,7 @@
 package do
 
 import (
-	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/digitalocean/godo"
 )
 

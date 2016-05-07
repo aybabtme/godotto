@@ -3,9 +3,9 @@ package accounts
 import (
 	"fmt"
 
-	"github.com/aybabtme/godotto/internal/do/cloud"
-	"github.com/aybabtme/godotto/internal/do/cloud/accounts"
 	"github.com/aybabtme/godotto/internal/ottoutil"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )

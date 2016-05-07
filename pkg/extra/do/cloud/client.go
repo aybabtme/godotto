@@ -1,16 +1,16 @@
 package cloud
 
 import (
-	"github.com/aybabtme/godotto/internal/do/cloud/accounts"
-	"github.com/aybabtme/godotto/internal/do/cloud/actions"
-	"github.com/aybabtme/godotto/internal/do/cloud/domains"
-	"github.com/aybabtme/godotto/internal/do/cloud/drives"
-	"github.com/aybabtme/godotto/internal/do/cloud/droplets"
-	"github.com/aybabtme/godotto/internal/do/cloud/floatingips"
-	"github.com/aybabtme/godotto/internal/do/cloud/images"
-	"github.com/aybabtme/godotto/internal/do/cloud/keys"
-	"github.com/aybabtme/godotto/internal/do/cloud/regions"
-	"github.com/aybabtme/godotto/internal/do/cloud/sizes"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
 	"github.com/digitalocean/godo"
 )
 

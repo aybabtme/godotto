@@ -5,9 +5,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/aybabtme/godotto/internal/do/cloud"
-	"github.com/aybabtme/godotto/internal/do/cloud/sizes"
 	"github.com/aybabtme/godotto/internal/ottoutil"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
 	"github.com/robertkrimen/otto"
 )
 

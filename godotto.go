@@ -15,7 +15,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/sizes"
 	"github.com/digitalocean/godo"
 
-	"github.com/aybabtme/godotto/internal/do/cloud"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/robertkrimen/otto"
 )
 
