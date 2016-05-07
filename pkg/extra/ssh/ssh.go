@@ -3,6 +3,7 @@ package ssh
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 	"time"
 
@@ -29,7 +30,7 @@ func Apply(vm *otto.Otto, auth ssh.AuthMethod) (otto.Value, error) {
 		Name   string
 		Method func(otto.FunctionCall) otto.Value
 	}{
-		{"shell", svc.shell},
+		{"session", svc.session},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -57,9 +58,9 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 	case v.IsString():
 		host, _ = v.ToString()
 	case v.IsObject():
-		host = ottoutil.GetObject(vm, v.Object(), "public_ipv4")
+		host = ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "public_ipv4"))
 
-		slug := ottoutil.GetObject(vm, v.Object(), "image_slug")
+		slug := ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "image_slug"))
 		switch {
 		case strings.Contains(slug, "coreos"):
 			user = "core"
@@ -70,7 +71,7 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 		ottoutil.Throw(vm, "argument must be a string or a Droplet")
 	}
 
-	return &connectDropletOpts{
+	return &connectOpts{
 		Hostname: host,
 		Port:     "22",
 		Cfg: &ssh.ClientConfig{
@@ -96,7 +97,6 @@ func (svc *sshSvc) optionalConnectArgs(vm *otto.Otto, opts *connectOpts, v otto.
 
 func (svc *sshSvc) connect(ctx context.Context, opts *connectOpts) (*ssh.Client, error) {
 	addr := net.JoinHostPort(opts.Hostname, opts.Port)
-
 	var err error
 	for {
 		conn, derr := net.DialTimeout("tcp", addr, 2*time.Second)
@@ -121,7 +121,7 @@ func (svc *sshSvc) connect(ctx context.Context, opts *connectOpts) (*ssh.Client,
 	}
 }
 
-func (svc *sshSvc) shell(all otto.FunctionCall) otto.Value {
+func (svc *sshSvc) session(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	opts := svc.connectArgs(vm, all.Argument(0))
 	switch len(all.ArgumentList) {
@@ -136,21 +136,97 @@ func (svc *sshSvc) shell(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	run = func(all otto.FunctionCall) otto.Value {
-		vm := all.Otto
-		cmd := ottoutil.String(vm, all.Argument(0))
+	return ottoutil.ToPkg(vm, map[string]func(otto.FunctionCall) otto.Value{
+		"exec": func(all otto.FunctionCall) otto.Value {
+			vm := all.Otto
+			cmd := ottoutil.String(vm, all.Argument(0))
 
-		ss, err := client.NewSession()
-		if err != nil {
-			_ = client.Close()
-			ottoutil.Throw(vm, err.Error())
+			ss, err := client.NewSession()
+			if err != nil {
+				_ = client.Close()
+				ottoutil.Throw(vm, err.Error())
+			}
+			out, err := ss.CombinedOutput(cmd)
+			if err != nil {
+				ottoutil.Throw(vm, "%v: %s", err, string(out))
+			}
+			_ = ss.Close()
+			return ottoutil.ToValue(vm, string(out))
+		},
+		"close": func(all otto.FunctionCall) otto.Value {
+			vm := all.Otto
+			if err := client.Close(); err != nil {
+				ottoutil.Throw(vm, err.Error())
+			}
+			return q
+		},
+	})
+}
+
+// errors
+
+var knownFailureSuffixes = []string{
+	"connection refused",
+	"connection reset by peer.",
+	"connection timed out.",
+	"connection timed out", // inconsistent standard library
+	"no such host",
+	"remote error: handshake failure",
+	"unexpected EOF.",
+	"use of closed network connection",
+	"request canceled while waiting for connection",
+	"read/write on closed pipe",
+	"unexpected EOF reading trailer",
+}
+
+func hasRetryableSuffix(err error) bool {
+	s := err.Error()
+	for _, suffix := range knownFailureSuffixes {
+		if strings.HasSuffix(s, suffix) {
+			return true
 		}
-		out, err := ss.CombinedOutput(cmd)
-		if err != nil {
-			ottoutil.Throw(vm, "%v: %s", err, string(out))
-		}
-		_ = ss.Close()
-		return ottoutil.ToValue(string(out))
 	}
-	return ottoutil.ToAnonFunc(vm, run)
+	return false
+}
+
+func retryable(err error) bool {
+	if hasRetryableSuffix(err) {
+		return true
+	}
+
+	switch e := err.(type) {
+	case temporaryAndTimeoutError:
+		return e.Temporary() || e.Timeout()
+	case timeoutError:
+		return e.Timeout()
+	case temporaryError:
+		return e.Temporary()
+	case retryableError:
+		return e.Retry()
+	case *url.Error:
+		return retryable(e.Err)
+	default:
+		return false
+	}
+}
+
+type temporaryAndTimeoutError interface {
+	Temporary() bool
+	Timeout() bool
+	Error() string
+}
+
+type timeoutError interface {
+	Timeout() bool
+	Error() string
+}
+
+type temporaryError interface {
+	Temporary() bool
+	Error() string
+}
+
+type retryableError interface {
+	Retry() bool
+	Error() string
 }

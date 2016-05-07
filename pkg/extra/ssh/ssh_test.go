@@ -1,12 +1,13 @@
 package ssh
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 	"net"
 	"testing"
 
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
 	"github.com/robertkrimen/otto"
@@ -19,22 +20,30 @@ func TestApply(t *testing.T) {
 
 	src := fmt.Sprintf(`
 assert(ssh != null, "package should be loaded");
-assert(ssh.shell != null, "shell function should be defined");
+assert(ssh.session != null, "session function should be defined");
 
 var host = %[1]q;
-var user = %[1]q;
-var port = %[1]q;
+var user = %[2]q;
+var port = %[3]q;
 
-var shell = ssh.shell(host, {"user":user, "port": port});
-var out = shell("echo hello");
+var droplet = {"name":"derp", "id":456789, "public_ipv4": host};
 
-assert(out == 'you sent "echo hello"', "should have read response from server");
+var session = ssh.session(droplet, {"user":user, "port": port});
+assert(session.exec != null, "session should have exec method");
+assert(session.close != null, "session should have close method");
+
+try {
+	assert(session.exec("1") == 'you sent "1"', "should have read response from server");
+	assert(session.exec("22") == 'you sent "22"', "should have read response from server");
+	assert(session.exec("333") == 'you sent "333"', "should have read response from server");
+	assert(session.exec("echo hello") == 'you sent "echo hello"', "should have read response from server");
+} finally {
+	session.close();
+}
 
 `, host, user, port)
 
-	vmtest.Run(t, `
-
-    `, func(vm *otto.Otto) error {
+	vmtest.Run(t, src, func(vm *otto.Otto) error {
 		pkg, err := Apply(vm, auth)
 		if err != nil {
 			return err
@@ -43,94 +52,82 @@ assert(out == 'you sent "echo hello"', "should have read response from server");
 	})
 }
 
-func server(t testing.TB) (host, user, port string, auth ssh.AuthMethod, close func()) {
-	user := "testuser"
+func server(t testing.TB) (host, user, port string, auth ssh.AuthMethod, close func() error) {
+	user = "testuser"
 	password := "tiger"
 	auth = ssh.Password(password)
 
-	// An SSH server is represented by a ServerConfig, which holds
-	// certificate details and handles authentication of ServerConns.
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
-			// Should use constant-time compare (or better, salt+hash) in
-			// a production setting.
 			if c.User() == user && string(pass) == password {
 				return nil, nil
 			}
 			return nil, fmt.Errorf("password rejected for %q", c.User())
 		},
 	}
+	k, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		panic("Failed to generate private key")
+	}
 
-	// Once a ServerConfig has been configured, connections can be
-	// accepted.
+	private, err := ssh.NewSignerFromKey(k)
+	if err != nil {
+		panic("Failed to parse private key")
+	}
+
+	config.AddHostKey(private)
+
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal("failed to listen for connection")
 	}
 
 	go func() {
-		nConn, err := listener.Accept()
-		if err != nil {
-			t.Fatal("failed to accept incoming connection")
-		}
-
-		// Before use, a handshake must be performed on the incoming
-		// net.Conn.
-		_, chans, reqs, err := ssh.NewServerConn(nConn, config)
-		if err != nil {
-			t.Fatal("failed to handshake")
-		}
-		// The incoming Request channel must be serviced.
-		go ssh.DiscardRequests(reqs)
-
-		// Service the incoming Channel channel.
-		for newChannel := range chans {
-			// Channels have a type, depending on the application level
-			// protocol intended. In the case of a shell, the type is
-			// "session" and ServerShell may be used to present a simple
-			// terminal interface.
-			if newChannel.ChannelType() != "session" {
-				newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
-				continue
-			}
-			channel, requests, err := newChannel.Accept()
+		for {
+			nConn, err := listener.Accept()
 			if err != nil {
-				t.Fatal("could not accept channel.")
+				return
 			}
 
-			// Sessions have out-of-band requests such as "shell",
-			// "pty-req" and "env".  Here we handle only the
-			// "shell" request.
-			go func(in <-chan *ssh.Request) {
-				for req := range in {
-					ok := false
-					switch req.Type {
-					case "shell":
+			_, chans, reqs, err := ssh.NewServerConn(nConn, config)
+			if err != nil {
+				panic("failed to handshake")
+			}
+
+			go ssh.DiscardRequests(reqs)
+
+			for newChannel := range chans {
+
+				if newChannel.ChannelType() != "session" {
+					newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+					continue
+				}
+				channel, requests, err := newChannel.Accept()
+				if err != nil {
+					panic("could not accept channel.")
+				}
+
+				req := <-requests
+
+				var (
+					line string
+					ok   bool
+				)
+				switch req.Type {
+				case "exec":
+					if len(req.Payload) > 4 {
+						line = string(req.Payload[4:])
 						ok = true
-						if len(req.Payload) > 0 {
-							// We don't accept any
-							// commands, only the
-							// default shell.
-							ok = false
-						}
 					}
-					req.Reply(ok, nil)
 				}
-			}(requests)
-
-			term := terminal.NewTerminal(channel, "> ")
-
-			go func() {
-				defer channel.Close()
-				for {
-					line, err := term.ReadLine()
-					if err != nil {
-						break
-					}
-					fmt.Println(line)
-					fmt.Fsprintf(channel, "you send %q", line)
+				req.Reply(ok, nil)
+				if ok {
+					fmt.Fprintf(channel, "you sent %q", line)
+					channel.CloseWrite()
+					channel.SendRequest("exit-status", false, []byte{0, 0, 0, 0})
 				}
-			}()
+				channel.Close()
+			}
 		}
 	}()
 

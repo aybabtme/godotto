@@ -9,7 +9,6 @@ import (
 
 	"github.com/aybabtme/godotto"
 	"github.com/aybabtme/godotto/internal/do"
-	"github.com/aybabtme/godotto/internal/do/cloud"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
@@ -53,11 +52,9 @@ func Run(t testing.TB, src string, opts ...RunOption) {
 		gc.BaseURL = u
 	}
 
-	client := cloud.New(cloud.UseGodo(gc))
-
 	vm := otto.New()
 
-	pkg, err := godotto.Apply(vm, client)
+	pkg, err := godotto.Apply(vm, gc)
 	if err != nil {
 		t.Fatal(err)
 	}
