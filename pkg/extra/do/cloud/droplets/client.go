@@ -60,11 +60,12 @@ func (svc *client) Create(name, region, size, image string, opts ...CreateOpt) (
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Droplets.Create(opt.req)
+	d, resp, err := svc.g.Droplets.Create(opt.req)
 	if err != nil {
 		return nil, err
 	}
-	return &droplet{g: svc.g, d: d}, nil
+
+	return &droplet{g: svc.g, d: d}, waitForActions(context.TODO(), svc.g, resp.Links)
 }
 
 func (svc *client) Get(id int) (Droplet, error) {
@@ -76,8 +77,11 @@ func (svc *client) Get(id int) (Droplet, error) {
 }
 
 func (svc *client) Delete(id int) error {
-	_, err := svc.g.Droplets.Delete(id)
-	return err
+	resp, err := svc.g.Droplets.Delete(id)
+	if err != nil {
+		return err
+	}
+	return waitForActions(context.TODO(), svc.g, resp.Links)
 }
 
 func (svc *client) List(ctx context.Context) (<-chan Droplet, <-chan error) {

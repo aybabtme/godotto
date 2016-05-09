@@ -3,11 +3,23 @@ package regions_test
 import (
 	"testing"
 
+	"golang.org/x/net/context"
+
 	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
+	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
+	"github.com/digitalocean/godo"
 )
 
+type region struct {
+	*godo.Region
+}
+
+func (k *region) Struct() *godo.Region { return k.Region }
+
 func TestApply(t *testing.T) {
-	vmtest.Run(t, `
+	cloud := mockcloud.Client(nil)
+	vmtest.Run(t, cloud, `
 var pkg = cloud.regions;
 
 assert(pkg != null, "package should be loaded");
@@ -16,7 +28,19 @@ assert(pkg.list != null, "list function should be defined");
 }
 
 func TestList(t *testing.T) {
-	vmtest.Run(t, `
+	cloud := mockcloud.Client(nil)
+
+	want := &godo.Region{Slug: "lol", Name: "lol", Available: true, Features: []string{"lol"}}
+
+	cloud.MockRegions.ListFn = func(_ context.Context) (<-chan regions.Region, <-chan error) {
+		rc, ec := make(chan regions.Region, 1), make(chan error, 0)
+		rc <- &region{want}
+		close(rc)
+		close(ec)
+		return rc, ec
+	}
+
+	vmtest.Run(t, cloud, `
 var pkg = cloud.regions;
 var list = pkg.list();
 assert(list != null, "should have received a list");

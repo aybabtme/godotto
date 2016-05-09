@@ -43,7 +43,7 @@ try {
 
 `, host, user, port)
 
-	vmtest.Run(t, src, func(vm *otto.Otto) error {
+	vmtest.Run(t, nil, src, func(vm *otto.Otto) error {
 		pkg, err := Apply(vm, auth)
 		if err != nil {
 			return err

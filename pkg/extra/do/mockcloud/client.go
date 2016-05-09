@@ -257,7 +257,7 @@ func (mock *MockImages) Delete(id int) error {
 }
 func (mock *MockImages) List(ctx context.Context) (<-chan images.Image, <-chan error) {
 	if mock.ListFn != nil {
-		return mock.List(ctx)
+		return mock.ListFn(ctx)
 	}
 	return mock.wrap.Images().List(ctx)
 }
@@ -359,7 +359,7 @@ type MockRegions struct {
 
 func (mock *MockRegions) List(ctx context.Context) (<-chan regions.Region, <-chan error) {
 	if mock.ListFn != nil {
-		return mock.List(ctx)
+		return mock.ListFn(ctx)
 	}
 	return mock.wrap.Regions().List(ctx)
 }
@@ -373,7 +373,7 @@ type MockSizes struct {
 
 func (mock *MockSizes) List(ctx context.Context) (<-chan sizes.Size, <-chan error) {
 	if mock.ListFn != nil {
-		return mock.List(ctx)
+		return mock.ListFn(ctx)
 	}
 	return mock.wrap.Sizes().List(ctx)
 }
@@ -408,7 +408,7 @@ func (mock *MockFloatingIPs) Delete(ip string) error {
 }
 func (mock *MockFloatingIPs) List(ctx context.Context) (<-chan floatingips.FloatingIP, <-chan error) {
 	if mock.ListFn != nil {
-		return mock.List(ctx)
+		return mock.ListFn(ctx)
 	}
 	return mock.wrap.FloatingIPs().List(ctx)
 }

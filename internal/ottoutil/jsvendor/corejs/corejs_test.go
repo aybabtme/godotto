@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 		t.Logf("loaded in %v", time.Since(start))
 		return err
 	}
-	vmtest.Run(t, `
+	vmtest.Run(t, nil, `
 var msg = "hello world";
 assert(msg.startsWith != null, "startsWith should be defined on strings");
 assert(msg.startsWith("hello"), "message should start with 'hello'");
