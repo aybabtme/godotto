@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"sync"
 
@@ -15,9 +16,12 @@ import (
 	"github.com/aybabtme/godotto/internal/repl"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/spycloud"
+	jsssh "github.com/aybabtme/godotto/pkg/extra/ssh"
 
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/oauth2"
 
@@ -76,6 +80,14 @@ func main() {
 	}
 	vm.Set("cloud", pkg)
 
+	auth, done := sshAgent()
+	defer done()
+	if s, err := jsssh.Apply(vm, auth); err != nil {
+		log.Fatal(err)
+	} else {
+		vm.Set("ssh", s)
+	}
+
 	if len(os.Args[1:]) == 0 {
 		// run REPL
 		if !terminal.IsTerminal(0) {
@@ -114,6 +126,16 @@ func main() {
 				}
 			}
 		}
+	}
+}
+
+func sshAgent() (ssh.AuthMethod, func()) {
+	sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
+	if err != nil {
+		return nil, func() {}
+	}
+	return ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers), func() {
+		_ = sshAgent.Close()
 	}
 }
 

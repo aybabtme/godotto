@@ -61,8 +61,8 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be a object")
 	}
 
-	imgArg := ottoutil.GetObject(vm, arg, "image").Object()
-	if imgArg == nil {
+	imgArg := ottoutil.GetObject(vm, arg, "image")
+	if imgArg.IsUndefined() {
 		ottoutil.Throw(vm, "object must contain an 'image' field")
 	}
 
@@ -70,13 +70,19 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		name   = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name"))
 		region = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "region"))
 		size   = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size"))
-		image  = ottoutil.String(vm, ottoutil.GetObject(vm, imgArg, "slug"))
+		image  string
 	)
+	switch {
+	case imgArg.IsString():
+		image = ottoutil.String(vm, imgArg)
+	case imgArg.IsObject():
+		image = ottoutil.String(vm, ottoutil.GetObject(vm, imgArg.Object(), "slug"))
+	}
 
 	opts := &godo.DropletCreateRequest{
-		Backups:           ottoutil.Bool(vm, ottoutil.GetObject(vm, imgArg, "backups")),
-		IPv6:              ottoutil.Bool(vm, ottoutil.GetObject(vm, imgArg, "ipv6")),
-		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, imgArg, "private_networking")),
+		Backups:           ottoutil.Bool(vm, ottoutil.GetObject(vm, arg, "backups")),
+		IPv6:              ottoutil.Bool(vm, ottoutil.GetObject(vm, arg, "ipv6")),
+		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, arg, "private_networking")),
 		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size")),
 	}
 
@@ -183,6 +189,8 @@ func (svc *dropletSvc) list(all otto.FunctionCall) otto.Value {
 func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
 	g := v.Struct()
+	publicIPv4, _ := g.PublicIPv4()
+
 	for _, field := range []struct {
 		name string
 		v    interface{}
@@ -202,7 +210,7 @@ func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Valu
 		{"locked", g.Locked},
 		{"status", g.Status},
 		{"networks", g.Networks},
-		{"public_ipv4", g.Networks.V4[0].IPAddress},
+		{"public_ipv4", publicIPv4},
 		{"created_at", g.Created},
 		{"kernel", g.Kernel},
 	} {
