@@ -8,10 +8,10 @@ import (
 
 // A Client can interact with the DigitalOcean Images service.
 type Client interface {
-	GetByID(int) (Image, error)
-	GetBySlug(string) (Image, error)
-	Update(int, ...UpdateOpt) (Image, error)
-	Delete(int) error
+	GetByID(context.Context, int) (Image, error)
+	GetBySlug(context.Context, string) (Image, error)
+	Update(context.Context, int, ...UpdateOpt) (Image, error)
+	Delete(context.Context, int) error
 	List(context.Context) (<-chan Image, <-chan error)
 	ListApplication(context.Context) (<-chan Image, <-chan error)
 	ListDistribution(context.Context) (<-chan Image, <-chan error)
@@ -35,7 +35,7 @@ type client struct {
 	g *godo.Client
 }
 
-func (svc *client) GetByID(id int) (Image, error) {
+func (svc *client) GetByID(ctx context.Context, id int) (Image, error) {
 	d, _, err := svc.g.Images.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (svc *client) GetByID(id int) (Image, error) {
 	return &image{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetBySlug(slug string) (Image, error) {
+func (svc *client) GetBySlug(ctx context.Context, slug string) (Image, error) {
 	d, _, err := svc.g.Images.GetBySlug(slug)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (svc *client) defaultUpdateOpts() *updateOpt {
 	}
 }
 
-func (svc *client) Update(id int, opts ...UpdateOpt) (Image, error) {
+func (svc *client) Update(ctx context.Context, id int, opts ...UpdateOpt) (Image, error) {
 	opt := svc.defaultUpdateOpts()
 	for _, fn := range opts {
 		fn(opt)
@@ -80,7 +80,7 @@ func (svc *client) Update(id int, opts ...UpdateOpt) (Image, error) {
 	return &image{g: svc.g, d: d}, nil
 }
 
-func (svc *client) Delete(id int) error {
+func (svc *client) Delete(ctx context.Context, id int) error {
 	_, err := svc.g.Images.Delete(id)
 	return err
 }

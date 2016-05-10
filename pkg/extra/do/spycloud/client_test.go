@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"golang.org/x/net/context"
+
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/spycloud"
@@ -20,13 +22,13 @@ func TestSpy(t *testing.T) {
 	want := &godo.Droplet{ID: 42, Name: "hello"}
 
 	mock := mockcloud.Client(nil)
-	mock.MockDroplets.CreateFn = func(name, _, _, _ string, _ ...droplets.CreateOpt) (droplets.Droplet, error) {
+	mock.MockDroplets.CreateFn = func(_ context.Context, name, _, _, _ string, _ ...droplets.CreateOpt) (droplets.Droplet, error) {
 		return &droplet{&godo.Droplet{ID: want.ID, Name: name}}, nil
 	}
-	mock.MockDroplets.DeleteFn = func(id int) error { return nil }
+	mock.MockDroplets.DeleteFn = func(_ context.Context, id int) error { return nil }
 
 	cloud, spy := spycloud.Client(mock)
-	d, err := cloud.Droplets().Create(want.Name, "", "", "")
+	d, err := cloud.Droplets().Create(nil, want.Name, "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +49,7 @@ func TestSpy(t *testing.T) {
 		t.Errorf("want seen %d, got %d", 1, seen)
 	}
 
-	if err := cloud.Droplets().Delete(d.Struct().ID); err != nil {
+	if err := cloud.Droplets().Delete(nil, d.Struct().ID); err != nil {
 		t.Fatal(err)
 	}
 

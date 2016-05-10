@@ -14,13 +14,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := driveSvc{
+		ctx: ctx,
 		svc: client.Drives(),
 	}
 
@@ -47,6 +48,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type driveSvc struct {
+	ctx context.Context
 	svc drives.Client
 }
 
@@ -100,6 +102,7 @@ func (svc *driveSvc) createDrive(all otto.FunctionCall) otto.Value {
 		opt = append(opt, drives.SetDriveDescription(desc))
 	}
 	d, err := svc.svc.CreateDrive(
+		svc.ctx,
 		name, region, size, opt...,
 	)
 	if err != nil {
@@ -117,7 +120,7 @@ func (svc *driveSvc) getDrive(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	id := svc.argDriveID(all, 0)
 
-	d, err := svc.svc.GetDrive(id)
+	d, err := svc.svc.GetDrive(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -132,7 +135,7 @@ func (svc *driveSvc) deleteDrive(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	id := svc.argDriveID(all, 0)
 
-	err := svc.svc.DeleteDrive(id)
+	err := svc.svc.DeleteDrive(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -140,13 +143,11 @@ func (svc *driveSvc) deleteDrive(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *driveSvc) listDrive(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	vm := all.Otto
 
 	var drives = make([]otto.Value, 0)
-	drivec, errc := svc.svc.ListDrives(ctx)
+	drivec, errc := svc.svc.ListDrives(svc.ctx)
 	for d := range drivec {
 		v, err := svc.driveToVM(vm, d)
 		if err != nil {
@@ -178,7 +179,7 @@ func (svc *driveSvc) createSnapshot(all otto.FunctionCall) otto.Value {
 		opt = append(opt, drives.SetSnapshotDescription(desc))
 	}
 
-	d, err := svc.svc.CreateSnapshot(driveID, name, opt...)
+	d, err := svc.svc.CreateSnapshot(svc.ctx, driveID, name, opt...)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -195,7 +196,7 @@ func (svc *driveSvc) getSnapshot(all otto.FunctionCall) otto.Value {
 		vm = all.Otto
 		id = svc.argSnapshotID(all, 0)
 	)
-	d, err := svc.svc.GetSnapshot(id)
+	d, err := svc.svc.GetSnapshot(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -212,7 +213,7 @@ func (svc *driveSvc) deleteSnapshot(all otto.FunctionCall) otto.Value {
 		vm = all.Otto
 		id = svc.argSnapshotID(all, 0)
 	)
-	err := svc.svc.DeleteSnapshot(id)
+	err := svc.svc.DeleteSnapshot(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -220,8 +221,6 @@ func (svc *driveSvc) deleteSnapshot(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *driveSvc) listSnapshots(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	var (
 		vm      = all.Otto
@@ -229,7 +228,7 @@ func (svc *driveSvc) listSnapshots(all otto.FunctionCall) otto.Value {
 	)
 
 	var Snapshots = make([]otto.Value, 0)
-	snapshotc, errc := svc.svc.ListSnapshots(ctx, driveID)
+	snapshotc, errc := svc.svc.ListSnapshots(svc.ctx, driveID)
 	for d := range snapshotc {
 		v, err := svc.driveSnapshotToVM(vm, d)
 		if err != nil {

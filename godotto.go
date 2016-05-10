@@ -8,19 +8,19 @@ import (
 	"github.com/aybabtme/godotto/pkg/domains"
 	"github.com/aybabtme/godotto/pkg/drives"
 	"github.com/aybabtme/godotto/pkg/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/floatingips"
 	"github.com/aybabtme/godotto/pkg/images"
 	"github.com/aybabtme/godotto/pkg/keys"
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
-
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/robertkrimen/otto"
+	"golang.org/x/net/context"
 )
 
 var q = otto.NullValue()
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
@@ -28,7 +28,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 
 	for _, applier := range []struct {
 		Name  string
-		Apply func(*otto.Otto, cloud.Client) (otto.Value, error)
+		Apply func(context.Context, *otto.Otto, cloud.Client) (otto.Value, error)
 	}{
 		{"accounts", accounts.Apply},
 		{"actions", actions.Apply},
@@ -41,7 +41,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 		{"sizes", sizes.Apply},
 		{"drives", drives.Apply},
 	} {
-		svc, err := applier.Apply(vm, client)
+		svc, err := applier.Apply(ctx, vm, client)
 		if err != nil {
 			return q, fmt.Errorf("preparing godo %s service: %v", applier.Name, err)
 		}

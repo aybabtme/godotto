@@ -3,6 +3,8 @@ package vmtest
 import (
 	"testing"
 
+	"golang.org/x/net/context"
+
 	"github.com/aybabtme/godotto"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
@@ -22,7 +24,7 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 
 	vm := otto.New()
 
-	pkg, err := godotto.Apply(vm, cloud)
+	pkg, err := godotto.Apply(context.Background(), vm, cloud)
 	if err != nil {
 		t.Fatal(err)
 	}

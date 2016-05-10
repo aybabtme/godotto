@@ -15,13 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := floatingIPSvc{
+		ctx: ctx,
 		svc: client.FloatingIPs(),
 	}
 
@@ -43,6 +44,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type floatingIPSvc struct {
+	ctx context.Context
 	svc floatingips.Client
 }
 
@@ -66,7 +68,7 @@ func (svc *floatingIPSvc) create(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	req := svc.argCreateFloatingIP(all, 0)
-	fip, err := svc.svc.Create(req.Region, floatingips.UseGodoFloatingIP(req))
+	fip, err := svc.svc.Create(svc.ctx, req.Region, floatingips.UseGodoFloatingIP(req))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -81,7 +83,7 @@ func (svc *floatingIPSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	ip := svc.argFloatingIP(all, 0)
-	fip, err := svc.svc.Get(ip)
+	fip, err := svc.svc.Get(svc.ctx, ip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -96,7 +98,7 @@ func (svc *floatingIPSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	ip := svc.argFloatingIP(all, 0)
 
-	err := svc.svc.Delete(ip)
+	err := svc.svc.Delete(svc.ctx, ip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -104,12 +106,10 @@ func (svc *floatingIPSvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *floatingIPSvc) list(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	vm := all.Otto
 
 	var floatingIPs = make([]otto.Value, 0)
-	floatingIPc, errc := svc.svc.List(ctx)
+	floatingIPc, errc := svc.svc.List(svc.ctx)
 	for d := range floatingIPc {
 		v, err := svc.floatingIPToVM(vm, d)
 		if err != nil {

@@ -8,9 +8,9 @@ import (
 
 // A Client can interact with the DigitalOcean Droplets service.
 type Client interface {
-	Create(name, region, size, image string, opts ...CreateOpt) (Droplet, error)
-	Get(id int) (Droplet, error)
-	Delete(id int) error
+	Create(ctx context.Context, name, region, size, image string, opts ...CreateOpt) (Droplet, error)
+	Get(ctx context.Context, id int) (Droplet, error)
+	Delete(ctx context.Context, id int) error
 	List(ctx context.Context) (<-chan Droplet, <-chan error)
 }
 
@@ -50,7 +50,7 @@ func (svc *client) defaultCreateOpts() *createOpt {
 	}
 }
 
-func (svc *client) Create(name, region, size, image string, opts ...CreateOpt) (Droplet, error) {
+func (svc *client) Create(ctx context.Context, name, region, size, image string, opts ...CreateOpt) (Droplet, error) {
 	opt := svc.defaultCreateOpts()
 	for _, fn := range opts {
 		fn(opt)
@@ -65,10 +65,10 @@ func (svc *client) Create(name, region, size, image string, opts ...CreateOpt) (
 		return nil, err
 	}
 
-	return &droplet{g: svc.g, d: d}, waitForActions(context.TODO(), svc.g, resp.Links)
+	return &droplet{g: svc.g, d: d}, waitForActions(ctx, svc.g, resp.Links)
 }
 
-func (svc *client) Get(id int) (Droplet, error) {
+func (svc *client) Get(ctx context.Context, id int) (Droplet, error) {
 	d, _, err := svc.g.Droplets.Get(id)
 	if err != nil {
 		return nil, err
@@ -76,12 +76,12 @@ func (svc *client) Get(id int) (Droplet, error) {
 	return &droplet{g: svc.g, d: d}, nil
 }
 
-func (svc *client) Delete(id int) error {
+func (svc *client) Delete(ctx context.Context, id int) error {
 	resp, err := svc.g.Droplets.Delete(id)
 	if err != nil {
 		return err
 	}
-	return waitForActions(context.TODO(), svc.g, resp.Links)
+	return waitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *client) List(ctx context.Context) (<-chan Droplet, <-chan error) {

@@ -15,13 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := domainSvc{
+		ctx: ctx,
 		svc: client.Domains(),
 	}
 
@@ -49,6 +50,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type domainSvc struct {
+	ctx context.Context
 	svc domains.Client
 }
 
@@ -96,6 +98,7 @@ func (svc *domainSvc) create(all otto.FunctionCall) otto.Value {
 	}
 
 	d, err := svc.svc.Create(
+		svc.ctx,
 		ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
 		ottoutil.String(vm, ottoutil.GetObject(vm, arg, "ip_address")),
 	)
@@ -114,7 +117,7 @@ func (svc *domainSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	name := svc.argDomainName(all, 0)
 
-	d, err := svc.svc.Get(name)
+	d, err := svc.svc.Get(svc.ctx, name)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -129,7 +132,7 @@ func (svc *domainSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	name := svc.argDomainName(all, 0)
 
-	err := svc.svc.Delete(name)
+	err := svc.svc.Delete(svc.ctx, name)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -137,13 +140,11 @@ func (svc *domainSvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *domainSvc) list(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	vm := all.Otto
 
 	var domains = make([]otto.Value, 0)
-	domainc, errc := svc.svc.List(ctx)
+	domainc, errc := svc.svc.List(svc.ctx)
 	for d := range domainc {
 		v, err := svc.domainToVM(vm, d)
 		if err != nil {
@@ -167,7 +168,7 @@ func (svc *domainSvc) createRecord(all otto.FunctionCall) otto.Value {
 	name := svc.argDomainName(all, 0)
 	record := svc.argDomainRecord(all, 1)
 
-	d, err := svc.svc.CreateRecord(name, domains.UseGodoRecord(record))
+	d, err := svc.svc.CreateRecord(svc.ctx, name, domains.UseGodoRecord(record))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -185,7 +186,7 @@ func (svc *domainSvc) record(all otto.FunctionCall) otto.Value {
 		name = svc.argDomainName(all, 0)
 		id   = svc.argRecordID(all, 1)
 	)
-	d, err := svc.svc.GetRecord(name, id)
+	d, err := svc.svc.GetRecord(svc.ctx, name, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -204,7 +205,7 @@ func (svc *domainSvc) editRecord(all otto.FunctionCall) otto.Value {
 		id     = svc.argRecordID(all, 1)
 		record = svc.argDomainRecord(all, 2)
 	)
-	d, err := svc.svc.UpdateRecord(name, id, domains.UseGodoRecord(record))
+	d, err := svc.svc.UpdateRecord(svc.ctx, name, id, domains.UseGodoRecord(record))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -222,7 +223,7 @@ func (svc *domainSvc) deleteRecord(all otto.FunctionCall) otto.Value {
 		name = svc.argDomainName(all, 0)
 		id   = svc.argRecordID(all, 1)
 	)
-	err := svc.svc.DeleteRecord(name, id)
+	err := svc.svc.DeleteRecord(svc.ctx, name, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -230,8 +231,6 @@ func (svc *domainSvc) deleteRecord(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *domainSvc) records(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	var (
 		vm   = all.Otto
@@ -239,7 +238,7 @@ func (svc *domainSvc) records(all otto.FunctionCall) otto.Value {
 	)
 
 	var records = make([]otto.Value, 0)
-	recordc, errc := svc.svc.ListRecord(ctx, name)
+	recordc, errc := svc.svc.ListRecord(svc.ctx, name)
 	for d := range recordc {
 		v, err := svc.domainRecordToVM(vm, d)
 		if err != nil {

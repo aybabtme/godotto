@@ -1,10 +1,13 @@
 package accounts
 
-import "github.com/digitalocean/godo"
+import (
+	"github.com/digitalocean/godo"
+	"golang.org/x/net/context"
+)
 
 // A Client can interact with the DigitalOcean Accounts service.
 type Client interface {
-	Get() (Account, error)
+	Get(context.Context) (Account, error)
 }
 
 // A Account in the DigitalOcean cloud.
@@ -24,7 +27,7 @@ type client struct {
 	g *godo.Client
 }
 
-func (svc *client) Get() (Account, error) {
+func (svc *client) Get(ctx context.Context) (Account, error) {
 	d, _, err := svc.g.Account.Get()
 	if err != nil {
 		return nil, err

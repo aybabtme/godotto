@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
 	"github.com/robertkrimen/otto"
@@ -44,7 +45,7 @@ try {
 `, host, user, port)
 
 	vmtest.Run(t, nil, src, func(vm *otto.Otto) error {
-		pkg, err := Apply(vm, auth)
+		pkg, err := Apply(context.Background(), vm, auth)
 		if err != nil {
 			return err
 		}

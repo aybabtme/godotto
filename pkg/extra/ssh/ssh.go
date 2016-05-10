@@ -16,13 +16,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, auth ssh.AuthMethod) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, auth ssh.AuthMethod) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := sshSvc{
+		ctx:  ctx,
 		auth: auth,
 	}
 
@@ -40,6 +41,7 @@ func Apply(vm *otto.Otto, auth ssh.AuthMethod) (otto.Value, error) {
 }
 
 type sshSvc struct {
+	ctx  context.Context
 	auth ssh.AuthMethod
 }
 
@@ -131,7 +133,7 @@ func (svc *sshSvc) session(all otto.FunctionCall) otto.Value {
 	default: // too many!
 		ottoutil.Throw(vm, "too many arguments")
 	}
-	client, err := svc.connect(context.TODO(), opts)
+	client, err := svc.connect(svc.ctx, opts)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

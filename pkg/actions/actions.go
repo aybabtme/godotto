@@ -13,13 +13,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := actionSvc{
+		ctx: ctx,
 		svc: client.Actions(),
 	}
 
@@ -39,6 +40,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type actionSvc struct {
+	ctx context.Context
 	svc actions.Client
 }
 
@@ -56,7 +58,7 @@ func (svc *actionSvc) get(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be an Action or an ActionID")
 	}
 
-	a, err := svc.svc.Get(aid)
+	a, err := svc.svc.Get(svc.ctx, aid)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -68,12 +70,10 @@ func (svc *actionSvc) get(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *actionSvc) list(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	vm := all.Otto
 	actions := []actions.Action{}
-	actionc, errc := svc.svc.List(ctx)
+	actionc, errc := svc.svc.List(svc.ctx)
 	for action := range actionc {
 		actions = append(actions, action)
 	}

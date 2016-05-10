@@ -8,9 +8,9 @@ import (
 
 // A Client can interact with the DigitalOcean FloatingIPs service.
 type Client interface {
-	Create(region string, opts ...CreateOpt) (FloatingIP, error)
-	Get(string) (FloatingIP, error)
-	Delete(string) error
+	Create(ctx context.Context, region string, opts ...CreateOpt) (FloatingIP, error)
+	Get(context.Context, string) (FloatingIP, error)
+	Delete(context.Context, string) error
 	List(context.Context) (<-chan FloatingIP, <-chan error)
 }
 
@@ -48,7 +48,7 @@ func (svc *client) defaultCreateOpts() *createOpt {
 	}
 }
 
-func (svc *client) Create(region string, opts ...CreateOpt) (FloatingIP, error) {
+func (svc *client) Create(ctx context.Context, region string, opts ...CreateOpt) (FloatingIP, error) {
 
 	opt := svc.defaultCreateOpts()
 	opt.req.Region = region
@@ -62,7 +62,7 @@ func (svc *client) Create(region string, opts ...CreateOpt) (FloatingIP, error) 
 	return &floatingIP{g: svc.g, d: d}, nil
 }
 
-func (svc *client) Get(ip string) (FloatingIP, error) {
+func (svc *client) Get(ctx context.Context, ip string) (FloatingIP, error) {
 	d, _, err := svc.g.FloatingIPs.Get(ip)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (svc *client) Get(ip string) (FloatingIP, error) {
 	return &floatingIP{g: svc.g, d: d}, nil
 }
 
-func (svc *client) Delete(ip string) error {
+func (svc *client) Delete(ctx context.Context, ip string) error {
 	_, err := svc.g.FloatingIPs.Delete(ip)
 	return err
 }

@@ -8,13 +8,13 @@ import (
 
 // A Client can interact with the DigitalOcean Domains service.
 type Client interface {
-	Create(name, publicKey string, opts ...CreateOpt) (Key, error)
-	GetByID(int) (Key, error)
-	GetByFingerprint(string) (Key, error)
-	UpdateByID(int, ...UpdateOpt) (Key, error)
-	UpdateByFingerprint(string, ...UpdateOpt) (Key, error)
-	DeleteByID(int) error
-	DeleteByFingerprint(string) error
+	Create(ctx context.Context, name, publicKey string, opts ...CreateOpt) (Key, error)
+	GetByID(context.Context, int) (Key, error)
+	GetByFingerprint(context.Context, string) (Key, error)
+	UpdateByID(context.Context, int, ...UpdateOpt) (Key, error)
+	UpdateByFingerprint(context.Context, string, ...UpdateOpt) (Key, error)
+	DeleteByID(context.Context, int) error
+	DeleteByFingerprint(context.Context, string) error
 	List(context.Context) (<-chan Key, <-chan error)
 }
 
@@ -48,7 +48,7 @@ func (svc *client) defaultCreateOpts() *createOpt {
 	}
 }
 
-func (svc *client) Create(name, publicKey string, opts ...CreateOpt) (Key, error) {
+func (svc *client) Create(ctx context.Context, name, publicKey string, opts ...CreateOpt) (Key, error) {
 
 	opt := svc.defaultCreateOpts()
 	opt.req.Name = name
@@ -64,7 +64,7 @@ func (svc *client) Create(name, publicKey string, opts ...CreateOpt) (Key, error
 	return &key{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetByID(id int) (Key, error) {
+func (svc *client) GetByID(ctx context.Context, id int) (Key, error) {
 	d, _, err := svc.g.Keys.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (svc *client) GetByID(id int) (Key, error) {
 	return &key{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetByFingerprint(fp string) (Key, error) {
+func (svc *client) GetByFingerprint(ctx context.Context, fp string) (Key, error) {
 	d, _, err := svc.g.Keys.GetByFingerprint(fp)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (svc *client) defaultUpdateOpts() *updateOpt {
 	}
 }
 
-func (svc *client) UpdateByID(id int, opts ...UpdateOpt) (Key, error) {
+func (svc *client) UpdateByID(ctx context.Context, id int, opts ...UpdateOpt) (Key, error) {
 	opt := svc.defaultUpdateOpts()
 	for _, fn := range opts {
 		fn(opt)
@@ -109,7 +109,7 @@ func (svc *client) UpdateByID(id int, opts ...UpdateOpt) (Key, error) {
 	return &key{g: svc.g, d: d}, nil
 }
 
-func (svc *client) UpdateByFingerprint(fp string, opts ...UpdateOpt) (Key, error) {
+func (svc *client) UpdateByFingerprint(ctx context.Context, fp string, opts ...UpdateOpt) (Key, error) {
 	opt := svc.defaultUpdateOpts()
 	for _, fn := range opts {
 		fn(opt)
@@ -121,12 +121,12 @@ func (svc *client) UpdateByFingerprint(fp string, opts ...UpdateOpt) (Key, error
 	return &key{g: svc.g, d: d}, nil
 }
 
-func (svc *client) DeleteByID(id int) error {
+func (svc *client) DeleteByID(ctx context.Context, id int) error {
 	_, err := svc.g.Keys.DeleteByID(id)
 	return err
 }
 
-func (svc *client) DeleteByFingerprint(fp string) error {
+func (svc *client) DeleteByFingerprint(ctx context.Context, fp string) error {
 	_, err := svc.g.Keys.DeleteByFingerprint(fp)
 	return err
 }

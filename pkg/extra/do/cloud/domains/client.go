@@ -8,15 +8,15 @@ import (
 
 // A Client can interact with the DigitalOcean Domains service.
 type Client interface {
-	Create(name, ip string, opts ...CreateOpt) (Domain, error)
-	Get(string) (Domain, error)
-	Delete(string) error
+	Create(ctx context.Context, name, ip string, opts ...CreateOpt) (Domain, error)
+	Get(context.Context, string) (Domain, error)
+	Delete(context.Context, string) error
 	List(context.Context) (<-chan Domain, <-chan error)
 
-	CreateRecord(string, ...RecordOpt) (Record, error)
-	GetRecord(string, int) (Record, error)
-	UpdateRecord(string, int, ...RecordOpt) (Record, error)
-	DeleteRecord(string, int) error
+	CreateRecord(context.Context, string, ...RecordOpt) (Record, error)
+	GetRecord(context.Context, string, int) (Record, error)
+	UpdateRecord(context.Context, string, int, ...RecordOpt) (Record, error)
+	DeleteRecord(context.Context, string, int) error
 	ListRecord(ctx context.Context, name string) (<-chan Record, <-chan error)
 }
 
@@ -55,7 +55,7 @@ func (svc *client) defaultCreateOpts() *createOpt {
 	}
 }
 
-func (svc *client) Create(name, ip string, opts ...CreateOpt) (Domain, error) {
+func (svc *client) Create(ctx context.Context, name, ip string, opts ...CreateOpt) (Domain, error) {
 
 	opt := svc.defaultCreateOpts()
 	opt.req.Name = name
@@ -70,7 +70,7 @@ func (svc *client) Create(name, ip string, opts ...CreateOpt) (Domain, error) {
 	return &domain{g: svc.g, d: d}, nil
 }
 
-func (svc *client) Get(name string) (Domain, error) {
+func (svc *client) Get(ctx context.Context, name string) (Domain, error) {
 	d, _, err := svc.g.Domains.Get(name)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (svc *client) Get(name string) (Domain, error) {
 	return &domain{g: svc.g, d: d}, nil
 }
 
-func (svc *client) Delete(name string) error {
+func (svc *client) Delete(ctx context.Context, name string) error {
 	_, err := svc.g.Domains.Delete(name)
 	return err
 }
@@ -133,7 +133,7 @@ func (svc *client) defaultRecordOpts() *recordOpt {
 	}
 }
 
-func (svc *client) CreateRecord(name string, opts ...RecordOpt) (Record, error) {
+func (svc *client) CreateRecord(ctx context.Context, name string, opts ...RecordOpt) (Record, error) {
 
 	opt := svc.defaultRecordOpts()
 	for _, fn := range opts {
@@ -146,7 +146,7 @@ func (svc *client) CreateRecord(name string, opts ...RecordOpt) (Record, error) 
 	return &record{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetRecord(name string, id int) (Record, error) {
+func (svc *client) GetRecord(ctx context.Context, name string, id int) (Record, error) {
 	d, _, err := svc.g.Domains.Record(name, id)
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (svc *client) GetRecord(name string, id int) (Record, error) {
 	return &record{g: svc.g, d: d}, nil
 }
 
-func (svc *client) UpdateRecord(name string, id int, opts ...RecordOpt) (Record, error) {
+func (svc *client) UpdateRecord(ctx context.Context, name string, id int, opts ...RecordOpt) (Record, error) {
 	opt := svc.defaultRecordOpts()
 	for _, fn := range opts {
 		fn(opt)
@@ -166,7 +166,7 @@ func (svc *client) UpdateRecord(name string, id int, opts ...RecordOpt) (Record,
 	return &record{g: svc.g, d: d}, nil
 }
 
-func (svc *client) DeleteRecord(name string, id int) error {
+func (svc *client) DeleteRecord(ctx context.Context, name string, id int) error {
 	_, err := svc.g.Domains.DeleteRecord(name, id)
 	return err
 }

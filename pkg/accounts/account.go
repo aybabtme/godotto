@@ -3,6 +3,8 @@ package accounts
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
+
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"
@@ -12,13 +14,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := accountSvc{
+		ctx: ctx,
 		svc: client.Accounts(),
 	}
 
@@ -37,13 +40,14 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type accountSvc struct {
+	ctx context.Context
 	svc accounts.Client
 }
 
 func (svc *accountSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
-	a, err := svc.svc.Get()
+	a, err := svc.svc.Get(svc.ctx)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

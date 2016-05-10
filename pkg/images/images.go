@@ -15,13 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := imageSvc{
+		ctx: ctx,
 		svc: client.Images(),
 	}
 
@@ -46,6 +47,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type imageSvc struct {
+	ctx context.Context
 	svc images.Client
 }
 
@@ -103,10 +105,10 @@ func (svc *imageSvc) get(all otto.FunctionCall) otto.Value {
 	switch {
 	case arg.IsNumber():
 		id := svc.argImageID(all, 0)
-		img, err = svc.svc.GetByID(id)
+		img, err = svc.svc.GetByID(svc.ctx, id)
 	case arg.IsString():
 		slug := svc.argImageSlug(all, 0)
-		img, err = svc.svc.GetBySlug(slug)
+		img, err = svc.svc.GetBySlug(svc.ctx, slug)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -126,7 +128,7 @@ func (svc *imageSvc) update(all otto.FunctionCall) otto.Value {
 		id  = svc.argImageID(all, 0)
 		req = svc.argImageUpdate(all, 0)
 	)
-	img, err := svc.svc.Update(id, images.UseGodoImage(req))
+	img, err := svc.svc.Update(svc.ctx, id, images.UseGodoImage(req))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -141,7 +143,7 @@ func (svc *imageSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	id := svc.argImageID(all, 0)
 
-	err := svc.svc.Delete(id)
+	err := svc.svc.Delete(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -167,12 +169,10 @@ func (svc *imageSvc) listUser(all otto.FunctionCall) otto.Value {
 type listfunc func(context.Context) (<-chan images.Image, <-chan error)
 
 func (svc *imageSvc) listCommon(all otto.FunctionCall, listfn listfunc) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	vm := all.Otto
 
 	var images = make([]otto.Value, 0)
-	imagec, errc := listfn(ctx)
+	imagec, errc := listfn(svc.ctx)
 	for d := range imagec {
 		v, err := svc.imageToVM(vm, d)
 		if err != nil {

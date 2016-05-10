@@ -8,7 +8,7 @@ import (
 
 // A Client can interact with the DigitalOcean Actions service.
 type Client interface {
-	Get(int) (Action, error)
+	Get(context.Context, int) (Action, error)
 	List(context.Context) (<-chan Action, <-chan error)
 }
 
@@ -29,7 +29,7 @@ type client struct {
 	g *godo.Client
 }
 
-func (svc *client) Get(id int) (Action, error) {
+func (svc *client) Get(ctx context.Context, id int) (Action, error) {
 	d, _, err := svc.g.Actions.Get(id)
 	if err != nil {
 		return nil, err

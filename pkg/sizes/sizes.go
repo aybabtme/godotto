@@ -13,13 +13,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := sizeSvc{
+		ctx: ctx,
 		svc: client.Sizes(),
 	}
 
@@ -38,16 +39,16 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type sizeSvc struct {
+	ctx context.Context
 	svc sizes.Client
 }
 
 func (svc *sizeSvc) list(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+
 	vm := all.Otto
 
 	var sizes = make([]otto.Value, 0)
-	sizec, errc := svc.svc.List(ctx)
+	sizec, errc := svc.svc.List(svc.ctx)
 	for d := range sizec {
 		v, err := svc.sizeToVM(vm, d)
 		if err != nil {

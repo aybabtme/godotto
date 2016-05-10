@@ -23,6 +23,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 
 	_ "github.com/robertkrimen/otto/underscore"
@@ -74,7 +75,8 @@ func main() {
 	cloud, spy := spycloud.Client(cloud.New(cloud.UseGodo(gc)))
 	defer enumerateLeftover(spy)
 
-	pkg, err := godotto.Apply(vm, cloud)
+	ctx := context.Background()
+	pkg, err := godotto.Apply(ctx, vm, cloud)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,7 +84,7 @@ func main() {
 
 	auth, done := sshAgent()
 	defer done()
-	if s, err := jsssh.Apply(vm, auth); err != nil {
+	if s, err := jsssh.Apply(ctx, vm, auth); err != nil {
 		log.Fatal(err)
 	} else {
 		vm.Set("ssh", s)

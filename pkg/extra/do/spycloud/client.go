@@ -11,6 +11,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
+	"golang.org/x/net/context"
 )
 
 // A Spy lets you see what's been created by a client.
@@ -147,8 +148,8 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	return c, mock
 }
 
-func (client *client) interceptDropletCreate(name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error) {
-	d, err := client.real.Droplets().Create(name, region, size, image, opts...)
+func (client *client) interceptDropletCreate(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error) {
+	d, err := client.real.Droplets().Create(ctx, name, region, size, image, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -157,8 +158,8 @@ func (client *client) interceptDropletCreate(name, region, size, image string, o
 	return d, err
 }
 
-func (client *client) interceptDropletDelete(id int) error {
-	err := client.real.Droplets().Delete(id)
+func (client *client) interceptDropletDelete(ctx context.Context, id int) error {
+	err := client.real.Droplets().Delete(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -167,8 +168,8 @@ func (client *client) interceptDropletDelete(id int) error {
 	return err
 }
 
-func (client *client) interceptDriveCreate(name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error) {
-	d, err := client.real.Drives().CreateDrive(name, region, sizeGibiBytes, opts...)
+func (client *client) interceptDriveCreate(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error) {
+	d, err := client.real.Drives().CreateDrive(ctx, name, region, sizeGibiBytes, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -177,8 +178,8 @@ func (client *client) interceptDriveCreate(name, region string, sizeGibiBytes in
 	return d, err
 }
 
-func (client *client) interceptDriveDelete(id string) error {
-	err := client.real.Drives().DeleteDrive(id)
+func (client *client) interceptDriveDelete(ctx context.Context, id string) error {
+	err := client.real.Drives().DeleteDrive(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -187,8 +188,8 @@ func (client *client) interceptDriveDelete(id string) error {
 	return err
 }
 
-func (client *client) interceptSnapshotCreate(driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error) {
-	d, err := client.real.Drives().CreateSnapshot(driveID, name, opts...)
+func (client *client) interceptSnapshotCreate(ctx context.Context, driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error) {
+	d, err := client.real.Drives().CreateSnapshot(ctx, driveID, name, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -197,8 +198,8 @@ func (client *client) interceptSnapshotCreate(driveID, name string, opts ...driv
 	return d, err
 }
 
-func (client *client) interceptSnapshotDelete(id string) error {
-	err := client.real.Drives().DeleteSnapshot(id)
+func (client *client) interceptSnapshotDelete(ctx context.Context, id string) error {
+	err := client.real.Drives().DeleteSnapshot(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -207,8 +208,8 @@ func (client *client) interceptSnapshotDelete(id string) error {
 	return err
 }
 
-func (client *client) interceptDomainCreate(name, ip string, opts ...domains.CreateOpt) (domains.Domain, error) {
-	d, err := client.real.Domains().Create(name, ip, opts...)
+func (client *client) interceptDomainCreate(ctx context.Context, name, ip string, opts ...domains.CreateOpt) (domains.Domain, error) {
+	d, err := client.real.Domains().Create(ctx, name, ip, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -217,8 +218,8 @@ func (client *client) interceptDomainCreate(name, ip string, opts ...domains.Cre
 	return d, err
 }
 
-func (client *client) interceptDomainDelete(id string) error {
-	err := client.real.Domains().Delete(id)
+func (client *client) interceptDomainDelete(ctx context.Context, id string) error {
+	err := client.real.Domains().Delete(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -227,8 +228,8 @@ func (client *client) interceptDomainDelete(id string) error {
 	return err
 }
 
-func (client *client) interceptDomainRecordCreate(id string, opts ...domains.RecordOpt) (domains.Record, error) {
-	d, err := client.real.Domains().CreateRecord(id, opts...)
+func (client *client) interceptDomainRecordCreate(ctx context.Context, id string, opts ...domains.RecordOpt) (domains.Record, error) {
+	d, err := client.real.Domains().CreateRecord(ctx, id, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -237,8 +238,8 @@ func (client *client) interceptDomainRecordCreate(id string, opts ...domains.Rec
 	return d, err
 }
 
-func (client *client) interceptDomainRecordDelete(name string, id int) error {
-	err := client.real.Domains().DeleteRecord(name, id)
+func (client *client) interceptDomainRecordDelete(ctx context.Context, name string, id int) error {
+	err := client.real.Domains().DeleteRecord(ctx, name, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -247,8 +248,8 @@ func (client *client) interceptDomainRecordDelete(name string, id int) error {
 	return err
 }
 
-func (client *client) interceptFloatingIPCreate(region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
-	d, err := client.real.FloatingIPs().Create(region, opts...)
+func (client *client) interceptFloatingIPCreate(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
+	d, err := client.real.FloatingIPs().Create(ctx, region, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -257,8 +258,8 @@ func (client *client) interceptFloatingIPCreate(region string, opts ...floatingi
 	return d, err
 }
 
-func (client *client) interceptFloatingIPDelete(ip string) error {
-	err := client.real.FloatingIPs().Delete(ip)
+func (client *client) interceptFloatingIPDelete(ctx context.Context, ip string) error {
+	err := client.real.FloatingIPs().Delete(ctx, ip)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -267,8 +268,8 @@ func (client *client) interceptFloatingIPDelete(ip string) error {
 	return err
 }
 
-func (client *client) interceptKeyCreate(name, publicKey string, opts ...keys.CreateOpt) (keys.Key, error) {
-	d, err := client.real.Keys().Create(name, publicKey, opts...)
+func (client *client) interceptKeyCreate(ctx context.Context, name, publicKey string, opts ...keys.CreateOpt) (keys.Key, error) {
+	d, err := client.real.Keys().Create(ctx, name, publicKey, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -277,8 +278,8 @@ func (client *client) interceptKeyCreate(name, publicKey string, opts ...keys.Cr
 	return d, err
 }
 
-func (client *client) interceptKeyDeleteByID(id int) error {
-	err := client.real.Keys().DeleteByID(id)
+func (client *client) interceptKeyDeleteByID(ctx context.Context, id int) error {
+	err := client.real.Keys().DeleteByID(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -287,8 +288,8 @@ func (client *client) interceptKeyDeleteByID(id int) error {
 	return err
 }
 
-func (client *client) interceptKeyDeleteByFingerprint(fp string) error {
-	err := client.real.Keys().DeleteByFingerprint(fp)
+func (client *client) interceptKeyDeleteByFingerprint(ctx context.Context, fp string) error {
+	err := client.real.Keys().DeleteByFingerprint(ctx, fp)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()

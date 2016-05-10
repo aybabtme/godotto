@@ -8,14 +8,14 @@ import (
 
 // A Client can interact with the DigitalOcean Drives service.
 type Client interface {
-	CreateDrive(name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Drive, error)
-	GetDrive(string) (Drive, error)
-	DeleteDrive(string) error
+	CreateDrive(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Drive, error)
+	GetDrive(context.Context, string) (Drive, error)
+	DeleteDrive(context.Context, string) error
 	ListDrives(context.Context) (<-chan Drive, <-chan error)
 
-	CreateSnapshot(driveID, name string, opts ...SnapshotOpt) (Snapshot, error)
-	GetSnapshot(string) (Snapshot, error)
-	DeleteSnapshot(string) error
+	CreateSnapshot(ctx context.Context, driveID, name string, opts ...SnapshotOpt) (Snapshot, error)
+	GetSnapshot(context.Context, string) (Snapshot, error)
+	DeleteSnapshot(context.Context, string) error
 	ListSnapshots(ctx context.Context, driveID string) (<-chan Snapshot, <-chan error)
 }
 
@@ -59,7 +59,7 @@ func (svc *client) defaultCreateOpts() *createOpt {
 	}
 }
 
-func (svc *client) CreateDrive(name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Drive, error) {
+func (svc *client) CreateDrive(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Drive, error) {
 
 	opt := svc.defaultCreateOpts()
 	opt.req.Name = name
@@ -76,7 +76,7 @@ func (svc *client) CreateDrive(name, region string, sizeGibiBytes int64, opts ..
 	return &drive{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetDrive(name string) (Drive, error) {
+func (svc *client) GetDrive(ctx context.Context, name string) (Drive, error) {
 	d, _, err := svc.g.Storage.GetDrive(name)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (svc *client) GetDrive(name string) (Drive, error) {
 	return &drive{g: svc.g, d: d}, nil
 }
 
-func (svc *client) DeleteDrive(name string) error {
+func (svc *client) DeleteDrive(ctx context.Context, name string) error {
 	_, err := svc.g.Storage.DeleteDrive(name)
 	return err
 }
@@ -140,7 +140,7 @@ func (svc *client) defaultSnapshotOpts() *snapshotOpt {
 	}
 }
 
-func (svc *client) CreateSnapshot(driveID, name string, opts ...SnapshotOpt) (Snapshot, error) {
+func (svc *client) CreateSnapshot(ctx context.Context, driveID, name string, opts ...SnapshotOpt) (Snapshot, error) {
 
 	opt := svc.defaultSnapshotOpts()
 	for _, fn := range opts {
@@ -155,7 +155,7 @@ func (svc *client) CreateSnapshot(driveID, name string, opts ...SnapshotOpt) (Sn
 	return &snapshot{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetSnapshot(id string) (Snapshot, error) {
+func (svc *client) GetSnapshot(ctx context.Context, id string) (Snapshot, error) {
 	d, _, err := svc.g.Storage.GetSnapshot(id)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func (svc *client) GetSnapshot(id string) (Snapshot, error) {
 	return &snapshot{g: svc.g, d: d}, nil
 }
 
-func (svc *client) DeleteSnapshot(id string) error {
+func (svc *client) DeleteSnapshot(ctx context.Context, id string) error {
 	_, err := svc.g.Storage.DeleteSnapshot(id)
 	return err
 }

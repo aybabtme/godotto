@@ -72,29 +72,29 @@ func (mock *Mock) Drives() drives.Client           { return mock.MockDrives }
 
 type MockDroplets struct {
 	wrap     cloud.Client
-	CreateFn func(name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error)
-	GetFn    func(id int) (droplets.Droplet, error)
-	DeleteFn func(id int) error
+	CreateFn func(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error)
+	GetFn    func(ctx context.Context, id int) (droplets.Droplet, error)
+	DeleteFn func(ctx context.Context, id int) error
 	ListFn   func(ctx context.Context) (<-chan droplets.Droplet, <-chan error)
 }
 
-func (mock *MockDroplets) Create(name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error) {
+func (mock *MockDroplets) Create(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error) {
 	if mock.CreateFn != nil {
-		return mock.CreateFn(name, region, size, image, opts...)
+		return mock.CreateFn(ctx, name, region, size, image, opts...)
 	}
-	return mock.wrap.Droplets().Create(name, region, size, image, opts...)
+	return mock.wrap.Droplets().Create(ctx, name, region, size, image, opts...)
 }
-func (mock *MockDroplets) Get(id int) (droplets.Droplet, error) {
+func (mock *MockDroplets) Get(ctx context.Context, id int) (droplets.Droplet, error) {
 	if mock.GetFn != nil {
-		return mock.GetFn(id)
+		return mock.GetFn(ctx, id)
 	}
-	return mock.wrap.Droplets().Get(id)
+	return mock.wrap.Droplets().Get(ctx, id)
 }
-func (mock *MockDroplets) Delete(id int) error {
+func (mock *MockDroplets) Delete(ctx context.Context, id int) error {
 	if mock.DeleteFn != nil {
-		return mock.DeleteFn(id)
+		return mock.DeleteFn(ctx, id)
 	}
-	return mock.wrap.Droplets().Delete(id)
+	return mock.wrap.Droplets().Delete(ctx, id)
 }
 func (mock *MockDroplets) List(ctx context.Context) (<-chan droplets.Droplet, <-chan error) {
 	if mock.ListFn != nil {
@@ -107,29 +107,29 @@ func (mock *MockDroplets) List(ctx context.Context) (<-chan droplets.Droplet, <-
 
 type MockAccounts struct {
 	wrap  cloud.Client
-	GetFn func() (accounts.Account, error)
+	GetFn func(context.Context) (accounts.Account, error)
 }
 
-func (mock *MockAccounts) Get() (accounts.Account, error) {
+func (mock *MockAccounts) Get(ctx context.Context) (accounts.Account, error) {
 	if mock.GetFn != nil {
-		return mock.GetFn()
+		return mock.GetFn(ctx)
 	}
-	return mock.wrap.Accounts().Get()
+	return mock.wrap.Accounts().Get(ctx)
 }
 
 // Actions
 
 type MockActions struct {
 	wrap   cloud.Client
-	GetFn  func(id int) (actions.Action, error)
+	GetFn  func(ctx context.Context, id int) (actions.Action, error)
 	ListFn func(ctx context.Context) (<-chan actions.Action, <-chan error)
 }
 
-func (mock *MockActions) Get(id int) (actions.Action, error) {
+func (mock *MockActions) Get(ctx context.Context, id int) (actions.Action, error) {
 	if mock.GetFn != nil {
-		return mock.GetFn(id)
+		return mock.GetFn(ctx, id)
 	}
-	return mock.wrap.Actions().Get(id)
+	return mock.wrap.Actions().Get(ctx, id)
 }
 
 func (mock *MockActions) List(ctx context.Context) (<-chan actions.Action, <-chan error) {
@@ -143,36 +143,36 @@ func (mock *MockActions) List(ctx context.Context) (<-chan actions.Action, <-cha
 
 type MockDomains struct {
 	wrap           cloud.Client
-	CreateFn       func(name, ip string, opts ...domains.CreateOpt) (domains.Domain, error)
-	GetFn          func(id string) (domains.Domain, error)
-	DeleteFn       func(id string) error
+	CreateFn       func(ctx context.Context, name, ip string, opts ...domains.CreateOpt) (domains.Domain, error)
+	GetFn          func(ctx context.Context, id string) (domains.Domain, error)
+	DeleteFn       func(ctx context.Context, id string) error
 	ListFn         func(ctx context.Context) (<-chan domains.Domain, <-chan error)
-	CreateRecordFn func(id string, opts ...domains.RecordOpt) (domains.Record, error)
-	GetRecordFn    func(name string, id int) (domains.Record, error)
-	UpdateRecordFn func(name string, id int, opts ...domains.RecordOpt) (domains.Record, error)
-	DeleteRecordFn func(name string, id int) error
+	CreateRecordFn func(ctx context.Context, id string, opts ...domains.RecordOpt) (domains.Record, error)
+	GetRecordFn    func(ctx context.Context, name string, id int) (domains.Record, error)
+	UpdateRecordFn func(ctx context.Context, name string, id int, opts ...domains.RecordOpt) (domains.Record, error)
+	DeleteRecordFn func(ctx context.Context, name string, id int) error
 	ListRecordFn   func(ctx context.Context, name string) (<-chan domains.Record, <-chan error)
 }
 
-func (mock *MockDomains) Create(name, ip string, opts ...domains.CreateOpt) (domains.Domain, error) {
+func (mock *MockDomains) Create(ctx context.Context, name, ip string, opts ...domains.CreateOpt) (domains.Domain, error) {
 	if mock.CreateFn != nil {
-		return mock.CreateFn(name, ip, opts...)
+		return mock.CreateFn(ctx, name, ip, opts...)
 	}
-	return mock.wrap.Domains().Create(name, ip, opts...)
+	return mock.wrap.Domains().Create(ctx, name, ip, opts...)
 }
 
-func (mock *MockDomains) Get(id string) (domains.Domain, error) {
+func (mock *MockDomains) Get(ctx context.Context, id string) (domains.Domain, error) {
 	if mock.GetFn != nil {
-		return mock.GetFn(id)
+		return mock.GetFn(ctx, id)
 	}
-	return mock.wrap.Domains().Get(id)
+	return mock.wrap.Domains().Get(ctx, id)
 }
 
-func (mock *MockDomains) Delete(id string) error {
+func (mock *MockDomains) Delete(ctx context.Context, id string) error {
 	if mock.DeleteFn != nil {
-		return mock.DeleteFn(id)
+		return mock.DeleteFn(ctx, id)
 	}
-	return mock.wrap.Domains().Delete(id)
+	return mock.wrap.Domains().Delete(ctx, id)
 }
 
 func (mock *MockDomains) List(ctx context.Context) (<-chan domains.Domain, <-chan error) {
@@ -182,32 +182,32 @@ func (mock *MockDomains) List(ctx context.Context) (<-chan domains.Domain, <-cha
 	return mock.wrap.Domains().List(ctx)
 }
 
-func (mock *MockDomains) CreateRecord(id string, opts ...domains.RecordOpt) (domains.Record, error) {
+func (mock *MockDomains) CreateRecord(ctx context.Context, id string, opts ...domains.RecordOpt) (domains.Record, error) {
 	if mock.CreateRecordFn != nil {
-		return mock.CreateRecordFn(id, opts...)
+		return mock.CreateRecordFn(ctx, id, opts...)
 	}
-	return mock.wrap.Domains().CreateRecord(id, opts...)
+	return mock.wrap.Domains().CreateRecord(ctx, id, opts...)
 }
 
-func (mock *MockDomains) GetRecord(name string, id int) (domains.Record, error) {
+func (mock *MockDomains) GetRecord(ctx context.Context, name string, id int) (domains.Record, error) {
 	if mock.GetRecordFn != nil {
-		return mock.GetRecordFn(name, id)
+		return mock.GetRecordFn(ctx, name, id)
 	}
-	return mock.wrap.Domains().GetRecord(name, id)
+	return mock.wrap.Domains().GetRecord(ctx, name, id)
 }
 
-func (mock *MockDomains) UpdateRecord(name string, id int, opts ...domains.RecordOpt) (domains.Record, error) {
+func (mock *MockDomains) UpdateRecord(ctx context.Context, name string, id int, opts ...domains.RecordOpt) (domains.Record, error) {
 	if mock.UpdateRecordFn != nil {
-		return mock.UpdateRecordFn(name, id, opts...)
+		return mock.UpdateRecordFn(ctx, name, id, opts...)
 	}
-	return mock.wrap.Domains().UpdateRecord(name, id, opts...)
+	return mock.wrap.Domains().UpdateRecord(ctx, name, id, opts...)
 }
 
-func (mock *MockDomains) DeleteRecord(name string, id int) error {
+func (mock *MockDomains) DeleteRecord(ctx context.Context, name string, id int) error {
 	if mock.DeleteRecordFn != nil {
-		return mock.DeleteRecordFn(name, id)
+		return mock.DeleteRecordFn(ctx, name, id)
 	}
-	return mock.wrap.Domains().DeleteRecord(name, id)
+	return mock.wrap.Domains().DeleteRecord(ctx, name, id)
 }
 
 func (mock *MockDomains) ListRecord(ctx context.Context, name string) (<-chan domains.Record, <-chan error) {
@@ -221,39 +221,39 @@ func (mock *MockDomains) ListRecord(ctx context.Context, name string) (<-chan do
 
 type MockImages struct {
 	wrap               cloud.Client
-	GetByIDFn          func(int) (images.Image, error)
-	GetBySlugFn        func(string) (images.Image, error)
-	UpdateFn           func(int, ...images.UpdateOpt) (images.Image, error)
-	DeleteFn           func(int) error
+	GetByIDFn          func(context.Context, int) (images.Image, error)
+	GetBySlugFn        func(context.Context, string) (images.Image, error)
+	UpdateFn           func(context.Context, int, ...images.UpdateOpt) (images.Image, error)
+	DeleteFn           func(context.Context, int) error
 	ListFn             func(context.Context) (<-chan images.Image, <-chan error)
 	ListApplicationFn  func(context.Context) (<-chan images.Image, <-chan error)
 	ListDistributionFn func(context.Context) (<-chan images.Image, <-chan error)
 	ListUserFn         func(context.Context) (<-chan images.Image, <-chan error)
 }
 
-func (mock *MockImages) GetByID(id int) (images.Image, error) {
+func (mock *MockImages) GetByID(ctx context.Context, id int) (images.Image, error) {
 	if mock.GetByIDFn != nil {
-		return mock.GetByID(id)
+		return mock.GetByID(ctx, id)
 	}
-	return mock.wrap.Images().GetByID(id)
+	return mock.wrap.Images().GetByID(ctx, id)
 }
-func (mock *MockImages) GetBySlug(slug string) (images.Image, error) {
+func (mock *MockImages) GetBySlug(ctx context.Context, slug string) (images.Image, error) {
 	if mock.GetBySlugFn != nil {
-		return mock.GetBySlug(slug)
+		return mock.GetBySlug(ctx, slug)
 	}
-	return mock.wrap.Images().GetBySlug(slug)
+	return mock.wrap.Images().GetBySlug(ctx, slug)
 }
-func (mock *MockImages) Update(id int, opts ...images.UpdateOpt) (images.Image, error) {
+func (mock *MockImages) Update(ctx context.Context, id int, opts ...images.UpdateOpt) (images.Image, error) {
 	if mock.UpdateFn != nil {
-		return mock.Update(id, opts...)
+		return mock.Update(ctx, id, opts...)
 	}
-	return mock.wrap.Images().Update(id, opts...)
+	return mock.wrap.Images().Update(ctx, id, opts...)
 }
-func (mock *MockImages) Delete(id int) error {
+func (mock *MockImages) Delete(ctx context.Context, id int) error {
 	if mock.DeleteFn != nil {
-		return mock.Delete(id)
+		return mock.Delete(ctx, id)
 	}
-	return mock.wrap.Images().Delete(id)
+	return mock.wrap.Images().Delete(ctx, id)
 }
 func (mock *MockImages) List(ctx context.Context) (<-chan images.Image, <-chan error) {
 	if mock.ListFn != nil {
@@ -284,63 +284,63 @@ func (mock *MockImages) ListUser(ctx context.Context) (<-chan images.Image, <-ch
 
 type MockKeys struct {
 	wrap                  cloud.Client
-	CreateFn              func(name, publicKey string, opts ...keys.CreateOpt) (keys.Key, error)
-	GetByIDFn             func(int) (keys.Key, error)
-	GetByFingerprintFn    func(string) (keys.Key, error)
-	UpdateByIDFn          func(int, ...keys.UpdateOpt) (keys.Key, error)
-	UpdateByFingerprintFn func(string, ...keys.UpdateOpt) (keys.Key, error)
-	DeleteByIDFn          func(int) error
-	DeleteByFingerprintFn func(string) error
+	CreateFn              func(ctx context.Context, name, publicKey string, opts ...keys.CreateOpt) (keys.Key, error)
+	GetByIDFn             func(context.Context, int) (keys.Key, error)
+	GetByFingerprintFn    func(context.Context, string) (keys.Key, error)
+	UpdateByIDFn          func(context.Context, int, ...keys.UpdateOpt) (keys.Key, error)
+	UpdateByFingerprintFn func(context.Context, string, ...keys.UpdateOpt) (keys.Key, error)
+	DeleteByIDFn          func(context.Context, int) error
+	DeleteByFingerprintFn func(context.Context, string) error
 	ListFn                func(context.Context) (<-chan keys.Key, <-chan error)
 }
 
-func (mock *MockKeys) Create(name, publicKey string, opts ...keys.CreateOpt) (keys.Key, error) {
+func (mock *MockKeys) Create(ctx context.Context, name, publicKey string, opts ...keys.CreateOpt) (keys.Key, error) {
 	if mock.CreateFn != nil {
-		return mock.CreateFn(name, publicKey, opts...)
+		return mock.CreateFn(ctx, name, publicKey, opts...)
 	}
-	return mock.wrap.Keys().Create(name, publicKey, opts...)
+	return mock.wrap.Keys().Create(ctx, name, publicKey, opts...)
 }
 
-func (mock *MockKeys) GetByID(id int) (keys.Key, error) {
+func (mock *MockKeys) GetByID(ctx context.Context, id int) (keys.Key, error) {
 	if mock.GetByIDFn != nil {
-		return mock.GetByIDFn(id)
+		return mock.GetByIDFn(ctx, id)
 	}
-	return mock.wrap.Keys().GetByID(id)
+	return mock.wrap.Keys().GetByID(ctx, id)
 }
 
-func (mock *MockKeys) GetByFingerprint(fp string) (keys.Key, error) {
+func (mock *MockKeys) GetByFingerprint(ctx context.Context, fp string) (keys.Key, error) {
 	if mock.GetByFingerprintFn != nil {
-		return mock.GetByFingerprintFn(fp)
+		return mock.GetByFingerprintFn(ctx, fp)
 	}
-	return mock.wrap.Keys().GetByFingerprint(fp)
+	return mock.wrap.Keys().GetByFingerprint(ctx, fp)
 }
 
-func (mock *MockKeys) UpdateByID(id int, opts ...keys.UpdateOpt) (keys.Key, error) {
+func (mock *MockKeys) UpdateByID(ctx context.Context, id int, opts ...keys.UpdateOpt) (keys.Key, error) {
 	if mock.UpdateByIDFn != nil {
-		return mock.UpdateByIDFn(id, opts...)
+		return mock.UpdateByIDFn(ctx, id, opts...)
 	}
-	return mock.wrap.Keys().UpdateByID(id, opts...)
+	return mock.wrap.Keys().UpdateByID(ctx, id, opts...)
 }
 
-func (mock *MockKeys) UpdateByFingerprint(fp string, opts ...keys.UpdateOpt) (keys.Key, error) {
+func (mock *MockKeys) UpdateByFingerprint(ctx context.Context, fp string, opts ...keys.UpdateOpt) (keys.Key, error) {
 	if mock.UpdateByFingerprintFn != nil {
-		return mock.UpdateByFingerprintFn(fp, opts...)
+		return mock.UpdateByFingerprintFn(ctx, fp, opts...)
 	}
-	return mock.wrap.Keys().UpdateByFingerprint(fp, opts...)
+	return mock.wrap.Keys().UpdateByFingerprint(ctx, fp, opts...)
 }
 
-func (mock *MockKeys) DeleteByID(id int) error {
+func (mock *MockKeys) DeleteByID(ctx context.Context, id int) error {
 	if mock.DeleteByIDFn != nil {
-		return mock.DeleteByIDFn(id)
+		return mock.DeleteByIDFn(ctx, id)
 	}
-	return mock.wrap.Keys().DeleteByID(id)
+	return mock.wrap.Keys().DeleteByID(ctx, id)
 }
 
-func (mock *MockKeys) DeleteByFingerprint(fp string) error {
+func (mock *MockKeys) DeleteByFingerprint(ctx context.Context, fp string) error {
 	if mock.DeleteByFingerprintFn != nil {
-		return mock.DeleteByFingerprintFn(fp)
+		return mock.DeleteByFingerprintFn(ctx, fp)
 	}
-	return mock.wrap.Keys().DeleteByFingerprint(fp)
+	return mock.wrap.Keys().DeleteByFingerprint(ctx, fp)
 }
 
 func (mock *MockKeys) List(ctx context.Context) (<-chan keys.Key, <-chan error) {
@@ -382,29 +382,29 @@ func (mock *MockSizes) List(ctx context.Context) (<-chan sizes.Size, <-chan erro
 
 type MockFloatingIPs struct {
 	wrap     cloud.Client
-	CreateFn func(region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error)
-	GetFn    func(ip string) (floatingips.FloatingIP, error)
-	DeleteFn func(ip string) error
+	CreateFn func(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error)
+	GetFn    func(ctx context.Context, ip string) (floatingips.FloatingIP, error)
+	DeleteFn func(ctx context.Context, ip string) error
 	ListFn   func(ctx context.Context) (<-chan floatingips.FloatingIP, <-chan error)
 }
 
-func (mock *MockFloatingIPs) Create(region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
+func (mock *MockFloatingIPs) Create(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
 	if mock.CreateFn != nil {
-		return mock.Create(region, opts...)
+		return mock.Create(ctx, region, opts...)
 	}
-	return mock.wrap.FloatingIPs().Create(region, opts...)
+	return mock.wrap.FloatingIPs().Create(ctx, region, opts...)
 }
-func (mock *MockFloatingIPs) Get(ip string) (floatingips.FloatingIP, error) {
+func (mock *MockFloatingIPs) Get(ctx context.Context, ip string) (floatingips.FloatingIP, error) {
 	if mock.GetFn != nil {
-		return mock.Get(ip)
+		return mock.Get(ctx, ip)
 	}
-	return mock.wrap.FloatingIPs().Get(ip)
+	return mock.wrap.FloatingIPs().Get(ctx, ip)
 }
-func (mock *MockFloatingIPs) Delete(ip string) error {
+func (mock *MockFloatingIPs) Delete(ctx context.Context, ip string) error {
 	if mock.DeleteFn != nil {
-		return mock.Delete(ip)
+		return mock.Delete(ctx, ip)
 	}
-	return mock.wrap.FloatingIPs().Delete(ip)
+	return mock.wrap.FloatingIPs().Delete(ctx, ip)
 }
 func (mock *MockFloatingIPs) List(ctx context.Context) (<-chan floatingips.FloatingIP, <-chan error) {
 	if mock.ListFn != nil {
@@ -417,33 +417,33 @@ func (mock *MockFloatingIPs) List(ctx context.Context) (<-chan floatingips.Float
 
 type MockDrives struct {
 	wrap             cloud.Client
-	CreateDriveFn    func(name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error)
-	GetDriveFn       func(string) (drives.Drive, error)
-	DeleteDriveFn    func(string) error
+	CreateDriveFn    func(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error)
+	GetDriveFn       func(context.Context, string) (drives.Drive, error)
+	DeleteDriveFn    func(context.Context, string) error
 	ListDrivesFn     func(context.Context) (<-chan drives.Drive, <-chan error)
-	CreateSnapshotFn func(driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error)
-	GetSnapshotFn    func(string) (drives.Snapshot, error)
-	DeleteSnapshotFn func(string) error
+	CreateSnapshotFn func(ctx context.Context, driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error)
+	GetSnapshotFn    func(context.Context, string) (drives.Snapshot, error)
+	DeleteSnapshotFn func(context.Context, string) error
 	ListSnapshotsFn  func(ctx context.Context, driveID string) (<-chan drives.Snapshot, <-chan error)
 }
 
-func (mock *MockDrives) CreateDrive(name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error) {
+func (mock *MockDrives) CreateDrive(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error) {
 	if mock.CreateDriveFn != nil {
-		return mock.CreateDriveFn(name, region, sizeGibiBytes, opts...)
+		return mock.CreateDriveFn(ctx, name, region, sizeGibiBytes, opts...)
 	}
-	return mock.wrap.Drives().CreateDrive(name, region, sizeGibiBytes, opts...)
+	return mock.wrap.Drives().CreateDrive(ctx, name, region, sizeGibiBytes, opts...)
 }
-func (mock *MockDrives) GetDrive(id string) (drives.Drive, error) {
+func (mock *MockDrives) GetDrive(ctx context.Context, id string) (drives.Drive, error) {
 	if mock.GetDriveFn != nil {
-		return mock.GetDriveFn(id)
+		return mock.GetDriveFn(ctx, id)
 	}
-	return mock.wrap.Drives().GetDrive(id)
+	return mock.wrap.Drives().GetDrive(ctx, id)
 }
-func (mock *MockDrives) DeleteDrive(id string) error {
+func (mock *MockDrives) DeleteDrive(ctx context.Context, id string) error {
 	if mock.DeleteDriveFn != nil {
-		return mock.DeleteDriveFn(id)
+		return mock.DeleteDriveFn(ctx, id)
 	}
-	return mock.wrap.Drives().DeleteDrive(id)
+	return mock.wrap.Drives().DeleteDrive(ctx, id)
 }
 func (mock *MockDrives) ListDrives(ctx context.Context) (<-chan drives.Drive, <-chan error) {
 	if mock.ListDrivesFn != nil {
@@ -451,23 +451,23 @@ func (mock *MockDrives) ListDrives(ctx context.Context) (<-chan drives.Drive, <-
 	}
 	return mock.wrap.Drives().ListDrives(ctx)
 }
-func (mock *MockDrives) CreateSnapshot(driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error) {
+func (mock *MockDrives) CreateSnapshot(ctx context.Context, driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error) {
 	if mock.CreateSnapshotFn != nil {
-		return mock.CreateSnapshotFn(driveID, name, opts...)
+		return mock.CreateSnapshotFn(ctx, driveID, name, opts...)
 	}
-	return mock.wrap.Drives().CreateSnapshot(driveID, name, opts...)
+	return mock.wrap.Drives().CreateSnapshot(ctx, driveID, name, opts...)
 }
-func (mock *MockDrives) GetSnapshot(id string) (drives.Snapshot, error) {
+func (mock *MockDrives) GetSnapshot(ctx context.Context, id string) (drives.Snapshot, error) {
 	if mock.GetSnapshotFn != nil {
-		return mock.GetSnapshotFn(id)
+		return mock.GetSnapshotFn(ctx, id)
 	}
-	return mock.wrap.Drives().GetSnapshot(id)
+	return mock.wrap.Drives().GetSnapshot(ctx, id)
 }
-func (mock *MockDrives) DeleteSnapshot(id string) error {
+func (mock *MockDrives) DeleteSnapshot(ctx context.Context, id string) error {
 	if mock.DeleteSnapshotFn != nil {
-		return mock.DeleteSnapshotFn(id)
+		return mock.DeleteSnapshotFn(ctx, id)
 	}
-	return mock.wrap.Drives().DeleteSnapshot(id)
+	return mock.wrap.Drives().DeleteSnapshot(ctx, id)
 }
 func (mock *MockDrives) ListSnapshots(ctx context.Context, driveID string) (<-chan drives.Snapshot, <-chan error) {
 	if mock.ListSnapshotsFn != nil {

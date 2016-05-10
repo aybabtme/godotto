@@ -15,7 +15,7 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
@@ -44,6 +44,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type keySvc struct {
+	ctx context.Context
 	svc keys.Client
 }
 
@@ -106,7 +107,7 @@ func (svc *keySvc) create(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	req := svc.argKeyCreate(all, 0)
-	key, err := svc.svc.Create(req.Name, req.PublicKey)
+	key, err := svc.svc.Create(svc.ctx, req.Name, req.PublicKey)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -128,10 +129,10 @@ func (svc *keySvc) get(all otto.FunctionCall) otto.Value {
 	switch {
 	case arg.IsNumber():
 		id := svc.argKeyID(all, 0)
-		key, err = svc.svc.GetByID(id)
+		key, err = svc.svc.GetByID(svc.ctx, id)
 	case arg.IsString():
 		fp := svc.argKeyFingerprint(all, 0)
-		key, err = svc.svc.GetByFingerprint(fp)
+		key, err = svc.svc.GetByFingerprint(svc.ctx, fp)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -154,11 +155,11 @@ func (svc *keySvc) update(all otto.FunctionCall) otto.Value {
 	case arg.IsNumber():
 		id := svc.argKeyID(all, 0)
 		req := svc.argKeyUpdate(all, 1)
-		key, err = svc.svc.UpdateByID(id, keys.UseGodoKey(req))
+		key, err = svc.svc.UpdateByID(svc.ctx, id, keys.UseGodoKey(req))
 	case arg.IsString():
 		fp := svc.argKeyFingerprint(all, 0)
 		req := svc.argKeyUpdate(all, 1)
-		key, err = svc.svc.UpdateByFingerprint(fp, keys.UseGodoKey(req))
+		key, err = svc.svc.UpdateByFingerprint(svc.ctx, fp, keys.UseGodoKey(req))
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -177,10 +178,10 @@ func (svc *keySvc) delete(all otto.FunctionCall) otto.Value {
 	switch {
 	case arg.IsNumber():
 		id := svc.argKeyID(all, 0)
-		err = svc.svc.DeleteByID(id)
+		err = svc.svc.DeleteByID(svc.ctx, id)
 	case arg.IsString():
 		fp := svc.argKeyFingerprint(all, 0)
-		err = svc.svc.DeleteByFingerprint(fp)
+		err = svc.svc.DeleteByFingerprint(svc.ctx, fp)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -189,12 +190,10 @@ func (svc *keySvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *keySvc) list(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	vm := all.Otto
 
 	var keys = make([]otto.Value, 0)
-	keyc, errc := svc.svc.List(ctx)
+	keyc, errc := svc.svc.List(svc.ctx)
 	for d := range keyc {
 		v, err := svc.keyToVM(vm, d)
 		if err != nil {

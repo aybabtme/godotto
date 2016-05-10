@@ -15,13 +15,14 @@ import (
 
 var q = otto.Value{}
 
-func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}
 
 	svc := dropletSvc{
+		ctx: ctx,
 		svc: client.Droplets(),
 	}
 
@@ -51,6 +52,7 @@ func Apply(vm *otto.Otto, client cloud.Client) (otto.Value, error) {
 }
 
 type dropletSvc struct {
+	ctx context.Context
 	svc droplets.Client
 }
 
@@ -102,7 +104,7 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		}
 	}
 
-	d, err := svc.svc.Create(name, region, size, image, droplets.UseGodoCreate(opts))
+	d, err := svc.svc.Create(svc.ctx, name, region, size, image, droplets.UseGodoCreate(opts))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -128,7 +130,7 @@ func (svc *dropletSvc) get(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
 	}
 
-	d, err := svc.svc.Get(did)
+	d, err := svc.svc.Get(svc.ctx, did)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -153,7 +155,7 @@ func (svc *dropletSvc) delete(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
 	}
 
-	err := svc.svc.Delete(did)
+	err := svc.svc.Delete(svc.ctx, did)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
@@ -161,13 +163,10 @@ func (svc *dropletSvc) delete(all otto.FunctionCall) otto.Value {
 }
 
 func (svc *dropletSvc) list(all otto.FunctionCall) otto.Value {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	vm := all.Otto
 
 	var droplets = make([]otto.Value, 0)
-	dropletc, errc := svc.svc.List(ctx)
+	dropletc, errc := svc.svc.List(svc.ctx)
 	for d := range dropletc {
 		v, err := svc.dropletToVM(vm, d)
 		if err != nil {
