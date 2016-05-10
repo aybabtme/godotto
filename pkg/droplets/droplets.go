@@ -72,6 +72,8 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		size   = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size"))
 		image  string
 	)
+
+
 	switch {
 	case imgArg.IsString():
 		image = ottoutil.String(vm, imgArg)
@@ -83,7 +85,7 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		Backups:           ottoutil.Bool(vm, ottoutil.GetObject(vm, arg, "backups")),
 		IPv6:              ottoutil.Bool(vm, ottoutil.GetObject(vm, arg, "ipv6")),
 		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, arg, "private_networking")),
-		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size")),
+		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, arg, "user_data")),
 	}
 
 	sshArgs := ottoutil.GetObject(vm, arg, "ssh_keys").Object()

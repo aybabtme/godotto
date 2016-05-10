@@ -52,14 +52,14 @@ func (svc *client) defaultCreateOpts() *createOpt {
 
 func (svc *client) Create(name, region, size, image string, opts ...CreateOpt) (Droplet, error) {
 	opt := svc.defaultCreateOpts()
+	for _, fn := range opts {
+		fn(opt)
+	}
 	opt.req.Name = name
 	opt.req.Size = size
 	opt.req.Region = region
 	opt.req.Image.Slug = image
 
-	for _, fn := range opts {
-		fn(opt)
-	}
 	d, resp, err := svc.g.Droplets.Create(opt.req)
 	if err != nil {
 		return nil, err
