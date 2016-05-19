@@ -12,6 +12,7 @@ type Client interface {
 	Get(ctx context.Context, id int) (Droplet, error)
 	Delete(ctx context.Context, id int) error
 	List(ctx context.Context) (<-chan Droplet, <-chan error)
+	Actions() ActionClient
 }
 
 // A Droplet in the DigitalOcean cloud.
@@ -108,6 +109,10 @@ func (svc *client) List(ctx context.Context) (<-chan Droplet, <-chan error) {
 		}
 	}()
 	return outc, errc
+}
+
+func (svc *client) Actions() ActionClient {
+	return &actionClient{g: svc.g}
 }
 
 type droplet struct {

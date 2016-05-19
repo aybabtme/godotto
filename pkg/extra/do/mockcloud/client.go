@@ -44,7 +44,7 @@ type Mock struct {
 
 func Client(client cloud.Client) *Mock {
 	return &Mock{wrap: client,
-		MockDroplets:    &MockDroplets{wrap: client},
+		MockDroplets:    &MockDroplets{wrap: client, MockDropletActions: &MockDropletActions{wrap: client}},
 		MockAccounts:    &MockAccounts{wrap: client},
 		MockActions:     &MockActions{wrap: client},
 		MockDomains:     &MockDomains{wrap: client},
@@ -71,11 +71,12 @@ func (mock *Mock) Drives() drives.Client           { return mock.MockDrives }
 // Droplets
 
 type MockDroplets struct {
-	wrap     cloud.Client
-	CreateFn func(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error)
-	GetFn    func(ctx context.Context, id int) (droplets.Droplet, error)
-	DeleteFn func(ctx context.Context, id int) error
-	ListFn   func(ctx context.Context) (<-chan droplets.Droplet, <-chan error)
+	wrap               cloud.Client
+	CreateFn           func(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error)
+	GetFn              func(ctx context.Context, id int) (droplets.Droplet, error)
+	DeleteFn           func(ctx context.Context, id int) error
+	ListFn             func(ctx context.Context) (<-chan droplets.Droplet, <-chan error)
+	MockDropletActions *MockDropletActions
 }
 
 func (mock *MockDroplets) Create(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error) {
@@ -101,6 +102,145 @@ func (mock *MockDroplets) List(ctx context.Context) (<-chan droplets.Droplet, <-
 		return mock.ListFn(ctx)
 	}
 	return mock.wrap.Droplets().List(ctx)
+}
+func (mock *MockDroplets) Actions() droplets.ActionClient {
+	if mock.MockDropletActions != nil {
+		return mock.MockDropletActions
+	}
+	return mock.wrap.Droplets().Actions()
+}
+
+// Droplet Actions
+
+type MockDropletActions struct {
+	wrap                      cloud.Client
+	ShutdownFn                func(ctx context.Context, dropletID int) error
+	PowerOffFn                func(ctx context.Context, dropletID int) error
+	PowerOnFn                 func(ctx context.Context, dropletID int) error
+	PowerCycleFn              func(ctx context.Context, dropletID int) error
+	RebootFn                  func(ctx context.Context, dropletID int) error
+	RestoreFn                 func(ctx context.Context, dropletID, imageID int) error
+	ResizeFn                  func(ctx context.Context, dropletID int, sizeSlug string, resizeDisk bool) error
+	RenameFn                  func(ctx context.Context, dropletID int, name string) error
+	SnapshotFn                func(ctx context.Context, dropletID int, name string) error
+	EnableBackupsFn           func(ctx context.Context, dropletID int) error
+	DisableBackupsFn          func(ctx context.Context, dropletID int) error
+	PasswordResetFn           func(ctx context.Context, dropletID int) error
+	RebuildByImageIDFn        func(ctx context.Context, dropletID int, imageID int) error
+	RebuildByImageSlugFn      func(ctx context.Context, dropletID int, imageSlug string) error
+	ChangeKernelFn            func(ctx context.Context, dropletID int, kernelID int) error
+	EnableIPv6Fn              func(ctx context.Context, dropletID int) error
+	EnablePrivateNetworkingFn func(ctx context.Context, dropletID int) error
+	UpgradeFn                 func(ctx context.Context, dropletID int) error
+}
+
+func (mock *MockDropletActions) Shutdown(ctx context.Context, dropletID int) error {
+	if mock.ShutdownFn != nil {
+		return mock.ShutdownFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().Shutdown(ctx, dropletID)
+}
+func (mock *MockDropletActions) PowerOff(ctx context.Context, dropletID int) error {
+	if mock.PowerOffFn != nil {
+		return mock.PowerOffFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().PowerOff(ctx, dropletID)
+}
+func (mock *MockDropletActions) PowerOn(ctx context.Context, dropletID int) error {
+	if mock.PowerOnFn != nil {
+		return mock.PowerOnFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().PowerOn(ctx, dropletID)
+}
+func (mock *MockDropletActions) PowerCycle(ctx context.Context, dropletID int) error {
+	if mock.PowerCycleFn != nil {
+		return mock.PowerCycleFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().PowerCycle(ctx, dropletID)
+}
+func (mock *MockDropletActions) Reboot(ctx context.Context, dropletID int) error {
+	if mock.RebootFn != nil {
+		return mock.RebootFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().Reboot(ctx, dropletID)
+}
+func (mock *MockDropletActions) Restore(ctx context.Context, dropletID, imageID int) error {
+	if mock.RestoreFn != nil {
+		return mock.RestoreFn(ctx, dropletID, imageID)
+	}
+	return mock.wrap.Droplets().Actions().Restore(ctx, dropletID, imageID)
+}
+func (mock *MockDropletActions) Resize(ctx context.Context, dropletID int, sizeSlug string, resizeDisk bool) error {
+	if mock.ResizeFn != nil {
+		return mock.ResizeFn(ctx, dropletID, sizeSlug, resizeDisk)
+	}
+	return mock.wrap.Droplets().Actions().Resize(ctx, dropletID, sizeSlug, resizeDisk)
+}
+func (mock *MockDropletActions) Rename(ctx context.Context, dropletID int, name string) error {
+	if mock.RenameFn != nil {
+		return mock.RenameFn(ctx, dropletID, name)
+	}
+	return mock.wrap.Droplets().Actions().Rename(ctx, dropletID, name)
+}
+func (mock *MockDropletActions) Snapshot(ctx context.Context, dropletID int, name string) error {
+	if mock.SnapshotFn != nil {
+		return mock.SnapshotFn(ctx, dropletID, name)
+	}
+	return mock.wrap.Droplets().Actions().Snapshot(ctx, dropletID, name)
+}
+func (mock *MockDropletActions) EnableBackups(ctx context.Context, dropletID int) error {
+	if mock.EnableBackupsFn != nil {
+		return mock.EnableBackupsFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().EnableBackups(ctx, dropletID)
+}
+func (mock *MockDropletActions) DisableBackups(ctx context.Context, dropletID int) error {
+	if mock.DisableBackupsFn != nil {
+		return mock.DisableBackupsFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().DisableBackups(ctx, dropletID)
+}
+func (mock *MockDropletActions) PasswordReset(ctx context.Context, dropletID int) error {
+	if mock.PasswordResetFn != nil {
+		return mock.PasswordResetFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().PasswordReset(ctx, dropletID)
+}
+func (mock *MockDropletActions) RebuildByImageID(ctx context.Context, dropletID int, imageID int) error {
+	if mock.RebuildByImageIDFn != nil {
+		return mock.RebuildByImageIDFn(ctx, dropletID, imageID)
+	}
+	return mock.wrap.Droplets().Actions().RebuildByImageID(ctx, dropletID, imageID)
+}
+func (mock *MockDropletActions) RebuildByImageSlug(ctx context.Context, dropletID int, imageSlug string) error {
+	if mock.RebuildByImageSlugFn != nil {
+		return mock.RebuildByImageSlugFn(ctx, dropletID, imageSlug)
+	}
+	return mock.wrap.Droplets().Actions().RebuildByImageSlug(ctx, dropletID, imageSlug)
+}
+func (mock *MockDropletActions) ChangeKernel(ctx context.Context, dropletID int, kernelID int) error {
+	if mock.ChangeKernelFn != nil {
+		return mock.ChangeKernelFn(ctx, dropletID, kernelID)
+	}
+	return mock.wrap.Droplets().Actions().ChangeKernel(ctx, dropletID, kernelID)
+}
+func (mock *MockDropletActions) EnableIPv6(ctx context.Context, dropletID int) error {
+	if mock.EnableIPv6Fn != nil {
+		return mock.EnableIPv6Fn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().EnableIPv6(ctx, dropletID)
+}
+func (mock *MockDropletActions) EnablePrivateNetworking(ctx context.Context, dropletID int) error {
+	if mock.EnablePrivateNetworkingFn != nil {
+		return mock.EnablePrivateNetworkingFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().EnablePrivateNetworking(ctx, dropletID)
+}
+func (mock *MockDropletActions) Upgrade(ctx context.Context, dropletID int) error {
+	if mock.UpgradeFn != nil {
+		return mock.UpgradeFn(ctx, dropletID)
+	}
+	return mock.wrap.Droplets().Actions().Upgrade(ctx, dropletID)
 }
 
 // Accounts

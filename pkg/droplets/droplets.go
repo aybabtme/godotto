@@ -26,14 +26,20 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		svc: client.Droplets(),
 	}
 
+	actions, err := applyAction(ctx, vm, client)
+	if err != nil {
+		return q, err
+	}
+
 	for _, applier := range []struct {
 		Name   string
-		Method func(otto.FunctionCall) otto.Value
+		Method interface{}
 	}{
 		{"list", svc.list},
 		{"get", svc.get},
 		{"create", svc.create},
 		{"delete", svc.delete},
+		{"actions", actions},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -41,6 +47,58 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}
 
 	return root.Value(), nil
+}
+
+func argDropletID(vm *otto.Otto, v otto.Value) int {
+	var did int
+	switch {
+	case v.IsNumber():
+		did = ottoutil.Int(vm, v)
+	case v.IsObject():
+		did = ottoutil.Int(vm, ottoutil.GetObject(vm, v.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
+	}
+	return did
+}
+
+func argImageID(vm *otto.Otto, v otto.Value) int {
+	var imgID int
+	switch {
+	case v.IsNumber():
+		imgID = ottoutil.Int(vm, v)
+	case v.IsObject():
+		imgID = ottoutil.Int(vm, ottoutil.GetObject(vm, v.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be an Image or a ImageID")
+	}
+	return imgID
+}
+
+func argKernelID(vm *otto.Otto, v otto.Value) int {
+	var kernID int
+	switch {
+	case v.IsNumber():
+		kernID = ottoutil.Int(vm, v)
+	case v.IsObject():
+		kernID = ottoutil.Int(vm, ottoutil.GetObject(vm, v.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be a Kernel or a KernelID")
+	}
+	return kernID
+}
+
+func argSizeSlug(vm *otto.Otto, v otto.Value) string {
+	var slug string
+	switch {
+	case v.IsString():
+		slug = ottoutil.String(vm, v)
+	case v.IsObject():
+		slug = ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "slug"))
+	default:
+		ottoutil.Throw(vm, "argument must be an Size or a SizeSlug")
+	}
+	return slug
 }
 
 type dropletSvc struct {
@@ -111,15 +169,7 @@ func (svc *dropletSvc) get(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
 
-	var did int
-	switch {
-	case arg.IsNumber():
-		did = ottoutil.Int(vm, arg)
-	case arg.IsObject():
-		did = ottoutil.Int(vm, ottoutil.GetObject(vm, arg.Object(), "id"))
-	default:
-		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
-	}
+	did := argDropletID(vm, arg)
 
 	d, err := svc.svc.Get(svc.ctx, did)
 	if err != nil {
