@@ -257,8 +257,9 @@ func (svc *driveSvc) driveToVM(vm *otto.Otto, v drives.Drive) (otto.Value, error
 		{"id", g.ID},
 		{"name", g.Name},
 		{"region", g.Region.Slug},
-		{"size", g.SizeGigaBytes},
+		{"size", int64(g.SizeGigaBytes)},
 		{"description", g.Description},
+		{"droplet_ids", intsToInt64s(g.DropletIDs)},
 	} {
 		v, err := vm.ToValue(field.v)
 		if err != nil {
@@ -282,7 +283,7 @@ func (svc *driveSvc) driveSnapshotToVM(vm *otto.Otto, v drives.Snapshot) (otto.V
 		{"drive_id", g.DriveID},
 		{"name", g.Name},
 		{"region", g.Region.Slug},
-		{"size", g.SizeGibiBytes},
+		{"size", int64(g.SizeGibiBytes)},
 		{"description", g.Description},
 	} {
 		v, err := vm.ToValue(field.v)
@@ -294,4 +295,11 @@ func (svc *driveSvc) driveSnapshotToVM(vm *otto.Otto, v drives.Snapshot) (otto.V
 		}
 	}
 	return d.Value(), nil
+}
+
+func intsToInt64s(in []int) (out []int64) {
+	for _, i := range in {
+		out = append(out, int64(i))
+	}
+	return
 }

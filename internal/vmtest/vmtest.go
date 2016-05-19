@@ -1,6 +1,8 @@
 package vmtest
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
 
 	"golang.org/x/net/context"
@@ -29,6 +31,33 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 		t.Fatal(err)
 	}
 	vm.Set("cloud", pkg)
+	vm.Set("equals", func(call otto.FunctionCall) otto.Value {
+		vm := call.Otto
+		got, err := call.Argument(0).Export()
+		if err != nil {
+			ottoutil.Throw(vm, err.Error())
+		}
+		want, err := call.Argument(1).Export()
+		if err != nil {
+			ottoutil.Throw(vm, err.Error())
+		}
+		if reflect.DeepEqual(want, got) {
+			return otto.UndefinedValue()
+		}
+		msg := "assertion failed!\n" +
+			fmt.Sprintf(" got %T=%#v\n", got, got) +
+			fmt.Sprintf("want %T=%#v", want, want)
+
+		if len(call.ArgumentList) > 2 {
+			format, err := call.ArgumentList[2].ToString()
+			if err != nil {
+				ottoutil.Throw(vm, err.Error())
+			}
+			msg += "\n" + call.CallerLocation() + " | " + format
+		}
+		ottoutil.Throw(vm, msg)
+		return otto.UndefinedValue()
+	})
 	vm.Set("assert", func(call otto.FunctionCall) otto.Value {
 		vm := call.Otto
 		v, err := call.Argument(0).ToBoolean()
@@ -61,7 +90,10 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 	}
 
 	if _, err := vm.Run(script); err != nil {
-		oe := err.(*otto.Error)
-		t.Fatalf(oe.String())
+		if oe, ok := err.(*otto.Error); ok {
+			t.Fatal(oe.String())
+		} else {
+			t.Fatal(err)
+		}
 	}
 }

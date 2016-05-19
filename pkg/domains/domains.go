@@ -37,9 +37,9 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 
 		{"records", svc.records},
 		{"record", svc.record},
-		{"delete_record", svc.deleteRecord},
-		{"edit_record", svc.editRecord},
 		{"create_record", svc.createRecord},
+		{"edit_record", svc.editRecord},
+		{"delete_record", svc.deleteRecord},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -71,7 +71,18 @@ func (svc *domainSvc) argDomainName(all otto.FunctionCall, i int) string {
 }
 
 func (svc *domainSvc) argRecordID(all otto.FunctionCall, i int) int {
-	return ottoutil.Int(all.Otto, all.Argument(i))
+	vm := all.Otto
+	arg := all.Argument(i)
+	var id int
+	switch {
+	case arg.IsNumber():
+		id = ottoutil.Int(vm, arg)
+	case arg.IsObject():
+		id = ottoutil.Int(vm, ottoutil.GetObject(vm, arg.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be a Domain or a DomainName")
+	}
+	return id
 }
 
 func (svc *domainSvc) argDomainRecord(all otto.FunctionCall, i int) *godo.DomainRecordEditRequest {
@@ -203,7 +214,7 @@ func (svc *domainSvc) editRecord(all otto.FunctionCall) otto.Value {
 		vm     = all.Otto
 		name   = svc.argDomainName(all, 0)
 		id     = svc.argRecordID(all, 1)
-		record = svc.argDomainRecord(all, 2)
+		record = svc.argDomainRecord(all, 1)
 	)
 	d, err := svc.svc.UpdateRecord(svc.ctx, name, id, domains.UseGodoRecord(record))
 	if err != nil {
@@ -265,7 +276,7 @@ func (svc *domainSvc) domainToVM(vm *otto.Otto, v domains.Domain) (otto.Value, e
 		v    interface{}
 	}{
 		{"name", g.Name},
-		{"ttl", g.TTL},
+		{"ttl", int64(g.TTL)},
 		{"zone_file", g.ZoneFile},
 	} {
 		v, err := vm.ToValue(field.v)
@@ -286,13 +297,13 @@ func (svc *domainSvc) domainRecordToVM(vm *otto.Otto, v domains.Record) (otto.Va
 		name string
 		v    interface{}
 	}{
-		{"id", g.ID},
+		{"id", int64(g.ID)},
 		{"type", g.Type},
 		{"name", g.Name},
 		{"data", g.Data},
-		{"priority", g.Priority},
-		{"port", g.Port},
-		{"weight", g.Weight},
+		{"priority", int64(g.Priority)},
+		{"port", int64(g.Port)},
+		{"weight", int64(g.Weight)},
 	} {
 		v, err := vm.ToValue(field.v)
 		if err != nil {

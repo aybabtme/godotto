@@ -64,8 +64,8 @@ func (svc *accountSvc) accountToVM(vm *otto.Otto, g godo.Account) (otto.Value, e
 		name string
 		v    interface{}
 	}{
-		{"droplet_limit", g.DropletLimit},
-		{"floating_ip_limit", g.FloatingIPLimit},
+		{"droplet_limit", int64(g.DropletLimit)},
+		{"floating_ip_limit", int64(g.FloatingIPLimit)},
 		{"email", g.Email},
 		{"uuid", g.UUID},
 		{"email_verified", g.EmailVerified},

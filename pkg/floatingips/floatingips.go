@@ -131,14 +131,20 @@ func (svc *floatingIPSvc) list(all otto.FunctionCall) otto.Value {
 func (svc *floatingIPSvc) floatingIPToVM(vm *otto.Otto, v floatingips.FloatingIP) (otto.Value, error) {
 	d, _ := vm.Object(`({})`)
 	g := v.Struct()
-	for _, field := range []struct {
+	fields := []struct {
 		name string
 		v    interface{}
 	}{
-		{"region", g.Region},
-		{"droplet", g.Droplet},
+		{"region_slug", g.Region.Slug},
 		{"ip", g.IP},
-	} {
+	}
+	if g.Droplet != nil {
+		fields = append(fields, struct {
+			name string
+			v    interface{}
+		}{"droplet_id", int64(g.Droplet.ID)})
+	}
+	for _, field := range fields {
 		v, err := vm.ToValue(field.v)
 		if err != nil {
 			return q, fmt.Errorf("can't prepare field %q: %v", field.name, err)

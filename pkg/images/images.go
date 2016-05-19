@@ -126,7 +126,7 @@ func (svc *imageSvc) update(all otto.FunctionCall) otto.Value {
 	var (
 		// they read the same arg, just different fields
 		id  = svc.argImageID(all, 0)
-		req = svc.argImageUpdate(all, 0)
+		req = svc.argImageUpdate(all, 1)
 	)
 	img, err := svc.svc.Update(svc.ctx, id, images.UseGodoImage(req))
 	if err != nil {
@@ -199,15 +199,14 @@ func (svc *imageSvc) imageToVM(vm *otto.Otto, v images.Image) (otto.Value, error
 		name string
 		v    interface{}
 	}{
-		{"id", g.ID},
+		{"id", int64(g.ID)},
 		{"name", g.Name},
 		{"type", g.Type},
 		{"distribution", g.Distribution},
 		{"slug", g.Slug},
 		{"public", g.Public},
 		{"regions", g.Regions},
-		{"min_disk_size", g.MinDiskSize},
-		{"created_at", g.Created},
+		{"min_disk_size", int64(g.MinDiskSize)},
 	} {
 		v, err := vm.ToValue(field.v)
 		if err != nil {

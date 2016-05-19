@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -72,10 +73,14 @@ func (svc *actionSvc) get(all otto.FunctionCall) otto.Value {
 func (svc *actionSvc) list(all otto.FunctionCall) otto.Value {
 
 	vm := all.Otto
-	actions := []actions.Action{}
+	var actions = make([]otto.Value, 0)
 	actionc, errc := svc.svc.List(svc.ctx)
 	for action := range actionc {
-		actions = append(actions, action)
+		v, err := svc.actionToVM(vm, action)
+		if err != nil {
+			ottoutil.Throw(vm, err.Error())
+		}
+		actions = append(actions, v)
 	}
 	if err := <-errc; err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -95,14 +100,13 @@ func (svc *actionSvc) actionToVM(vm *otto.Otto, a actions.Action) (otto.Value, e
 		name string
 		v    interface{}
 	}{
-		{"id", g.ID},
+		{"id", int64(g.ID)},
 		{"status", g.Status},
 		{"type", g.Type},
-		{"started_at", g.StartedAt},
-		{"completed_at", g.CompletedAt},
-		{"resource_id", g.ResourceID},
+		{"started_at", g.StartedAt.Format(time.RFC3339Nano)},
+		{"completed_at", g.CompletedAt.Format(time.RFC3339Nano)},
+		{"resource_id", int64(g.ResourceID)},
 		{"resource_type", g.ResourceType},
-		{"region", g.Region},
 		{"region_slug", g.RegionSlug},
 	} {
 		v, err := vm.ToValue(field.v)

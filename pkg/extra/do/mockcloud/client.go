@@ -233,25 +233,25 @@ type MockImages struct {
 
 func (mock *MockImages) GetByID(ctx context.Context, id int) (images.Image, error) {
 	if mock.GetByIDFn != nil {
-		return mock.GetByID(ctx, id)
+		return mock.GetByIDFn(ctx, id)
 	}
 	return mock.wrap.Images().GetByID(ctx, id)
 }
 func (mock *MockImages) GetBySlug(ctx context.Context, slug string) (images.Image, error) {
 	if mock.GetBySlugFn != nil {
-		return mock.GetBySlug(ctx, slug)
+		return mock.GetBySlugFn(ctx, slug)
 	}
 	return mock.wrap.Images().GetBySlug(ctx, slug)
 }
 func (mock *MockImages) Update(ctx context.Context, id int, opts ...images.UpdateOpt) (images.Image, error) {
 	if mock.UpdateFn != nil {
-		return mock.Update(ctx, id, opts...)
+		return mock.UpdateFn(ctx, id, opts...)
 	}
 	return mock.wrap.Images().Update(ctx, id, opts...)
 }
 func (mock *MockImages) Delete(ctx context.Context, id int) error {
 	if mock.DeleteFn != nil {
-		return mock.Delete(ctx, id)
+		return mock.DeleteFn(ctx, id)
 	}
 	return mock.wrap.Images().Delete(ctx, id)
 }
@@ -263,19 +263,19 @@ func (mock *MockImages) List(ctx context.Context) (<-chan images.Image, <-chan e
 }
 func (mock *MockImages) ListApplication(ctx context.Context) (<-chan images.Image, <-chan error) {
 	if mock.ListApplicationFn != nil {
-		return mock.ListApplication(ctx)
+		return mock.ListApplicationFn(ctx)
 	}
 	return mock.wrap.Images().ListApplication(ctx)
 }
 func (mock *MockImages) ListDistribution(ctx context.Context) (<-chan images.Image, <-chan error) {
 	if mock.ListDistributionFn != nil {
-		return mock.ListDistribution(ctx)
+		return mock.ListDistributionFn(ctx)
 	}
 	return mock.wrap.Images().ListDistribution(ctx)
 }
 func (mock *MockImages) ListUser(ctx context.Context) (<-chan images.Image, <-chan error) {
 	if mock.ListUserFn != nil {
-		return mock.ListUser(ctx)
+		return mock.ListUserFn(ctx)
 	}
 	return mock.wrap.Images().ListUser(ctx)
 }
@@ -390,19 +390,19 @@ type MockFloatingIPs struct {
 
 func (mock *MockFloatingIPs) Create(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
 	if mock.CreateFn != nil {
-		return mock.Create(ctx, region, opts...)
+		return mock.CreateFn(ctx, region, opts...)
 	}
 	return mock.wrap.FloatingIPs().Create(ctx, region, opts...)
 }
 func (mock *MockFloatingIPs) Get(ctx context.Context, ip string) (floatingips.FloatingIP, error) {
 	if mock.GetFn != nil {
-		return mock.Get(ctx, ip)
+		return mock.GetFn(ctx, ip)
 	}
 	return mock.wrap.FloatingIPs().Get(ctx, ip)
 }
 func (mock *MockFloatingIPs) Delete(ctx context.Context, ip string) error {
 	if mock.DeleteFn != nil {
-		return mock.Delete(ctx, ip)
+		return mock.DeleteFn(ctx, ip)
 	}
 	return mock.wrap.FloatingIPs().Delete(ctx, ip)
 }

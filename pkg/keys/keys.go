@@ -22,6 +22,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}
 
 	svc := keySvc{
+		ctx: ctx,
 		svc: client.Keys(),
 	}
 

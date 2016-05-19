@@ -31,17 +31,9 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		Method func(otto.FunctionCall) otto.Value
 	}{
 		{"list", svc.list},
-		{"listByTag", svc.listByTag},
 		{"get", svc.get},
 		{"create", svc.create},
-		{"createMultiple", svc.createMultiple},
 		{"delete", svc.delete},
-		{"deleteByTag", svc.deleteByTag},
-		{"kernels", svc.kernels},
-		{"snapshots", svc.snapshots},
-		{"backups", svc.backups},
-		{"actions", svc.actions},
-		{"neighbors", svc.neighbors},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -74,7 +66,6 @@ func (svc *dropletSvc) create(all otto.FunctionCall) otto.Value {
 		size   = ottoutil.String(vm, ottoutil.GetObject(vm, arg, "size"))
 		image  string
 	)
-
 
 	switch {
 	case imgArg.IsString():
@@ -196,24 +187,20 @@ func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Valu
 		name string
 		v    interface{}
 	}{
-		{"id", g.ID},
+		{"id", int64(g.ID)},
 		{"name", g.Name},
-		{"memory", g.Memory},
-		{"vcpus", g.Vcpus},
-		{"disk", g.Disk},
-		{"region", g.Region.Slug},
-		{"image_id", g.Image.ID},
+		{"memory", int64(g.Memory)},
+		{"vcpus", int64(g.Vcpus)},
+		{"disk", int64(g.Disk)},
+		{"region_slug", g.Region.Slug},
+		{"image_id", int64(g.Image.ID)},
 		{"image_slug", g.Image.Slug},
-		{"size", g.Size},
-		{"size_slug", g.SizeSlug},
-		{"backup_ids", g.BackupIDs},
-		{"snapshot_ids", g.SnapshotIDs},
+		{"size_slug", g.Size.Slug},
+		{"backup_ids", intsToInt64s(g.BackupIDs)},
+		{"snapshot_ids", intsToInt64s(g.SnapshotIDs)},
 		{"locked", g.Locked},
 		{"status", g.Status},
-		{"networks", g.Networks},
 		{"public_ipv4", publicIPv4},
-		{"created_at", g.Created},
-		{"kernel", g.Kernel},
 	} {
 		v, err := vm.ToValue(field.v)
 		if err != nil {
@@ -226,37 +213,9 @@ func (svc *dropletSvc) dropletToVM(vm *otto.Otto, v droplets.Droplet) (otto.Valu
 	return d.Value(), nil
 }
 
-// not implemented
-
-func (svc *dropletSvc) listByTag(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) createMultiple(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) deleteByTag(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) kernels(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) snapshots(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) backups(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) actions(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
-}
-func (svc *dropletSvc) neighbors(all otto.FunctionCall) otto.Value {
-	ottoutil.Throw(all.Otto, "not implemented!")
-	return q
+func intsToInt64s(in []int) (out []int64) {
+	for _, i := range in {
+		out = append(out, int64(i))
+	}
+	return out
 }
