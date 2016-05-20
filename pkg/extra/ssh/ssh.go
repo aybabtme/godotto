@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 
+	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/robertkrimen/otto"
 )
@@ -60,11 +61,15 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 	case v.IsString():
 		host, _ = v.ToString()
 	case v.IsObject():
-		host = ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "public_ipv4"))
+		droplet := godojs.ArgDroplet(vm, v)
+		host, err := droplet.PublicIPv4()
+		if err != nil {
+			ottoutil.Throw(vm, err.Error())
+		}
 		if host == "" {
 			ottoutil.Throw(vm, "provided Droplet has no public IPv4")
 		}
-		slug := ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "image_slug"))
+		slug := droplet.Image.Slug
 		switch {
 		case strings.Contains(slug, "coreos"):
 			user = "core"
@@ -89,11 +94,10 @@ func (svc *sshSvc) optionalConnectArgs(vm *otto.Otto, opts *connectOpts, v otto.
 	if v.Object() == nil {
 		ottoutil.Throw(vm, "optional arguments must be an Object")
 	}
-	obj := v.Object()
-	if user := ottoutil.String(vm, ottoutil.GetObject(vm, obj, "user")); user != "" {
+	if user := ottoutil.String(vm, ottoutil.GetObject(vm, v, "user", false)); user != "" {
 		opts.Cfg.User = user
 	}
-	if port := ottoutil.String(vm, ottoutil.GetObject(vm, obj, "port")); port != "" {
+	if port := ottoutil.String(vm, ottoutil.GetObject(vm, v, "port", false)); port != "" {
 		opts.Port = port
 	}
 	return opts
@@ -140,7 +144,7 @@ func (svc *sshSvc) session(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	return ottoutil.ToPkg(vm, map[string]func(otto.FunctionCall) otto.Value{
+	return ottoutil.ToPkg(vm, map[string]interface{}{
 		"exec": func(all otto.FunctionCall) otto.Value {
 			vm := all.Otto
 			cmd := ottoutil.String(vm, all.Argument(0))

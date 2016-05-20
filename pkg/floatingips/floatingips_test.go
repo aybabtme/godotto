@@ -51,8 +51,8 @@ var pkg = cloud.floating_ips;
 
 [
 	{ name: "list",          fn: function() { pkg.list() } },
-	{ name: "get",           fn: function() { pkg.get(42) } },
-	{ name: "create",        fn: function() { pkg.create({"image":{}}) } },
+	{ name: "get",           fn: function() { pkg.get("127.0.0.1") } },
+	{ name: "create",        fn: function() { pkg.create({}) } },
 	{ name: "delete",        fn: function() { pkg.delete({}) } },
 
 ].forEach(function(kv) {
@@ -72,13 +72,20 @@ type floatingip struct {
 
 func (k *floatingip) Struct() *godo.FloatingIP { return k.FloatingIP }
 
+var (
+	region  = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
+	size    = &godo.Size{Slug: "lol", Memory: 1, Vcpus: 2, Disk: 2, PriceMonthly: 1.0, PriceHourly: 0.1, Regions: []string{"lol"}, Available: true, Transfer: 1.0}
+	image   = &godo.Image{ID: 42, Name: "derp", Type: "herp", Distribution: "coreos", Slug: "coreos-stable", Public: true, Regions: []string{"atlantis"}}
+	droplet = &godo.Droplet{ID: 42, Name: "my_name", Memory: 20, Vcpus: 21, Disk: 22, Region: region, Image: image, Size: size, SnapshotIDs: []int{42}, BackupIDs: []int{43}, Networks: &godo.Networks{V4: []godo.NetworkV4{{IPAddress: "127.0.0.1", Type: "public"}}}, Status: "loling"}
+)
+
 func TestList(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockFloatingIPs.ListFn = func(_ context.Context) (<-chan floatingips.FloatingIP, <-chan error) {
 		lc := make(chan floatingips.FloatingIP, 1)
 		lc <- &floatingip{&godo.FloatingIP{
-			Region:  &godo.Region{Slug: "nyc3"},
-			Droplet: &godo.Droplet{ID: 42},
+			Region:  region,
+			Droplet: droplet,
 			IP:      "127.0.0.1",
 		}}
 		close(lc)
@@ -93,12 +100,18 @@ var list = pkg.list();
 assert(list != null, "should have received a list");
 assert(list.length > 0, "should have received some elements")
 
-var d = list[0];
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+var droplet = { id: 42, name: "my_name", memory: 20, vcpus: 21, disk: 22, region: region, image: image, size: size, snapshot_ids: [42], backup_ids: [43], locked: false, public_ipv4: "127.0.0.1", status: "loling" };
+
 var want = {
-	region_slug: "nyc3",
-	droplet_id:  42,
-	ip:          "127.0.0.1"
+	region:  region,
+	droplet: droplet,
+	ip:      "127.0.0.1"
 };
+
+var d = list[0];
 equals(d, want, "should have proper object");
 `)
 }
@@ -107,8 +120,8 @@ func TestGet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockFloatingIPs.GetFn = func(_ context.Context, ip string) (floatingips.FloatingIP, error) {
 		return &floatingip{&godo.FloatingIP{
-			Region:  &godo.Region{Slug: "nyc3"},
-			Droplet: &godo.Droplet{ID: 42},
+			Region:  region,
+			Droplet: droplet,
 			IP:      ip,
 		}}, nil
 	}
@@ -116,22 +129,28 @@ func TestGet(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.floating_ips;
 
-var d = pkg.get("127.0.0.1")
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+var droplet = { id: 42, name: "my_name", memory: 20, vcpus: 21, disk: 22, region: region, image: image, size: size, snapshot_ids: [42], backup_ids: [43], locked: false, public_ipv4: "127.0.0.1", status: "loling" };
+
 var want = {
-	region_slug: "nyc3",
-	droplet_id:  42,
-	ip:          "127.0.0.1"
+	region:  region,
+	droplet: droplet,
+	ip:      "127.0.0.1"
 };
+
+var d = pkg.get("127.0.0.1")
 equals(d, want, "should have proper object");
 `)
 }
 
 func TestCreate(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockFloatingIPs.CreateFn = func(_ context.Context, region string, _ ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
+	cloud.MockFloatingIPs.CreateFn = func(_ context.Context, _ string, _ ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
 		return &floatingip{&godo.FloatingIP{
-			Region:  &godo.Region{Slug: region},
-			Droplet: &godo.Droplet{ID: 42},
+			Region:  region,
+			Droplet: droplet,
 			IP:      "127.0.0.1",
 		}}, nil
 	}
@@ -139,14 +158,18 @@ func TestCreate(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.floating_ips;
 
-
-var d = pkg.create({region:"nyc3", droplet_id: 42});
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+var droplet = { id: 42, name: "my_name", memory: 20, vcpus: 21, disk: 22, region: region, image: image, size: size, snapshot_ids: [42], backup_ids: [43], locked: false, public_ipv4: "127.0.0.1", status: "loling" };
 
 var want = {
-	region_slug: "nyc3",
-	droplet_id:  42,
-	ip:          "127.0.0.1"
+	region:  region,
+	droplet: droplet,
+	ip:      "127.0.0.1"
 };
+
+var d = pkg.create({region:"nyc3", droplet_id: 42});
 equals(d, want, "should have proper object");
 `)
 }

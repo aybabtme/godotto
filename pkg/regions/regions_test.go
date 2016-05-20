@@ -17,7 +17,7 @@ type region struct {
 
 func (k *region) Struct() *godo.Region { return k.Region }
 
-func TestApply(t *testing.T) {
+func TestRegionApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	vmtest.Run(t, cloud, `
 var pkg = cloud.regions;
@@ -27,7 +27,7 @@ assert(pkg.list != null, "list function should be defined");
     `)
 }
 
-func TestList(t *testing.T) {
+func TestRegionList(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
 	want := &godo.Region{Slug: "lol", Name: "lol", Available: true, Features: []string{"lol"}}

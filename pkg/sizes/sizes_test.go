@@ -49,15 +49,18 @@ var list = pkg.list();
 assert(list != null, "should have received a list");
 assert(list.length > 0, "should have received some elements")
 
-var size = list[0];
-assert(size.slug, "should have a slug")
-assert(size.memory, "should have a memory")
-assert(size.vcpus, "should have a vcpus")
-assert(size.disk, "should have a disk")
-assert(size.price_monthly, "should have a price_monthly")
-assert(size.price_hourly, "should have a price_hourly")
-assert(size.regions, "should have a regions")
-assert(size.available, "should have a available")
-assert(size.transfer, "should have a transfer")
-    `)
+var d = list[0];
+var want = {
+	slug: "lol",
+	memory: 1,
+	vcpus: 2,
+	disk: 2,
+	price_monthly: 1.0,
+	price_hourly: 0.1,
+	regions: ["lol"],
+	available: true,
+	transfer: 1.0,
+}
+equals(d, want, "should have proper object");
+`)
 }

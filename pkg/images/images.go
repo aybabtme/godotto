@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
@@ -51,46 +52,12 @@ type imageSvc struct {
 	svc images.Client
 }
 
-func (svc *imageSvc) argImageID(all otto.FunctionCall, i int) int {
-	vm := all.Otto
-	arg := all.Argument(i)
-
-	var id int
-	switch {
-	case arg.IsNumber():
-		id = ottoutil.Int(vm, arg)
-	case arg.IsObject():
-		id = ottoutil.Int(vm, ottoutil.GetObject(vm, arg.Object(), "id"))
-	default:
-		ottoutil.Throw(vm, "argument must be a Image or a ImageID")
-	}
-	return id
-}
-
-func (svc *imageSvc) argImageSlug(all otto.FunctionCall, i int) string {
-	vm := all.Otto
-	arg := all.Argument(i)
-
-	var slug string
-	switch {
-	case arg.IsString():
-		slug = ottoutil.String(vm, arg)
-	case arg.IsObject():
-		slug = ottoutil.String(vm, ottoutil.GetObject(vm, arg.Object(), "slug"))
-	default:
-		ottoutil.Throw(vm, "argument must be a Image or a ImageSlug")
-	}
-	return slug
-}
-
 func (svc *imageSvc) argImageUpdate(all otto.FunctionCall, i int) *godo.ImageUpdateRequest {
 	vm := all.Otto
-	arg := all.Argument(i).Object()
-	if arg == nil {
-		ottoutil.Throw(vm, "argument must be a ImageRecord")
-	}
+	arg := all.Argument(i)
+
 	return &godo.ImageUpdateRequest{
-		Name: ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
+		Name: godojs.ArgImageName(vm, arg),
 	}
 }
 
@@ -104,20 +71,16 @@ func (svc *imageSvc) get(all otto.FunctionCall) otto.Value {
 	arg := all.Argument(0)
 	switch {
 	case arg.IsNumber():
-		id := svc.argImageID(all, 0)
+		id := godojs.ArgImageID(vm, all.Argument(0))
 		img, err = svc.svc.GetByID(svc.ctx, id)
 	case arg.IsString():
-		slug := svc.argImageSlug(all, 0)
+		slug := godojs.ArgImageSlug(vm, all.Argument(0))
 		img, err = svc.svc.GetBySlug(svc.ctx, slug)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.imageToVM(vm, img)
-	if err != nil {
-		ottoutil.Throw(vm, err.Error())
-	}
-	return v
+	return godojs.ImageToVM(vm, img.Struct())
 }
 
 func (svc *imageSvc) update(all otto.FunctionCall) otto.Value {
@@ -125,23 +88,19 @@ func (svc *imageSvc) update(all otto.FunctionCall) otto.Value {
 
 	var (
 		// they read the same arg, just different fields
-		id  = svc.argImageID(all, 0)
+		id  = godojs.ArgImageID(vm, all.Argument(0))
 		req = svc.argImageUpdate(all, 1)
 	)
 	img, err := svc.svc.Update(svc.ctx, id, images.UseGodoImage(req))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.imageToVM(vm, img)
-	if err != nil {
-		ottoutil.Throw(vm, err.Error())
-	}
-	return v
+	return godojs.ImageToVM(vm, img.Struct())
 }
 
 func (svc *imageSvc) delete(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	id := svc.argImageID(all, 0)
+	id := godojs.ArgImageID(vm, all.Argument(0))
 
 	err := svc.svc.Delete(svc.ctx, id)
 	if err != nil {
@@ -174,11 +133,7 @@ func (svc *imageSvc) listCommon(all otto.FunctionCall, listfn listfunc) otto.Val
 	var images = make([]otto.Value, 0)
 	imagec, errc := listfn(svc.ctx)
 	for d := range imagec {
-		v, err := svc.imageToVM(vm, d)
-		if err != nil {
-			ottoutil.Throw(vm, err.Error())
-		}
-		images = append(images, v)
+		images = append(images, godojs.ImageToVM(vm, d.Struct()))
 	}
 	if err := <-errc; err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -189,32 +144,4 @@ func (svc *imageSvc) listCommon(all otto.FunctionCall, listfn listfunc) otto.Val
 		ottoutil.Throw(vm, err.Error())
 	}
 	return v
-
-}
-
-func (svc *imageSvc) imageToVM(vm *otto.Otto, v images.Image) (otto.Value, error) {
-	d, _ := vm.Object(`({})`)
-	g := v.Struct()
-	for _, field := range []struct {
-		name string
-		v    interface{}
-	}{
-		{"id", int64(g.ID)},
-		{"name", g.Name},
-		{"type", g.Type},
-		{"distribution", g.Distribution},
-		{"slug", g.Slug},
-		{"public", g.Public},
-		{"regions", g.Regions},
-		{"min_disk_size", int64(g.MinDiskSize)},
-	} {
-		v, err := vm.ToValue(field.v)
-		if err != nil {
-			return q, fmt.Errorf("can't prepare field %q: %v", field.name, err)
-		}
-		if err := d.Set(field.name, v); err != nil {
-			return q, fmt.Errorf("can't set field %q: %v", field.name, err)
-		}
-	}
-	return d.Value(), nil
 }

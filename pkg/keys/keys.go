@@ -5,11 +5,11 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 
-	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )
 
@@ -49,74 +49,15 @@ type keySvc struct {
 	svc keys.Client
 }
 
-func (svc *keySvc) argKeyID(all otto.FunctionCall, i int) int {
-	vm := all.Otto
-	arg := all.Argument(i)
-
-	var id int
-	switch {
-	case arg.IsNumber():
-		id = ottoutil.Int(vm, arg)
-	case arg.IsObject():
-		id = ottoutil.Int(vm, ottoutil.GetObject(vm, arg.Object(), "id"))
-	default:
-		ottoutil.Throw(vm, "argument must be a Key or a KeyID")
-	}
-	return id
-}
-
-func (svc *keySvc) argKeyFingerprint(all otto.FunctionCall, i int) string {
-	vm := all.Otto
-	arg := all.Argument(i)
-
-	var fp string
-	switch {
-	case arg.IsString():
-		fp = ottoutil.String(vm, arg)
-	case arg.IsObject():
-		fp = ottoutil.String(vm, ottoutil.GetObject(vm, arg.Object(), "fp"))
-	default:
-		ottoutil.Throw(vm, "argument must be a Key or a KeyFingerprint")
-	}
-	return fp
-}
-
-func (svc *keySvc) argKeyCreate(all otto.FunctionCall, i int) *godo.KeyCreateRequest {
-	vm := all.Otto
-	arg := all.Argument(i).Object()
-	if arg == nil {
-		ottoutil.Throw(vm, "argument must be a Key")
-	}
-	return &godo.KeyCreateRequest{
-		Name:      ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
-		PublicKey: ottoutil.String(vm, ottoutil.GetObject(vm, arg, "public_key")),
-	}
-}
-
-func (svc *keySvc) argKeyUpdate(all otto.FunctionCall, i int) *godo.KeyUpdateRequest {
-	vm := all.Otto
-	arg := all.Argument(i).Object()
-	if arg == nil {
-		ottoutil.Throw(vm, "argument must be a Key")
-	}
-	return &godo.KeyUpdateRequest{
-		Name: ottoutil.String(vm, ottoutil.GetObject(vm, arg, "name")),
-	}
-}
-
 func (svc *keySvc) create(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
-	req := svc.argKeyCreate(all, 0)
+	req := godojs.ArgKeyCreate(vm, all.Argument(0))
 	key, err := svc.svc.Create(svc.ctx, req.Name, req.PublicKey)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.keyToVM(vm, key)
-	if err != nil {
-		ottoutil.Throw(vm, err.Error())
-	}
-	return v
+	return godojs.KeyToVM(vm, key.Struct())
 }
 
 func (svc *keySvc) get(all otto.FunctionCall) otto.Value {
@@ -129,20 +70,16 @@ func (svc *keySvc) get(all otto.FunctionCall) otto.Value {
 	arg := all.Argument(0)
 	switch {
 	case arg.IsNumber():
-		id := svc.argKeyID(all, 0)
+		id := godojs.ArgKeyID(vm, all.Argument(0))
 		key, err = svc.svc.GetByID(svc.ctx, id)
 	case arg.IsString():
-		fp := svc.argKeyFingerprint(all, 0)
+		fp := godojs.ArgKeyFingerprint(vm, all.Argument(0))
 		key, err = svc.svc.GetByFingerprint(svc.ctx, fp)
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.keyToVM(vm, key)
-	if err != nil {
-		ottoutil.Throw(vm, err.Error())
-	}
-	return v
+	return godojs.KeyToVM(vm, key.Struct())
 }
 
 func (svc *keySvc) update(all otto.FunctionCall) otto.Value {
@@ -154,22 +91,18 @@ func (svc *keySvc) update(all otto.FunctionCall) otto.Value {
 	)
 	switch {
 	case arg.IsNumber():
-		id := svc.argKeyID(all, 0)
-		req := svc.argKeyUpdate(all, 1)
+		id := godojs.ArgKeyID(vm, all.Argument(0))
+		req := godojs.ArgKeyUpdate(vm, all.Argument(1))
 		key, err = svc.svc.UpdateByID(svc.ctx, id, keys.UseGodoKey(req))
 	case arg.IsString():
-		fp := svc.argKeyFingerprint(all, 0)
-		req := svc.argKeyUpdate(all, 1)
+		fp := godojs.ArgKeyFingerprint(vm, all.Argument(0))
+		req := godojs.ArgKeyUpdate(vm, all.Argument(1))
 		key, err = svc.svc.UpdateByFingerprint(svc.ctx, fp, keys.UseGodoKey(req))
 	}
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	v, err := svc.keyToVM(vm, key)
-	if err != nil {
-		ottoutil.Throw(vm, err.Error())
-	}
-	return v
+	return godojs.KeyToVM(vm, key.Struct())
 }
 
 func (svc *keySvc) delete(all otto.FunctionCall) otto.Value {
@@ -178,10 +111,10 @@ func (svc *keySvc) delete(all otto.FunctionCall) otto.Value {
 	var err error
 	switch {
 	case arg.IsNumber():
-		id := svc.argKeyID(all, 0)
+		id := godojs.ArgKeyID(vm, all.Argument(0))
 		err = svc.svc.DeleteByID(svc.ctx, id)
 	case arg.IsString():
-		fp := svc.argKeyFingerprint(all, 0)
+		fp := godojs.ArgKeyFingerprint(vm, all.Argument(0))
 		err = svc.svc.DeleteByFingerprint(svc.ctx, fp)
 	}
 	if err != nil {
@@ -196,11 +129,7 @@ func (svc *keySvc) list(all otto.FunctionCall) otto.Value {
 	var keys = make([]otto.Value, 0)
 	keyc, errc := svc.svc.List(svc.ctx)
 	for d := range keyc {
-		v, err := svc.keyToVM(vm, d)
-		if err != nil {
-			ottoutil.Throw(vm, err.Error())
-		}
-		keys = append(keys, v)
+		keys = append(keys, godojs.KeyToVM(vm, d.Struct()))
 	}
 	if err := <-errc; err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -211,27 +140,4 @@ func (svc *keySvc) list(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 	return v
-}
-
-func (svc *keySvc) keyToVM(vm *otto.Otto, v keys.Key) (otto.Value, error) {
-	d, _ := vm.Object(`({})`)
-	g := v.Struct()
-	for _, field := range []struct {
-		name string
-		v    interface{}
-	}{
-		{"id", g.ID},
-		{"name", g.Name},
-		{"fingerprint", g.Fingerprint},
-		{"public_key", g.PublicKey},
-	} {
-		v, err := vm.ToValue(field.v)
-		if err != nil {
-			return q, fmt.Errorf("can't prepare field %q: %v", field.name, err)
-		}
-		if err := d.Set(field.name, v); err != nil {
-			return q, fmt.Errorf("can't set field %q: %v", field.name, err)
-		}
-	}
-	return d.Value(), nil
 }

@@ -7,15 +7,15 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-func ToPkg(vm *otto.Otto, methods map[string]func(otto.FunctionCall) otto.Value) otto.Value {
+func ToPkg(vm *otto.Otto, fields map[string]interface{}) otto.Value {
 	v, err := vm.Run(`({})`)
 	if err != nil {
 		Throw(vm, err.Error())
 	}
 	obj := v.Object()
-	for name, method := range methods {
-		if err := obj.Set(name, method); err != nil {
-			Throw(vm, "can't set method %q, %v", name, err)
+	for name, field := range fields {
+		if err := obj.Set(name, field); err != nil {
+			Throw(vm, "can't set field %q, %v", name, err)
 		}
 	}
 	return v
@@ -45,10 +45,16 @@ func ToAnonFunc(vm *otto.Otto, fn func(otto.FunctionCall) otto.Value) otto.Value
 	return outfn
 }
 
-func GetObject(vm *otto.Otto, obj *otto.Object, name string) otto.Value {
-	v, err := obj.Get(name)
+func GetObject(vm *otto.Otto, obj otto.Value, name string, mandatory bool) otto.Value {
+	if !obj.IsObject() {
+		Throw(vm, "can't get field %q out of a %q", name, obj.Class())
+	}
+	v, err := obj.Object().Get(name)
 	if err != nil {
 		Throw(vm, err.Error())
+	}
+	if mandatory && !v.IsDefined() {
+		Throw(vm, "missing mandatory %q field", name)
 	}
 	return v
 }
@@ -68,6 +74,23 @@ func LoadObject(vm *otto.Otto, obj otto.Value, extractors map[string]func(otto.V
 		}
 	}
 	return nil
+}
+
+func LoadArray(vm *otto.Otto, obj otto.Value, eachElem func(v otto.Value)) {
+	if !obj.IsDefined() {
+		return
+	}
+	v := obj.Object()
+	if v == nil {
+		Throw(vm, "need to be an array, not a %q", obj.Class())
+	}
+	for _, key := range v.Keys() {
+		v, err := v.Get(key)
+		if err != nil {
+			Throw(vm, "can't get key %q: %v", key, err)
+		}
+		eachElem(v)
+	}
 }
 
 func String(vm *otto.Otto, v otto.Value) string {
@@ -106,6 +129,9 @@ func Bool(vm *otto.Otto, v otto.Value) bool {
 }
 
 func StringSlice(vm *otto.Otto, v otto.Value) []string {
+	if !v.IsDefined() {
+		return nil
+	}
 	ov := v.Object()
 	if ov == nil {
 		Throw(vm, "needs to be an array, was a %q", v.Class())
@@ -126,6 +152,9 @@ func StringSlice(vm *otto.Otto, v otto.Value) []string {
 }
 
 func Float64Slice(vm *otto.Otto, v otto.Value) []float64 {
+	if !v.IsDefined() {
+		return nil
+	}
 	ov := v.Object()
 	if ov == nil {
 		Throw(vm, "needs to be an array, was a %q", v.Class())
@@ -145,7 +174,33 @@ func Float64Slice(vm *otto.Otto, v otto.Value) []float64 {
 	return out
 }
 
+func IntSlice(vm *otto.Otto, v otto.Value) []int {
+	if !v.IsDefined() {
+		return nil
+	}
+	ov := v.Object()
+	if ov == nil {
+		Throw(vm, "needs to be an array, was a %q", v.Class())
+	}
+	var out []int
+	for _, key := range ov.Keys() {
+		elv, err := ov.Get(key)
+		if err != nil {
+			Throw(vm, "can't get element %q: %v", key, err)
+		}
+		f, err := elv.ToInteger()
+		if err != nil {
+			Throw(vm, "element %q is not a int: %v", key, err)
+		}
+		out = append(out, int(f))
+	}
+	return out
+}
+
 func StringMap(vm *otto.Otto, v otto.Value) map[string]string {
+	if !v.IsDefined() {
+		return nil
+	}
 	ov := v.Object()
 	if ov == nil {
 		Throw(vm, "needs to be an object, was a %q", v.Class())

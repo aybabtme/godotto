@@ -12,7 +12,7 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-func TestApply(t *testing.T) {
+func TestDropletApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	vmtest.Run(t, cloud, `
 var pkg = cloud.droplets;
@@ -25,7 +25,7 @@ assert(pkg.delete != null, "delete function should be defined");
     `)
 }
 
-func TestThrows(t *testing.T) {
+func TestDropletThrows(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
 	cloud.MockDroplets.ListFn = func(_ context.Context) (<-chan droplets.Droplet, <-chan error) {
@@ -66,34 +66,24 @@ var pkg = cloud.droplets;
 })`)
 }
 
+var (
+	region = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
+	size   = &godo.Size{Slug: "lol", Memory: 1, Vcpus: 2, Disk: 2, PriceMonthly: 1.0, PriceHourly: 0.1, Regions: []string{"lol"}, Available: true, Transfer: 1.0}
+	image  = &godo.Image{ID: 42, Name: "derp", Type: "herp", Distribution: "coreos", Slug: "coreos-stable", Public: true, Regions: []string{"atlantis"}}
+	d      = &godo.Droplet{ID: 42, Name: "my_name", Memory: 20, Vcpus: 21, Disk: 22, Region: region, Image: image, Size: size, SnapshotIDs: []int{42}, BackupIDs: []int{43}, Networks: &godo.Networks{V4: []godo.NetworkV4{{IPAddress: "127.0.0.1", Type: "public"}}}, Status: "loling"}
+)
+
 type droplet struct {
 	*godo.Droplet
 }
 
 func (k *droplet) Struct() *godo.Droplet { return k.Droplet }
 
-func TestList(t *testing.T) {
+func TestDropletList(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockDroplets.ListFn = func(_ context.Context) (<-chan droplets.Droplet, <-chan error) {
 		lc := make(chan droplets.Droplet, 1)
-		lc <- &droplet{&godo.Droplet{
-			ID:          42,
-			Name:        "my_name",
-			Memory:      20,
-			Vcpus:       21,
-			Disk:        22,
-			Region:      &godo.Region{Slug: "nyc1"},
-			Image:       &godo.Image{ID: 43, Slug: "coreos-stable"},
-			Size:        &godo.Size{Slug: "4gb"},
-			SnapshotIDs: []int{42},
-			BackupIDs:   []int{43},
-			Networks: &godo.Networks{
-				V4: []godo.NetworkV4{
-					{IPAddress: "127.0.0.1", Type: "public"},
-				},
-			},
-			Status: "loling",
-		}}
+		lc <- &droplet{d}
 		close(lc)
 		ec := make(chan error)
 		close(ec)
@@ -106,95 +96,69 @@ var list = pkg.list();
 assert(list != null, "should have received a list");
 assert(list.length > 0, "should have received some elements")
 
-var d = list[0];
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+
 var want = {
-	id:           42,
-	name:         "my_name",
-	memory:       20,
-	vcpus:        21,
-	disk:         22,
-	region_slug:  "nyc1",
-	image_id:     43,
-	image_slug:   "coreos-stable",
-	size_slug:    "4gb"
-	snapshot_ids: [42],
-	backup_ids:   [43],
-	locked:       false,
-	public_ipv4:  "127.0.0.1",
-	status:       "loling"
+  backup_ids: [ 43 ],
+  disk: 22,
+  id: 42,
+  image: image,
+  locked: false,
+  memory: 20,
+  name: "my_name",
+  public_ipv4: "127.0.0.1",
+  region: region,
+  size: size,
+  snapshot_ids: [ 42 ],
+  status: "loling",
+  vcpus: 21
 };
+
+var d = list[0];
 equals(d, want, "should have proper object");
 `)
 }
 
-func TestGet(t *testing.T) {
+func TestDropletGet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockDroplets.GetFn = func(_ context.Context, id int) (droplets.Droplet, error) {
-		return &droplet{&godo.Droplet{
-			ID:          42,
-			Name:        "my_name",
-			Memory:      20,
-			Vcpus:       21,
-			Disk:        22,
-			Region:      &godo.Region{Slug: "nyc1"},
-			Image:       &godo.Image{ID: 43, Slug: "coreos-stable"},
-			Size:        &godo.Size{Slug: "4gb"},
-			SnapshotIDs: []int{42},
-			BackupIDs:   []int{43},
-			Networks: &godo.Networks{
-				V4: []godo.NetworkV4{
-					{IPAddress: "127.0.0.1", Type: "public"},
-				},
-			},
-			Status: "loling",
-		}}, nil
+		return &droplet{d}, nil
 	}
 
 	vmtest.Run(t, cloud, `
 var pkg = cloud.droplets;
 
-var d = pkg.get(42)
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+
 var want = {
-	id:           42,
-	name:         "my_name",
-	memory:       20,
-	vcpus:        21,
-	disk:         22,
-	region_slug:  "nyc1",
-	image_id:     43,
-	image_slug:   "coreos-stable",
-	size_slug:    "4gb"
-	snapshot_ids: [42],
-	backup_ids:   [43],
-	locked:       false,
-	public_ipv4:  "127.0.0.1",
-	status:       "loling"
+  backup_ids: [ 43 ],
+  disk: 22,
+  id: 42,
+  image: image,
+  locked: false,
+  memory: 20,
+  name: "my_name",
+  public_ipv4: "127.0.0.1",
+  region: region,
+  size: size,
+  snapshot_ids: [ 42 ],
+  status: "loling",
+  vcpus: 21
 };
+
+var d = pkg.get(42)
 equals(d, want, "should have proper object");
 `)
 }
 
-func TestCreate(t *testing.T) {
+func TestDropletCreate(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockDroplets.CreateFn = func(_ context.Context, name, region, size, image string, _ ...droplets.CreateOpt) (droplets.Droplet, error) {
-		return &droplet{&godo.Droplet{
-			ID:          42,
-			Name:        "my_name",
-			Memory:      20,
-			Vcpus:       21,
-			Disk:        22,
-			Region:      &godo.Region{Slug: "nyc1"},
-			Image:       &godo.Image{ID: 43, Slug: "coreos-stable"},
-			Size:        &godo.Size{Slug: "4gb"},
-			SnapshotIDs: []int{42},
-			BackupIDs:   []int{43},
-			Networks: &godo.Networks{
-				V4: []godo.NetworkV4{
-					{IPAddress: "127.0.0.1", Type: "public"},
-				},
-			},
-			Status: "loling",
-		}}, nil
+		return &droplet{d}, nil
 	}
 
 	vmtest.Run(t, cloud, `
@@ -216,27 +180,31 @@ var d = pkg.create({
 	user_data:    "lolll"
 });
 
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+
 var want = {
-	id:           42,
-	name:         "my_name",
-	memory:       20,
-	vcpus:        21,
-	disk:         22,
-	region_slug:  "nyc1",
-	image_id:     43,
-	image_slug:   "coreos-stable",
-	size_slug:    "4gb"
-	snapshot_ids: [42],
-	backup_ids:   [43],
-	locked:       false,
-	public_ipv4:  "127.0.0.1",
-	status:       "loling"
+  backup_ids: [ 43 ],
+  disk: 22,
+  id: 42,
+  image: image,
+  locked: false,
+  memory: 20,
+  name: "my_name",
+  public_ipv4: "127.0.0.1",
+  region: region,
+  size: size,
+  snapshot_ids: [ 42 ],
+  status: "loling",
+  vcpus: 21
 };
+
 equals(d, want, "should have proper object");
 `)
 }
 
-func TestDelete(t *testing.T) {
+func TestDropletDelete(t *testing.T) {
 	wantID := 42
 	cloud := mockcloud.Client(nil)
 	cloud.MockDroplets.DeleteFn = func(_ context.Context, gotID int) error {

@@ -10,7 +10,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 )
 
-func TestActionsApply(t *testing.T) {
+func TestDropletActionsApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	vmtest.Run(t, cloud, `
 var pkg = cloud.droplets.actions;
@@ -35,7 +35,7 @@ assert(pkg.upgrade != null, "upgrade function should be defined");
     `)
 }
 
-func TestActionsThrows(t *testing.T) {
+func TestDropletActionsThrows(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
 	mock := cloud.MockDroplets.MockDropletActions
@@ -127,7 +127,7 @@ var pkg = cloud.droplets.actions;
 })`)
 }
 
-func TestActionShutdown(t *testing.T) {
+func TestDropletActionShutdown(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 	mock.ShutdownFn = func(ctx context.Context, dropletID int) error {
@@ -143,7 +143,7 @@ pkg.shutdown(42);
 
 }
 
-func TestActionPowerOff(t *testing.T) {
+func TestDropletActionPowerOff(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -159,7 +159,7 @@ pkg.power_off(42);
 	`)
 }
 
-func TestActionPowerOn(t *testing.T) {
+func TestDropletActionPowerOn(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -175,7 +175,7 @@ pkg.power_on(42);
 	`)
 }
 
-func TestActionPowerCycle(t *testing.T) {
+func TestDropletActionPowerCycle(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -191,7 +191,7 @@ pkg.power_cycle(42);
 	`)
 }
 
-func TestActionReboot(t *testing.T) {
+func TestDropletActionReboot(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -207,7 +207,7 @@ pkg.reboot(42);
 	`)
 }
 
-func TestActionRestore(t *testing.T) {
+func TestDropletActionRestore(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -226,7 +226,7 @@ pkg.restore(42, 43);
 	`)
 }
 
-func TestActionResize(t *testing.T) {
+func TestDropletActionResize(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -248,7 +248,7 @@ pkg.resize(42, "4gb", true);
 	`)
 }
 
-func TestActionRename(t *testing.T) {
+func TestDropletActionRename(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -267,7 +267,7 @@ pkg.rename(42, "hello");
 	`)
 }
 
-func TestActionSnapshot(t *testing.T) {
+func TestDropletActionSnapshot(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -286,7 +286,7 @@ pkg.snapshot(42, "hello");
 	`)
 }
 
-func TestActionEnableBackups(t *testing.T) {
+func TestDropletActionEnableBackups(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -302,7 +302,7 @@ pkg.enable_backups(42);
 	`)
 }
 
-func TestActionDisableBackups(t *testing.T) {
+func TestDropletActionDisableBackups(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -318,7 +318,7 @@ pkg.disable_backups(42);
 	`)
 }
 
-func TestActionPasswordReset(t *testing.T) {
+func TestDropletActionPasswordReset(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -334,7 +334,7 @@ pkg.password_reset(42);
 	`)
 }
 
-func TestActionChangeKernel(t *testing.T) {
+func TestDropletActionChangeKernel(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -353,7 +353,7 @@ pkg.change_kernel(42, 43);
 	`)
 }
 
-func TestActionEnableIPv6(t *testing.T) {
+func TestDropletActionEnableIPv6(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -369,7 +369,7 @@ pkg.enable_ipv6(42);
 	`)
 }
 
-func TestActionEnablePrivateNetworking(t *testing.T) {
+func TestDropletActionEnablePrivateNetworking(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 
@@ -385,7 +385,7 @@ pkg.enable_private_networking(42);
 	`)
 }
 
-func TestActionUpgrade(t *testing.T) {
+func TestDropletActionUpgrade(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	mock := cloud.MockDroplets.MockDropletActions
 

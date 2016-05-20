@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
@@ -49,11 +50,7 @@ func (svc *regionSvc) list(all otto.FunctionCall) otto.Value {
 	var regions = make([]otto.Value, 0)
 	regionc, errc := svc.svc.List(svc.ctx)
 	for d := range regionc {
-		v, err := svc.regionToVM(vm, d)
-		if err != nil {
-			ottoutil.Throw(vm, err.Error())
-		}
-		regions = append(regions, v)
+		regions = append(regions, godojs.RegionToVM(vm, d.Struct()))
 	}
 	if err := <-errc; err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -64,28 +61,4 @@ func (svc *regionSvc) list(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 	return v
-}
-
-func (svc *regionSvc) regionToVM(vm *otto.Otto, v regions.Region) (otto.Value, error) {
-	d, _ := vm.Object(`({})`)
-	g := v.Struct()
-	for _, field := range []struct {
-		name string
-		v    interface{}
-	}{
-		{"slug", g.Slug},
-		{"name", g.Name},
-		{"sizes", g.Sizes},
-		{"available", g.Available},
-		{"features", g.Features},
-	} {
-		v, err := vm.ToValue(field.v)
-		if err != nil {
-			return q, fmt.Errorf("can't prepare field %q: %v", field.name, err)
-		}
-		if err := d.Set(field.name, v); err != nil {
-			return q, fmt.Errorf("can't set field %q: %v", field.name, err)
-		}
-	}
-	return d.Value(), nil
 }

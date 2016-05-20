@@ -114,13 +114,17 @@ type snapshot struct {
 
 func (k *snapshot) Struct() *godo.Snapshot { return k.Snapshot }
 
-func TestList(t *testing.T) {
+var (
+	region = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
+)
+
+func TestDriveList(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockDrives.ListDrivesFn = func(_ context.Context) (<-chan drives.Drive, <-chan error) {
 		lc := make(chan drives.Drive, 1)
 		lc <- &drive{&godo.Drive{
 			ID:            "lol",
-			Region:        &godo.Region{Slug: "nyc1"},
+			Region:        region,
 			Name:          "my_name",
 			SizeGigaBytes: 100,
 			Description:   "lolz",
@@ -138,10 +142,12 @@ var list = pkg.list_drives();
 assert(list != null, "should have received a list");
 assert(list.length > 0, "should have received some elements")
 
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
 var d = list[0];
 var want = {
 	id:          "lol",
-	region:      "nyc1",
+	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",
@@ -151,12 +157,12 @@ equals(d, want, "should have proper object");
 `)
 }
 
-func TestGet(t *testing.T) {
+func TestDriveGet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockDrives.GetDriveFn = func(_ context.Context, _ string) (drives.Drive, error) {
 		return &drive{&godo.Drive{
 			ID:            "lol",
-			Region:        &godo.Region{Slug: "nyc1"},
+			Region:        region,
 			Name:          "my_name",
 			SizeGigaBytes: 100,
 			Description:   "lolz",
@@ -167,10 +173,12 @@ func TestGet(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.drives;
 
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
 var d = pkg.get_drive("my_name")
 var want = {
 	id:          "lol",
-	region:      "nyc1",
+	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",
@@ -180,12 +188,12 @@ equals(d, want, "should have proper object");
 `)
 }
 
-func TestCreate(t *testing.T) {
+func TestDriveCreate(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockDrives.CreateDriveFn = func(_ context.Context, _, _ string, _ int64, _ ...drives.CreateOpt) (drives.Drive, error) {
 		return &drive{&godo.Drive{
 			ID:            "lol",
-			Region:        &godo.Region{Slug: "nyc1"},
+			Region:        region,
 			Name:          "my_name",
 			SizeGigaBytes: 100,
 			Description:   "lolz",
@@ -195,6 +203,8 @@ func TestCreate(t *testing.T) {
 
 	vmtest.Run(t, cloud, `
 var pkg = cloud.drives;
+
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
 
 var d = pkg.create_drive({
 	name: "my_name",
@@ -202,7 +212,7 @@ var d = pkg.create_drive({
 });
 var want = {
 	id:          "lol",
-	region:      "nyc1",
+	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",
@@ -212,7 +222,7 @@ equals(d, want, "should have proper object");
 `)
 }
 
-func TestDelete(t *testing.T) {
+func TestDriveDelete(t *testing.T) {
 	wantName := "my name"
 	cloud := mockcloud.Client(nil)
 	cloud.MockDrives.DeleteDriveFn = func(_ context.Context, gotName string) error {
@@ -240,7 +250,7 @@ func TestListSnapshot(t *testing.T) {
 		lc <- &snapshot{&godo.Snapshot{
 			ID:            "lol",
 			DriveID:       "lolzzzz",
-			Region:        &godo.Region{Slug: "nyc1"},
+			Region:        region,
 			Name:          "my_name",
 			SizeGibiBytes: 100,
 			Description:   "lolz",
@@ -258,11 +268,13 @@ var snapshots = pkg.list_snapshots("my name");
 assert(snapshots != null, "should have received a snapshots");
 assert(snapshots.length > 0, "should have received some elements")
 
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
 var d = snapshots[0];
 var want = {
 	id:          "lol",
 	drive_id:    "lolzzzz",
-	region:      "nyc1",
+	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",
@@ -281,7 +293,7 @@ func TestGetSnapshot(t *testing.T) {
 		return &snapshot{&godo.Snapshot{
 			ID:            "lol",
 			DriveID:       "lolzzzz",
-			Region:        &godo.Region{Slug: "nyc1"},
+			Region:        region,
 			Name:          wantName,
 			SizeGibiBytes: 100,
 			Description:   "lolz",
@@ -291,11 +303,13 @@ func TestGetSnapshot(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.drives;
 
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
 var d = pkg.get_snapshot("my_name", 42)
 var want = {
 	id:          "lol",
 	drive_id:    "lolzzzz",
-	region:      "nyc1",
+	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",
@@ -310,7 +324,7 @@ func TestCreateSnapshot(t *testing.T) {
 		return &snapshot{&godo.Snapshot{
 			ID:            "lol",
 			DriveID:       "lolzzzz",
-			Region:        &godo.Region{Slug: "nyc1"},
+			Region:        region,
 			Name:          "my_name",
 			SizeGibiBytes: 100,
 			Description:   "lolz",
@@ -320,10 +334,12 @@ func TestCreateSnapshot(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.drives;
 
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
 var want = {
 	id:          "lol",
 	drive_id:    "lolzzzz",
-	region:      "nyc1",
+	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",

@@ -41,12 +41,11 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-		if reflect.DeepEqual(want, got) {
+		ok, cause := deepEqual(want, got)
+		if ok {
 			return otto.UndefinedValue()
 		}
-		msg := "assertion failed!\n" +
-			fmt.Sprintf(" got %T=%#v\n", got, got) +
-			fmt.Sprintf("want %T=%#v", want, want)
+		msg := "assertion failed!\n" + cause
 
 		if len(call.ArgumentList) > 2 {
 			format, err := call.ArgumentList[2].ToString()
@@ -95,5 +94,30 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 		} else {
 			t.Fatal(err)
 		}
+	}
+}
+
+func deepEqual(a, b interface{}) (bool, string) {
+	switch av := a.(type) {
+	case map[string]interface{}:
+		bv, ok := b.(map[string]interface{})
+		if !ok {
+			return false, fmt.Sprintf("type %T != %T", a, b)
+		}
+
+		for k, v := range av {
+			if ok, cause := deepEqual(v, bv[k]); !ok {
+				return false, fmt.Sprintf("lhs-key %q: %s", k, cause)
+			}
+		}
+		for k, v := range bv {
+			if ok, cause := deepEqual(v, av[k]); !ok {
+				return false, fmt.Sprintf("rhs-key %q: %s", k, cause)
+			}
+		}
+		return true, ""
+
+	default:
+		return reflect.DeepEqual(a, b), fmt.Sprintf("lhs=%#v\nrhs=%#v", a, b)
 	}
 }

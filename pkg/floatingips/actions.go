@@ -3,6 +3,7 @@ package floatingips
 import (
 	"fmt"
 
+	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
@@ -42,8 +43,8 @@ type actionSvc struct {
 
 func (svc *actionSvc) assign(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	ip := argFloatingIP(vm, all.Argument(0))
-	dropletID := argDropletID(vm, all.Argument(1))
+	ip := godojs.ArgFloatingIPActualIP(vm, all.Argument(0))
+	dropletID := godojs.ArgDropletID(vm, all.Argument(1))
 	err := svc.svc.Assign(svc.ctx, ip, dropletID)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -53,8 +54,8 @@ func (svc *actionSvc) assign(all otto.FunctionCall) otto.Value {
 
 func (svc *actionSvc) unassign(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	dropletID := argFloatingIP(vm, all.Argument(0))
-	err := svc.svc.Unassign(svc.ctx, dropletID)
+	ip := godojs.ArgFloatingIPActualIP(vm, all.Argument(0))
+	err := svc.svc.Unassign(svc.ctx, ip)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

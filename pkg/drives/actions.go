@@ -3,6 +3,7 @@ package drives
 import (
 	"fmt"
 
+	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
@@ -42,8 +43,8 @@ type actionSvc struct {
 
 func (svc *actionSvc) attach(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	ip := argDriveID(vm, all.Argument(0))
-	dropletID := argDropletID(vm, all.Argument(1))
+	ip := godojs.ArgDriveID(vm, all.Argument(0))
+	dropletID := godojs.ArgDropletID(vm, all.Argument(1))
 	err := svc.svc.Attach(svc.ctx, ip, dropletID)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
@@ -53,7 +54,7 @@ func (svc *actionSvc) attach(all otto.FunctionCall) otto.Value {
 
 func (svc *actionSvc) detach(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	dropletID := argDriveID(vm, all.Argument(0))
+	dropletID := godojs.ArgDriveID(vm, all.Argument(0))
 	err := svc.svc.Detach(svc.ctx, dropletID)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
