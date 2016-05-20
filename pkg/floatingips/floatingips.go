@@ -26,14 +26,20 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		svc: client.FloatingIPs(),
 	}
 
+	actions, err := applyAction(ctx, vm, client)
+	if err != nil {
+		return q, err
+	}
+
 	for _, applier := range []struct {
 		Name   string
-		Method func(otto.FunctionCall) otto.Value
+		Method interface{}
 	}{
 		{"list", svc.list},
 		{"create", svc.create},
 		{"get", svc.get},
 		{"delete", svc.delete},
+		{"actions", actions},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -41,6 +47,32 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}
 
 	return root.Value(), nil
+}
+
+func argFloatingIP(vm *otto.Otto, v otto.Value) string {
+	var ip string
+	switch {
+	case v.IsString():
+		ip = ottoutil.String(vm, v)
+	case v.IsObject():
+		ip = ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "ip"))
+	default:
+		ottoutil.Throw(vm, "argument must be a FloatingIP or an IP")
+	}
+	return ip
+}
+
+func argDropletID(vm *otto.Otto, v otto.Value) int {
+	var did int
+	switch {
+	case v.IsNumber():
+		did = ottoutil.Int(vm, v)
+	case v.IsObject():
+		did = ottoutil.Int(vm, ottoutil.GetObject(vm, v.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
+	}
+	return did
 }
 
 type floatingIPSvc struct {

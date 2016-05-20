@@ -52,7 +52,7 @@ func Client(client cloud.Client) *Mock {
 		MockKeys:        &MockKeys{wrap: client},
 		MockRegions:     &MockRegions{wrap: client},
 		MockSizes:       &MockSizes{wrap: client},
-		MockFloatingIPs: &MockFloatingIPs{wrap: client},
+		MockFloatingIPs: &MockFloatingIPs{wrap: client, MockFloatingIPActions: &MockFloatingIPActions{wrap: client}},
 		MockDrives:      &MockDrives{wrap: client},
 	}
 }
@@ -521,11 +521,12 @@ func (mock *MockSizes) List(ctx context.Context) (<-chan sizes.Size, <-chan erro
 // FloatingIPs
 
 type MockFloatingIPs struct {
-	wrap     cloud.Client
-	CreateFn func(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error)
-	GetFn    func(ctx context.Context, ip string) (floatingips.FloatingIP, error)
-	DeleteFn func(ctx context.Context, ip string) error
-	ListFn   func(ctx context.Context) (<-chan floatingips.FloatingIP, <-chan error)
+	wrap                  cloud.Client
+	MockFloatingIPActions *MockFloatingIPActions
+	CreateFn              func(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error)
+	GetFn                 func(ctx context.Context, ip string) (floatingips.FloatingIP, error)
+	DeleteFn              func(ctx context.Context, ip string) error
+	ListFn                func(ctx context.Context) (<-chan floatingips.FloatingIP, <-chan error)
 }
 
 func (mock *MockFloatingIPs) Create(ctx context.Context, region string, opts ...floatingips.CreateOpt) (floatingips.FloatingIP, error) {
@@ -551,6 +552,33 @@ func (mock *MockFloatingIPs) List(ctx context.Context) (<-chan floatingips.Float
 		return mock.ListFn(ctx)
 	}
 	return mock.wrap.FloatingIPs().List(ctx)
+}
+func (mock *MockFloatingIPs) Actions() floatingips.ActionClient {
+	if mock.MockFloatingIPActions != nil {
+		return mock.MockFloatingIPActions
+	}
+	return mock.wrap.FloatingIPs().Actions()
+}
+
+// FloatingIP Actions
+
+type MockFloatingIPActions struct {
+	wrap       cloud.Client
+	AssignFn   func(ctx context.Context, ip string, did int) error
+	UnassignFn func(ctx context.Context, ip string) error
+}
+
+func (mock *MockFloatingIPActions) Assign(ctx context.Context, ip string, did int) error {
+	if mock.AssignFn != nil {
+		return mock.AssignFn(ctx, ip, did)
+	}
+	return mock.wrap.FloatingIPs().Actions().Assign(ctx, ip, did)
+}
+func (mock *MockFloatingIPActions) Unassign(ctx context.Context, ip string) error {
+	if mock.UnassignFn != nil {
+		return mock.UnassignFn(ctx, ip)
+	}
+	return mock.wrap.FloatingIPs().Actions().Unassign(ctx, ip)
 }
 
 // Drives

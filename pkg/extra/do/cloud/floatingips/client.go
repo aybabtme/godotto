@@ -12,6 +12,7 @@ type Client interface {
 	Get(context.Context, string) (FloatingIP, error)
 	Delete(context.Context, string) error
 	List(context.Context) (<-chan FloatingIP, <-chan error)
+	Actions() ActionClient
 }
 
 // FloatingIP in the DigitalOcean cloud.
@@ -99,6 +100,10 @@ func (svc *client) List(ctx context.Context) (<-chan FloatingIP, <-chan error) {
 		}
 	}()
 	return outc, errc
+}
+
+func (svc *client) Actions() ActionClient {
+	return &actionClient{g: svc.g}
 }
 
 type floatingIP struct {
