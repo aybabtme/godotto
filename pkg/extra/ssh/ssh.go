@@ -61,7 +61,9 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 		host, _ = v.ToString()
 	case v.IsObject():
 		host = ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "public_ipv4"))
-
+		if host == "" {
+			ottoutil.Throw(vm, "provided Droplet has no public IPv4")
+		}
 		slug := ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "image_slug"))
 		switch {
 		case strings.Contains(slug, "coreos"):

@@ -17,6 +17,8 @@ type Client interface {
 	GetSnapshot(context.Context, string) (Snapshot, error)
 	DeleteSnapshot(context.Context, string) error
 	ListSnapshots(ctx context.Context, driveID string) (<-chan Snapshot, <-chan error)
+
+	Actions() ActionClient
 }
 
 // A Drive in the DigitalOcean cloud.
@@ -113,6 +115,10 @@ func (svc *client) ListDrives(ctx context.Context) (<-chan Drive, <-chan error) 
 		}
 	}()
 	return outc, errc
+}
+
+func (svc *client) Actions() ActionClient {
+	return &actionClient{g: svc.g}
 }
 
 type drive struct {

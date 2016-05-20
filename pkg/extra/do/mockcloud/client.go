@@ -53,7 +53,7 @@ func Client(client cloud.Client) *Mock {
 		MockRegions:     &MockRegions{wrap: client},
 		MockSizes:       &MockSizes{wrap: client},
 		MockFloatingIPs: &MockFloatingIPs{wrap: client, MockFloatingIPActions: &MockFloatingIPActions{wrap: client}},
-		MockDrives:      &MockDrives{wrap: client},
+		MockDrives:      &MockDrives{wrap: client, MockDriveActions: &MockDriveActions{wrap: client}},
 	}
 }
 
@@ -585,6 +585,7 @@ func (mock *MockFloatingIPActions) Unassign(ctx context.Context, ip string) erro
 
 type MockDrives struct {
 	wrap             cloud.Client
+	MockDriveActions *MockDriveActions
 	CreateDriveFn    func(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error)
 	GetDriveFn       func(context.Context, string) (drives.Drive, error)
 	DeleteDriveFn    func(context.Context, string) error
@@ -642,4 +643,33 @@ func (mock *MockDrives) ListSnapshots(ctx context.Context, driveID string) (<-ch
 		return mock.ListSnapshotsFn(ctx, driveID)
 	}
 	return mock.wrap.Drives().ListSnapshots(ctx, driveID)
+}
+
+func (mock *MockDrives) Actions() drives.ActionClient {
+	if mock.MockDriveActions != nil {
+		return mock.MockDriveActions
+	}
+	return mock.wrap.Drives().Actions()
+}
+
+// Drive Actions
+
+type MockDriveActions struct {
+	wrap     cloud.Client
+	AttachFn func(ctx context.Context, driveID string, dropletID int) error
+	DetachFn func(ctx context.Context, driveID string) error
+}
+
+func (mock *MockDriveActions) Attach(ctx context.Context, driveID string, dropletID int) error {
+	if mock.AttachFn != nil {
+		return mock.AttachFn(ctx, driveID, dropletID)
+	}
+	return mock.wrap.Drives().Actions().Attach(ctx, driveID, dropletID)
+}
+
+func (mock *MockDriveActions) Detach(ctx context.Context, driveID string) error {
+	if mock.DetachFn != nil {
+		return mock.DetachFn(ctx, driveID)
+	}
+	return mock.wrap.Drives().Actions().Detach(ctx, driveID)
 }

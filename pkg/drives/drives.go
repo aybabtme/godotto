@@ -25,9 +25,14 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		svc: client.Drives(),
 	}
 
+	actions, err := applyAction(ctx, vm, client)
+	if err != nil {
+		return q, err
+	}
+
 	for _, applier := range []struct {
 		Name   string
-		Method func(otto.FunctionCall) otto.Value
+		Method interface{}
 	}{
 		{"list_drives", svc.listDrive},
 		{"get_drive", svc.getDrive},
@@ -38,6 +43,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"get_snapshot", svc.getSnapshot},
 		{"delete_snapshot", svc.deleteSnapshot},
 		{"create_snapshot", svc.createSnapshot},
+
+		{"actions", actions},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -45,6 +52,32 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}
 
 	return root.Value(), nil
+}
+
+func argDropletID(vm *otto.Otto, v otto.Value) int {
+	var did int
+	switch {
+	case v.IsNumber():
+		did = ottoutil.Int(vm, v)
+	case v.IsObject():
+		did = ottoutil.Int(vm, ottoutil.GetObject(vm, v.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be a Droplet or a DropletID")
+	}
+	return did
+}
+
+func argDriveID(vm *otto.Otto, v otto.Value) string {
+	var driveID string
+	switch {
+	case v.IsString():
+		driveID = ottoutil.String(vm, v)
+	case v.IsObject():
+		driveID = ottoutil.String(vm, ottoutil.GetObject(vm, v.Object(), "id"))
+	default:
+		ottoutil.Throw(vm, "argument must be an Drive or a DriveID")
+	}
+	return driveID
 }
 
 type driveSvc struct {
