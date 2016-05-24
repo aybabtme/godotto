@@ -49,6 +49,7 @@ type sshSvc struct {
 type connectOpts struct {
 	Hostname string
 	Port     string
+	Timeout  time.Duration
 	Cfg      *ssh.ClientConfig
 }
 
@@ -60,9 +61,13 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 	switch {
 	case v.IsString():
 		host, _ = v.ToString()
+		if host == "" {
+			ottoutil.Throw(vm, "no hostname provided")
+		}
 	case v.IsObject():
 		droplet := godojs.ArgDroplet(vm, v)
-		host, err := droplet.PublicIPv4()
+		var err error
+		host, err = droplet.PublicIPv4()
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
@@ -79,7 +84,6 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 	default:
 		ottoutil.Throw(vm, "argument must be a string or a Droplet")
 	}
-
 	return &connectOpts{
 		Hostname: host,
 		Port:     "22",
@@ -100,10 +104,19 @@ func (svc *sshSvc) optionalConnectArgs(vm *otto.Otto, opts *connectOpts, v otto.
 	if port := ottoutil.String(vm, ottoutil.GetObject(vm, v, "port", false)); port != "" {
 		opts.Port = port
 	}
+	if timeout := ottoutil.Duration(vm, ottoutil.GetObject(vm, v, "timeout", false)); timeout != 0 {
+		opts.Timeout = timeout
+	}
 	return opts
 }
 
 func (svc *sshSvc) connect(ctx context.Context, opts *connectOpts) (*ssh.Client, error) {
+	if opts.Timeout != 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+		defer cancel()
+	}
+
 	addr := net.JoinHostPort(opts.Hostname, opts.Port)
 	var err error
 	for {
@@ -114,7 +127,6 @@ func (svc *sshSvc) connect(ctx context.Context, opts *connectOpts) (*ssh.Client,
 			}
 			return nil, fmt.Errorf("unexpected network error: %v", derr)
 		}
-
 		sconn, sc, rr, cerr := ssh.NewClientConn(conn, addr, opts.Cfg)
 		if cerr == nil {
 			return ssh.NewClient(sconn, sc, rr), nil
