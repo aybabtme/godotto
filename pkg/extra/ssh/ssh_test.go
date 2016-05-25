@@ -27,9 +27,7 @@ var host = %[1]q;
 var user = %[2]q;
 var port = %[3]q;
 
-var droplet = {"name":"derp", "id":456789, "public_ipv4": host};
-
-var session = ssh.session(droplet, {"user":user, "port": port});
+var session = ssh.session(host, {"user":user, "port": port});
 assert(session.exec != null, "session should have exec method");
 assert(session.close != null, "session should have close method");
 
@@ -45,7 +43,7 @@ try {
 `, host, user, port)
 
 	vmtest.Run(t, nil, src, func(vm *otto.Otto) error {
-		pkg, err := Apply(context.Background(), vm, auth)
+		pkg, _, err := Apply(context.Background(), vm, auth)
 		if err != nil {
 			return err
 		}

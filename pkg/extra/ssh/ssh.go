@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -17,15 +18,17 @@ import (
 
 var q = otto.Value{}
 
-func Apply(ctx context.Context, vm *otto.Otto, auth ssh.AuthMethod) (otto.Value, error) {
+func Apply(ctx context.Context, vm *otto.Otto, auth ssh.AuthMethod) (v otto.Value, cleanup func(), err error) {
+	var qdn = func() {}
 	root, err := vm.Object(`({})`)
 	if err != nil {
-		return q, err
+		return q, qdn, err
 	}
 
 	svc := sshSvc{
-		ctx:  ctx,
-		auth: auth,
+		ctx:    ctx,
+		auth:   auth,
+		opened: make(map[*ssh.Client]struct{}),
 	}
 
 	for _, applier := range []struct {
@@ -35,15 +38,26 @@ func Apply(ctx context.Context, vm *otto.Otto, auth ssh.AuthMethod) (otto.Value,
 		{"session", svc.session},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
-			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
+			return q, qdn, fmt.Errorf("preparing method %q, %v", applier.Name, err)
 		}
 	}
-	return root.Value(), nil
+	cleanup = func() {
+		svc.mu.Lock()
+		defer svc.mu.Unlock()
+		for client := range svc.opened {
+			_ = client.Close()
+		}
+	}
+
+	return root.Value(), cleanup, nil
 }
 
 type sshSvc struct {
 	ctx  context.Context
 	auth ssh.AuthMethod
+
+	mu     sync.Mutex
+	opened map[*ssh.Client]struct{}
 }
 
 type connectOpts struct {
@@ -104,8 +118,10 @@ func (svc *sshSvc) optionalConnectArgs(vm *otto.Otto, opts *connectOpts, v otto.
 	if port := ottoutil.String(vm, ottoutil.GetObject(vm, v, "port", false)); port != "" {
 		opts.Port = port
 	}
-	if timeout := ottoutil.Duration(vm, ottoutil.GetObject(vm, v, "timeout", false)); timeout != 0 {
-		opts.Timeout = timeout
+	if dur := ottoutil.GetObject(vm, v, "timeout", false); dur.IsDefined() {
+		if timeout := ottoutil.Duration(vm, dur); timeout != 0 {
+			opts.Timeout = timeout
+		}
 	}
 	return opts
 }
@@ -129,7 +145,11 @@ func (svc *sshSvc) connect(ctx context.Context, opts *connectOpts) (*ssh.Client,
 		}
 		sconn, sc, rr, cerr := ssh.NewClientConn(conn, addr, opts.Cfg)
 		if cerr == nil {
-			return ssh.NewClient(sconn, sc, rr), nil
+			client := ssh.NewClient(sconn, sc, rr)
+			svc.mu.Lock()
+			defer svc.mu.Unlock()
+			svc.opened[client] = struct{}{}
+			return client, nil
 		}
 		_ = conn.Close()
 		err = fmt.Errorf("can't ssh into address %q, %v", addr, cerr)
@@ -178,6 +198,9 @@ func (svc *sshSvc) session(all otto.FunctionCall) otto.Value {
 			if err := client.Close(); err != nil {
 				ottoutil.Throw(vm, err.Error())
 			}
+			svc.mu.Lock()
+			defer svc.mu.Unlock()
+			delete(svc.opened, client)
 			return q
 		},
 	})
