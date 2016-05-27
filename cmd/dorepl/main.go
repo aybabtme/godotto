@@ -84,9 +84,10 @@ func main() {
 
 	auth, done := sshAgent()
 	defer done()
-	if s, err := jsssh.Apply(ctx, vm, auth); err != nil {
+	if s, cleanup, err := jsssh.Apply(ctx, vm, auth); err != nil {
 		log.Fatal(err)
 	} else {
+		defer cleanup()
 		vm.Set("ssh", s)
 	}
 
