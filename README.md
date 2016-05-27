@@ -48,6 +48,7 @@ _.each(regions, function(r) {
 });
 ```
 
+
 ## installation
 
 ### linux
@@ -62,13 +63,13 @@ wget -qO- https://github.com/aybabtme/godotto/releases/download/0.1/dorepl_linux
 wget -qO- https://github.com/aybabtme/godotto/releases/download/0.1/dorepl_darwin.tar.gz | tar xvz
 ```
 
-## API docs
-
-Insert here.
 
 ## not implemented
 
 * `Droplet`: everything is missing except the CRUD
+* `Droplet Actions`
+* `Image Actions`
+* `Floating IP Actions`
 * `Tags`
 
 ## license
