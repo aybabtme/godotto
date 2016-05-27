@@ -48,12 +48,13 @@ _.each(regions, function(r) {
 });
 ```
 
+## API docs
+
+Insert here.
+
 ## not implemented
 
 * `Droplet`: everything is missing except the CRUD
-* `Droplet Actions`
-* `Image Actions`
-* `Floating IP Actions`
 * `Tags`
 
 ## license
