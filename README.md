@@ -48,6 +48,20 @@ _.each(regions, function(r) {
 });
 ```
 
+## installation
+
+### linux
+
+```bash
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.1/dorepl_linux.tar.gz | tar xvz
+```
+
+### darwin
+
+```bash
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.1/dorepl_darwin.tar.gz | tar xvz
+```
+
 ## API docs
 
 Insert here.
