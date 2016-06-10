@@ -49,11 +49,31 @@ func TestDropletThrows(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.droplets;
 
+var region = { name: "", slug: "", sizes: [], available: true, features: [] };
+var image = { id: 42, name: "", type: "", distribution: "", slug: "", public: true, regions: [], min_disk_size: 0, };
+var size = { slug: "", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: [], available: true, transfer: 1.0, };
+
+var d = {
+  backup_ids: [ 43 ],
+  disk: 22,
+  id: 42,
+  image: image,
+  locked: false,
+  memory: 20,
+  name: "my_name",
+  public_ipv4: "127.0.0.1",
+  networks: {"v4":[], "v6":[]},
+  region: region,
+  size: size,
+  snapshot_ids: [ 42 ],
+  status: "loling",
+  vcpus: 21
+};
 [
 	{ name: "list",          fn: function() { pkg.list() } },
 	{ name: "get",           fn: function() { pkg.get(42) } },
-	{ name: "create",        fn: function() { pkg.create({"image":{}}) } },
-	{ name: "delete",        fn: function() { pkg.delete({}) } },
+	{ name: "create",        fn: function() { pkg.create(d) } },
+	{ name: "delete",        fn: function() { pkg.delete(42) } },
 
 ].forEach(function(kv) {
 	var name = kv.name;
@@ -70,7 +90,7 @@ var (
 	region = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
 	size   = &godo.Size{Slug: "lol", Memory: 1, Vcpus: 2, Disk: 2, PriceMonthly: 1.0, PriceHourly: 0.1, Regions: []string{"lol"}, Available: true, Transfer: 1.0}
 	image  = &godo.Image{ID: 42, Name: "derp", Type: "herp", Distribution: "coreos", Slug: "coreos-stable", Public: true, Regions: []string{"atlantis"}}
-	d      = &godo.Droplet{ID: 42, Name: "my_name", Memory: 20, Vcpus: 21, Disk: 22, Region: region, Image: image, Size: size, SnapshotIDs: []int{42}, BackupIDs: []int{43}, Networks: &godo.Networks{V4: []godo.NetworkV4{{IPAddress: "127.0.0.1", Type: "public"}}}, Status: "loling"}
+	d      = &godo.Droplet{ID: 42, Name: "my_name", Memory: 20, Vcpus: 21, Disk: 22, Region: region, Image: image, Size: size, SnapshotIDs: []int{42}, BackupIDs: []int{43}, Networks: &godo.Networks{}, Status: "loling", Tags: []string{"derp"}, DriveIDs: []string{""}}
 )
 
 type droplet struct {
@@ -108,11 +128,16 @@ var want = {
   locked: false,
   memory: 20,
   name: "my_name",
-  public_ipv4: "127.0.0.1",
   region: region,
   size: size,
   snapshot_ids: [ 42 ],
   status: "loling",
+  networks: {"v4":{}, "v6":{}},
+  tags: ["derp"],
+  created_at: "",
+  drives: [""],
+  size_slug: "",
+  public_ipv4: ""
   vcpus: 21
 };
 
@@ -142,12 +167,17 @@ var want = {
   locked: false,
   memory: 20,
   name: "my_name",
-  public_ipv4: "127.0.0.1",
   region: region,
   size: size,
   snapshot_ids: [ 42 ],
   status: "loling",
-  vcpus: 21
+  vcpus: 21,
+  networks: {"v4":{}, "v6":{}},
+  tags: ["derp"],
+  created_at: "",
+  drives: [""],
+  size_slug: "",
+  public_ipv4: ""
 };
 
 var d = pkg.get(42)
@@ -192,12 +222,17 @@ var want = {
   locked: false,
   memory: 20,
   name: "my_name",
-  public_ipv4: "127.0.0.1",
   region: region,
   size: size,
   snapshot_ids: [ 42 ],
   status: "loling",
-  vcpus: 21
+  vcpus: 21,
+  networks: {"v4":{}, "v6":{}},
+  tags: ["derp"],
+  created_at: "",
+  drives: [""],
+  size_slug: "",
+  public_ipv4: ""
 };
 
 equals(d, want, "should have proper object");

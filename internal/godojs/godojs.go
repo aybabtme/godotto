@@ -1,6 +1,7 @@
 package godojs
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/aybabtme/godotto/internal/ottoutil"
@@ -422,10 +423,14 @@ func ArgFloatingIPCreateRequest(vm *otto.Otto, v otto.Value) *godo.FloatingIPCre
 	if !v.IsObject() {
 		ottoutil.Throw(vm, "argument must be a FloatingIP, got a %q", v.Class())
 	}
-	return &godo.FloatingIPCreateRequest{
-		Region:    ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
-		DropletID: ArgDropletID(vm, ottoutil.GetObject(vm, v, "droplet", false)),
+	req := &godo.FloatingIPCreateRequest{
+		Region: ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
 	}
+
+	if v := ottoutil.GetObject(vm, v, "droplet", false); v.IsDefined() {
+		req.DropletID = ArgDropletID(vm, ottoutil.GetObject(vm, v, "droplet", false))
+	}
+	return req
 }
 
 func ArgFloatingIP(vm *otto.Otto, v otto.Value) *godo.FloatingIP {
@@ -706,23 +711,31 @@ func NetworksToVM(vm *otto.Otto, g *godo.Networks) otto.Value {
 	if g == nil {
 		return otto.NullValue()
 	}
-	var networkV4 []otto.Value
-	for _, v4 := range g.V4 {
-		networkV4 = append(networkV4, ottoutil.ToPkg(vm, map[string]interface{}{
-			"gateway":    v4.Gateway,
-			"ip_address": v4.IPAddress,
-			"netmask":    v4.Netmask,
-			"type":       v4.Type,
-		}))
+	var networkV4 map[string]interface{}
+	if len(g.V4) != 0 {
+		networkV4 = make(map[string]interface{})
+		for i, v4 := range g.V4 {
+			key := strconv.Itoa(i)
+			networkV4[key] = ottoutil.ToPkg(vm, map[string]interface{}{
+				"gateway":    v4.Gateway,
+				"ip_address": v4.IPAddress,
+				"netmask":    v4.Netmask,
+				"type":       v4.Type,
+			})
+		}
 	}
-	var networkV6 []otto.Value
-	for _, v6 := range g.V6 {
-		networkV6 = append(networkV6, ottoutil.ToPkg(vm, map[string]interface{}{
-			"gateway":    v6.Gateway,
-			"ip_address": v6.IPAddress,
-			"netmask":    v6.Netmask,
-			"type":       v6.Type,
-		}))
+	var networkV6 map[string]interface{}
+	if len(g.V6) != 0 {
+		networkV6 = make(map[string]interface{})
+		for i, v6 := range g.V6 {
+			key := strconv.Itoa(i)
+			networkV6[key] = ottoutil.ToPkg(vm, map[string]interface{}{
+				"gateway":    v6.Gateway,
+				"ip_address": v6.IPAddress,
+				"netmask":    v6.Netmask,
+				"type":       v6.Type,
+			})
+		}
 	}
 	return ottoutil.ToPkg(vm, map[string]interface{}{
 		"v4": networkV4, "v6": networkV6,

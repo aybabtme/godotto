@@ -71,25 +71,31 @@ func TestThrows(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.drives;
 
+var r = { name: "", slug: "", sizes: [], available: true, features: [] };
 var dr = {
-	type: "",
+	id: "",
+	region: "",
 	name: "",
-	data: "",
-	priority: "",
-	port: "",
-	weight: "",
+	size: "",
+	desc: "",
+	droplet_ids: []
+};
+var snap = {
+	drive: "",
+	name: "",
+	desc: ""
 };
 
 [
 	{ name: "list_drives",         fn: function() { pkg.list_drives() } },
 	{ name: "get_drive",           fn: function() { pkg.get_drive("hello.com") } },
-	{ name: "create_drive",        fn: function() { pkg.create_drive({}) } },
-	{ name: "delete_drive",        fn: function() { pkg.delete_drive({}) } },
+	{ name: "create_drive",        fn: function() { pkg.create_drive(dr) } },
+	{ name: "delete_drive",        fn: function() { pkg.delete_drive("") } },
 
-	{ name: "list_snapshots",      fn: function() { pkg.list_snapshots("hello.com") } },
-	{ name: "get_snapshot",        fn: function() { pkg.get_snapshot("hello.com", 1) } },
-	{ name: "create_snapshot",     fn: function() { pkg.create_snapshot("hello.com", {}) } },
-	{ name: "delete_snapshot",     fn: function() { pkg.delete_snapshot("hello.com", 1)  } }
+	{ name: "list_snapshots",      fn: function() { pkg.list_snapshots("") } },
+	{ name: "get_snapshot",        fn: function() { pkg.get_snapshot("") } },
+	{ name: "create_snapshot",     fn: function() { pkg.create_snapshot(snap) } },
+	{ name: "delete_snapshot",     fn: function() { pkg.delete_snapshot("")  } }
 
 ].forEach(function(kv) {
 	var name = kv.name;
@@ -208,7 +214,8 @@ var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true
 
 var d = pkg.create_drive({
 	name: "my_name",
-	ip: "127.0.0.1"
+	size: 100,
+	region: region
 });
 var want = {
 	id:          "lol",
@@ -336,16 +343,24 @@ var pkg = cloud.drives;
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
 
+var arg = {
+	id:          "lol",
+	drive:       "lolzzzz",
+	region:      region,
+	name:        "my_name",
+	size:        100,
+	description: "lolz",
+};
 var want = {
 	id:          "lol",
-	drive_id:    "lolzzzz",
+	drive_id:       "lolzzzz",
 	region:      region,
 	name:        "my_name",
 	size:        100,
 	description: "lolz",
 };
 
-var d = pkg.create_snapshot(want.name, want);
+var d = pkg.create_snapshot(arg);
 equals(d, want, "should have proper object");
 `)
 }

@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/aybabtme/godotto",
 	"GoVersion": "devel-3c6b668",
 	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/digitalocean/godo",
@@ -41,12 +44,53 @@
 			"Rev": "610cd3ae864b5f0977234663966e6108c63b0f8e"
 		},
 		{
+			"ImportPath": "github.com/robertkrimen/otto/underscore",
+			"Rev": "610cd3ae864b5f0977234663966e6108c63b0f8e"
+		},
+		{
 			"ImportPath": "github.com/tent/http-link-go",
 			"Rev": "ac974c61c2f990f4115b119354b5e0b47550e888"
 		},
 		{
+			"ImportPath": "golang.org/x/crypto/curve25519",
+			"Rev": "77f4136a99ffb5ecdbdd0226bd5cb146cf56bc0e"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ed25519",
+			"Rev": "77f4136a99ffb5ecdbdd0226bd5cb146cf56bc0e"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ed25519/internal/edwards25519",
+			"Rev": "77f4136a99ffb5ecdbdd0226bd5cb146cf56bc0e"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh",
+			"Rev": "77f4136a99ffb5ecdbdd0226bd5cb146cf56bc0e"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/agent",
+			"Rev": "77f4136a99ffb5ecdbdd0226bd5cb146cf56bc0e"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/terminal",
+			"Rev": "77f4136a99ffb5ecdbdd0226bd5cb146cf56bc0e"
+		},
+		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "3f122ce3dbbe488b7e6a8bdb26f41edec852a40b"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2",
+			"Rev": "65a8d08c6292395d47053be10b3c5e91960def76"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/internal",
+			"Rev": "65a8d08c6292395d47053be10b3c5e91960def76"
+		},
+		{
+			"ImportPath": "gopkg.in/readline.v1",
+			"Comment": "v1.3",
+			"Rev": "64a71f22be412fa183322657872f81a757eb8665"
 		},
 		{
 			"ImportPath": "gopkg.in/sourcemap.v1",

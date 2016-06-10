@@ -2,5 +2,6 @@ language: go
 go:
   - 1.6
 sudo: false
-install: true
-script: go test ./...
+install:
+    - go get github.com/tools/godep
+script: $GOPATH/bin/godep version && $GOPATH/bin/godep go test ./...

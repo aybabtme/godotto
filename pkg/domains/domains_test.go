@@ -75,6 +75,11 @@ func TestThrows(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.domains;
 
+var d = {
+	name: "",
+	ip_address: ""
+};
+
 var dr = {
 	type: "",
 	name: "",
@@ -87,12 +92,12 @@ var dr = {
 [
 	{ name: "list",          fn: function() { pkg.list() } },
 	{ name: "get",           fn: function() { pkg.get("hello.com") } },
-	{ name: "create",        fn: function() { pkg.create({}) } },
-	{ name: "delete",        fn: function() { pkg.delete({}) } },
+	{ name: "create",        fn: function() { pkg.create(d) } },
+	{ name: "delete",        fn: function() { pkg.delete(d) } },
 
 	{ name: "records",       fn: function() { pkg.records("hello.com") } },
 	{ name: "record",        fn: function() { pkg.record("hello.com", 1) } },
-	{ name: "create_record", fn: function() { pkg.create_record("hello.com", {}) } },
+	{ name: "create_record", fn: function() { pkg.create_record("hello.com", dr) } },
 	{ name: "edit_record",   fn: function() { pkg.edit_record("hello.com", dr) } },
 	{ name: "delete_record", fn: function() { pkg.delete_record("hello.com", 1)  } }
 
@@ -176,7 +181,7 @@ var pkg = cloud.domains;
 
 var d = pkg.create({
 	name: "my_name",
-	ip: "127.0.0.1"
+	ip_address: "127.0.0.1"
 });
 var want = {
 	name: "my_name",
