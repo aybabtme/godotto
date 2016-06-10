@@ -51,23 +51,27 @@ _.each(regions, function(r) {
 
 ## installation
 
+Automated CI status:
+- Linux: [![Build Status](https://travis-ci.org/aybabtme/godotto.svg?branch=master)](https://travis-ci.org/aybabtme/godotto)
+- Windows: [![Build status](https://ci.appveyor.com/api/projects/status/7v6iq8fs8rdq3ua2/branch/master?svg=true)](https://ci.appveyor.com/project/aybabtme/godotto/branch/master)
+
 ### linux
 
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.1/dorepl_linux.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.2/dorepl_linux.tar.gz | tar xvz
 ```
 
 ### darwin
 
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.1/dorepl_darwin.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.2/dorepl_darwin.tar.gz | tar xvz
 ```
 
 ### windows (not tested, ymmv)
 
 unzip this file somewhere, i guess!
 ```bash
-https://github.com/aybabtme/godotto/releases/download/0.2.1/dorepl_windows.zip
+https://github.com/aybabtme/godotto/releases/download/0.2.2/dorepl_windows.zip
 ```
 
 

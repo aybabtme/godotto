@@ -51,6 +51,10 @@ _.each(regions, function(r) {
 
 ## installation
 
+Automated CI status:
+- Linux: [![Build Status](https://travis-ci.org/aybabtme/godotto.svg?branch=master)](https://travis-ci.org/aybabtme/godotto)
+- Windows: [![Build status](https://ci.appveyor.com/api/projects/status/7v6iq8fs8rdq3ua2/branch/master?svg=true)](https://ci.appveyor.com/project/aybabtme/godotto/branch/master)
+
 ### linux
 
 ```bash
