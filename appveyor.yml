@@ -1,0 +1,20 @@
+version: "{build}"
+
+os: Windows Server 2012 R2
+
+clone_folder: c:\gopath\src\github.com\aybabtme\godotto
+
+environment:
+  GOPATH: c:\gopath
+
+install:
+  - echo %CD%
+  - echo %PATH%
+  - echo %GOPATH%
+  - go version
+  - go env
+
+build_script:
+  - go test -v -cover ./...
+  - go build ./cmd/...
+  - dorepl -h
