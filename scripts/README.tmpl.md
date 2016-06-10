@@ -65,8 +65,9 @@ wget -qO- https://github.com/aybabtme/godotto/releases/download/{{.version}}/dor
 
 ### windows (not tested, ymmv)
 
+unzip this file somewhere, i guess!
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/{{.version}}/dorepl_windows.tar.gz | tar xvz
+https://github.com/aybabtme/godotto/releases/download/{{.version}}/dorepl_windows.zip
 ```
 
 

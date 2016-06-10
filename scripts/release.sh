@@ -35,9 +35,9 @@ tar cvzf /tmp/dorepl_build/dorepl_darwin.tar.gz dorepl
 popd
 
 mkdir -p /tmp/dorepl_build/windows
-GOOS=windows go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/windows/dorepl github.com/aybabtme/godotto/cmd/dorepl
+GOOS=windows go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/windows/dorepl.exe github.com/aybabtme/godotto/cmd/dorepl
 pushd /tmp/dorepl_build/windows/
-tar cvzf /tmp/dorepl_build/dorepl_windows.tar.gz dorepl
+zip /tmp/dorepl_build/dorepl_windows.zip dorepl.exe
 popd
 
 
@@ -48,7 +48,7 @@ git commit -m 'release bump'
 hub release create \
     -a /tmp/dorepl_build/dorepl_linux.tar.gz \
     -a /tmp/dorepl_build/dorepl_darwin.tar.gz \
-    -a /tmp/dorepl_build/dorepl_windows.tar.gz \
+    -a /tmp/dorepl_build/dorepl_windows.zip \
     $VERSION
 
 git push origin master
