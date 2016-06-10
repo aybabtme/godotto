@@ -48,9 +48,10 @@ var defaultToken = func() string {
 	return ""
 }()
 
-var apiToken = flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
-
 func main() {
+	apiToken := flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
+	flag.Parse()
+
 	log.SetFlags(0)
 	log.SetPrefix("dorepl: ")
 
