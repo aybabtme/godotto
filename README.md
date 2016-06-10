@@ -54,13 +54,19 @@ _.each(regions, function(r) {
 ### linux
 
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.1/dorepl_linux.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2/dorepl_linux.tar.gz | tar xvz
 ```
 
 ### darwin
 
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.1/dorepl_darwin.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2/dorepl_darwin.tar.gz | tar xvz
+```
+
+### windows (not tested, ymmv)
+
+```bash
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2/dorepl_windows.tar.gz | tar xvz
 ```
 
 
