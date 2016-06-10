@@ -63,6 +63,12 @@ wget -qO- https://github.com/aybabtme/godotto/releases/download/{{.version}}/dor
 wget -qO- https://github.com/aybabtme/godotto/releases/download/{{.version}}/dorepl_darwin.tar.gz | tar xvz
 ```
 
+### windows (not tested, ymmv)
+
+```bash
+wget -qO- https://github.com/aybabtme/godotto/releases/download/{{.version}}/dorepl_windows.tar.gz | tar xvz
+```
+
 
 ## not implemented
 

@@ -34,6 +34,13 @@ pushd /tmp/dorepl_build/darwin/
 tar cvzf /tmp/dorepl_build/dorepl_darwin.tar.gz dorepl
 popd
 
+mkdir -p /tmp/dorepl_build/windows
+GOOS=windows go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/windows/dorepl github.com/aybabtme/godotto/cmd/dorepl
+pushd /tmp/dorepl_build/windows/
+tar cvzf /tmp/dorepl_build/dorepl_windows.tar.gz dorepl
+popd
+
+
 temple file < README.tmpl.md > ../README.md -var "version=$VERSION"
 git add ../README.md
 git commit -m 'release bump'
@@ -41,6 +48,7 @@ git commit -m 'release bump'
 hub release create \
     -a /tmp/dorepl_build/dorepl_linux.tar.gz \
     -a /tmp/dorepl_build/dorepl_darwin.tar.gz \
+    -a /tmp/dorepl_build/dorepl_windows.tar.gz \
     $VERSION
 
 git push origin master
