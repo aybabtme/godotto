@@ -58,20 +58,20 @@ Automated CI status:
 ### linux
 
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.2/dorepl_linux.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.3/dorepl_linux.tar.gz | tar xvz
 ```
 
 ### darwin
 
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.2/dorepl_darwin.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.2.3/dorepl_darwin.tar.gz | tar xvz
 ```
 
 ### windows (not tested, ymmv)
 
 unzip this file somewhere, i guess!
 ```bash
-https://github.com/aybabtme/godotto/releases/download/0.2.2/dorepl_windows.zip
+https://github.com/aybabtme/godotto/releases/download/0.2.3/dorepl_windows.zip
 ```
 
 
