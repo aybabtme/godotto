@@ -153,9 +153,9 @@ func enumerateLeftover(spy func(...spycloud.Spy)) {
 			once.Do(print)
 			log.Printf("- Droplet: %d", v.ID)
 		}),
-		spycloud.Drives(func(v *godo.Drive) {
+		spycloud.Volumes(func(v *godo.Volume) {
 			once.Do(print)
-			log.Printf("- Drive: %q", v.ID)
+			log.Printf("- Volume: %q", v.ID)
 		}),
 		spycloud.Snapshots(func(v *godo.Snapshot) {
 			once.Do(print)

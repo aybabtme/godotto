@@ -41,7 +41,7 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 		if err != nil {
 			ottoutil.Throw(vm, err.Error())
 		}
-		ok, cause := deepEqual(want, got)
+		ok, cause := deepEqual(got, want)
 		if ok {
 			return otto.UndefinedValue()
 		}
@@ -97,27 +97,27 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 	}
 }
 
-func deepEqual(a, b interface{}) (bool, string) {
-	switch av := a.(type) {
+func deepEqual(lhs, rhs interface{}) (bool, string) {
+	switch lhsv := lhs.(type) {
 	case map[string]interface{}:
-		bv, ok := b.(map[string]interface{})
+		rhsv, ok := rhs.(map[string]interface{})
 		if !ok {
-			return false, fmt.Sprintf("type %T != %T", a, b)
+			return false, fmt.Sprintf("type %T != %T", lhs, rhs)
 		}
 
-		for k, v := range av {
-			if ok, cause := deepEqual(v, bv[k]); !ok {
+		for k, v := range lhsv {
+			if ok, cause := deepEqual(v, rhsv[k]); !ok {
 				return false, fmt.Sprintf("lhs-key %q: %s", k, cause)
 			}
 		}
-		for k, v := range bv {
-			if ok, cause := deepEqual(v, av[k]); !ok {
+		for k, v := range rhsv {
+			if ok, cause := deepEqual(v, lhsv[k]); !ok {
 				return false, fmt.Sprintf("rhs-key %q: %s", k, cause)
 			}
 		}
 		return true, ""
 
 	default:
-		return reflect.DeepEqual(a, b), fmt.Sprintf("lhs=%#v\nrhs=%#v", a, b)
+		return reflect.DeepEqual(lhs, rhs), fmt.Sprintf("lhs=%#v (%T)\nrhs=%#v  (%T)", lhs, lhs, rhs, rhs)
 	}
 }

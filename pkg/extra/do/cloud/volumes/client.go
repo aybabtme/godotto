@@ -1,4 +1,4 @@
-package drives
+package volumes
 
 import (
 	"github.com/aybabtme/godotto/internal/godoutil"
@@ -6,24 +6,24 @@ import (
 	"golang.org/x/net/context"
 )
 
-// A Client can interact with the DigitalOcean Drives service.
+// A Client can interact with the DigitalOcean Volumes service.
 type Client interface {
-	CreateDrive(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Drive, error)
-	GetDrive(context.Context, string) (Drive, error)
-	DeleteDrive(context.Context, string) error
-	ListDrives(context.Context) (<-chan Drive, <-chan error)
+	CreateVolume(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Volume, error)
+	GetVolume(context.Context, string) (Volume, error)
+	DeleteVolume(context.Context, string) error
+	ListVolumes(context.Context) (<-chan Volume, <-chan error)
 
-	CreateSnapshot(ctx context.Context, driveID, name string, opts ...SnapshotOpt) (Snapshot, error)
+	CreateSnapshot(ctx context.Context, volumeID, name string, opts ...SnapshotOpt) (Snapshot, error)
 	GetSnapshot(context.Context, string) (Snapshot, error)
 	DeleteSnapshot(context.Context, string) error
-	ListSnapshots(ctx context.Context, driveID string) (<-chan Snapshot, <-chan error)
+	ListSnapshots(ctx context.Context, volumeID string) (<-chan Snapshot, <-chan error)
 
 	Actions() ActionClient
 }
 
-// A Drive in the DigitalOcean cloud.
-type Drive interface {
-	Struct() *godo.Drive
+// A Volume in the DigitalOcean cloud.
+type Volume interface {
+	Struct() *godo.Volume
 }
 
 // A Snapshot in the DigitalOcean cloud.
@@ -43,67 +43,67 @@ type client struct {
 	g *godo.Client
 }
 
-// CreateOpt is an optional argument to Drives.Create.
+// CreateOpt is an optional argument to Volumes.Create.
 type CreateOpt func(*createOpt)
 
-// SetDriveDescription does what it says on the tin.
-func SetDriveDescription(desc string) CreateOpt {
+// SetVolumeDescription does what it says on the tin.
+func SetVolumeDescription(desc string) CreateOpt {
 	return func(opt *createOpt) { opt.req.Description = desc }
 }
 
 type createOpt struct {
-	req *godo.DriveCreateRequest
+	req *godo.VolumeCreateRequest
 }
 
 func (svc *client) defaultCreateOpts() *createOpt {
 	return &createOpt{
-		req: &godo.DriveCreateRequest{},
+		req: &godo.VolumeCreateRequest{},
 	}
 }
 
-func (svc *client) CreateDrive(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Drive, error) {
+func (svc *client) CreateVolume(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...CreateOpt) (Volume, error) {
 
 	opt := svc.defaultCreateOpts()
 	opt.req.Name = name
 	opt.req.Region = region
-	opt.req.SizeGibiBytes = sizeGibiBytes
+	opt.req.SizeGigaBytes = sizeGibiBytes
 
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Storage.CreateDrive(opt.req)
+	d, _, err := svc.g.Storage.CreateVolume(opt.req)
 	if err != nil {
 		return nil, err
 	}
-	return &drive{g: svc.g, d: d}, nil
+	return &volume{g: svc.g, d: d}, nil
 }
 
-func (svc *client) GetDrive(ctx context.Context, name string) (Drive, error) {
-	d, _, err := svc.g.Storage.GetDrive(name)
+func (svc *client) GetVolume(ctx context.Context, name string) (Volume, error) {
+	d, _, err := svc.g.Storage.GetVolume(name)
 	if err != nil {
 		return nil, err
 	}
-	return &drive{g: svc.g, d: d}, nil
+	return &volume{g: svc.g, d: d}, nil
 }
 
-func (svc *client) DeleteDrive(ctx context.Context, name string) error {
-	_, err := svc.g.Storage.DeleteDrive(name)
+func (svc *client) DeleteVolume(ctx context.Context, name string) error {
+	_, err := svc.g.Storage.DeleteVolume(name)
 	return err
 }
 
-func (svc *client) ListDrives(ctx context.Context) (<-chan Drive, <-chan error) {
-	outc := make(chan Drive, 1)
+func (svc *client) ListVolumes(ctx context.Context) (<-chan Volume, <-chan error) {
+	outc := make(chan Volume, 1)
 	errc := make(chan error, 1)
 
 	go func() {
 		defer close(outc)
 		defer close(errc)
 		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Storage.ListDrives(opt)
+			r, resp, err := svc.g.Storage.ListVolumes(opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {
-				case outc <- &drive{g: svc.g, d: &dd}:
+				case outc <- &volume{g: svc.g, d: &dd}:
 				case <-ctx.Done():
 					return resp, err
 				}
@@ -121,14 +121,14 @@ func (svc *client) Actions() ActionClient {
 	return &actionClient{g: svc.g}
 }
 
-type drive struct {
+type volume struct {
 	g *godo.Client
-	d *godo.Drive
+	d *godo.Volume
 }
 
-func (svc *drive) Struct() *godo.Drive { return svc.d }
+func (svc *volume) Struct() *godo.Volume { return svc.d }
 
-// SnapshotOpt is an optional argument to Drives.Edit.
+// SnapshotOpt is an optional argument to Volumes.Edit.
 type SnapshotOpt func(*snapshotOpt)
 
 // SetSnapshotDescription does what it says on the tin.
@@ -146,13 +146,13 @@ func (svc *client) defaultSnapshotOpts() *snapshotOpt {
 	}
 }
 
-func (svc *client) CreateSnapshot(ctx context.Context, driveID, name string, opts ...SnapshotOpt) (Snapshot, error) {
+func (svc *client) CreateSnapshot(ctx context.Context, volumeID, name string, opts ...SnapshotOpt) (Snapshot, error) {
 
 	opt := svc.defaultSnapshotOpts()
 	for _, fn := range opts {
 		fn(opt)
 	}
-	opt.req.DriveID = driveID
+	opt.req.VolumeID = volumeID
 	opt.req.Name = name
 	d, _, err := svc.g.Storage.CreateSnapshot(opt.req)
 	if err != nil {
@@ -174,7 +174,7 @@ func (svc *client) DeleteSnapshot(ctx context.Context, id string) error {
 	return err
 }
 
-func (svc *client) ListSnapshots(ctx context.Context, driveID string) (<-chan Snapshot, <-chan error) {
+func (svc *client) ListSnapshots(ctx context.Context, volumeID string) (<-chan Snapshot, <-chan error) {
 	outc := make(chan Snapshot, 1)
 	errc := make(chan error, 1)
 
@@ -182,7 +182,7 @@ func (svc *client) ListSnapshots(ctx context.Context, driveID string) (<-chan Sn
 		defer close(outc)
 		defer close(errc)
 		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Storage.ListSnapshots(driveID, opt)
+			r, resp, err := svc.g.Storage.ListSnapshots(volumeID, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

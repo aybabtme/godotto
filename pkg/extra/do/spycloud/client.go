@@ -5,10 +5,10 @@ import (
 
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
 	"golang.org/x/net/context"
@@ -27,11 +27,11 @@ func Droplets(fn func(*godo.Droplet)) Spy {
 	}
 }
 
-// Drives lets you visit all the drives that are
+// Volumes lets you visit all the volumes that are
 // still created by the spied upon client.
-func Drives(fn func(*godo.Drive)) Spy {
+func Volumes(fn func(*godo.Volume)) Spy {
 	return func(c *client) {
-		for _, v := range c.drives {
+		for _, v := range c.volumes {
 			fn(v)
 		}
 	}
@@ -105,7 +105,7 @@ type client struct {
 
 	mu          sync.Mutex
 	droplets    map[int]*godo.Droplet
-	drives      map[string]*godo.Drive
+	volumes     map[string]*godo.Volume
 	snapshots   map[string]*godo.Snapshot
 	domains     map[string]*godo.Domain
 	records     map[int]*godo.DomainRecord
@@ -119,7 +119,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	c := &client{
 		real:        cloud,
 		droplets:    make(map[int]*godo.Droplet),
-		drives:      make(map[string]*godo.Drive),
+		volumes:     make(map[string]*godo.Volume),
 		snapshots:   make(map[string]*godo.Snapshot),
 		domains:     make(map[string]*godo.Domain),
 		records:     make(map[int]*godo.DomainRecord),
@@ -131,10 +131,10 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 
 	mock.MockDroplets.CreateFn = c.interceptDropletCreate
 	mock.MockDroplets.DeleteFn = c.interceptDropletDelete
-	mock.MockDrives.CreateDriveFn = c.interceptDriveCreate
-	mock.MockDrives.DeleteDriveFn = c.interceptDriveDelete
-	mock.MockDrives.CreateSnapshotFn = c.interceptSnapshotCreate
-	mock.MockDrives.DeleteSnapshotFn = c.interceptSnapshotDelete
+	mock.MockVolumes.CreateVolumeFn = c.interceptVolumeCreate
+	mock.MockVolumes.DeleteVolumeFn = c.interceptVolumeDelete
+	mock.MockVolumes.CreateSnapshotFn = c.interceptSnapshotCreate
+	mock.MockVolumes.DeleteSnapshotFn = c.interceptSnapshotDelete
 	mock.MockDomains.CreateFn = c.interceptDomainCreate
 	mock.MockDomains.DeleteFn = c.interceptDomainDelete
 	mock.MockDomains.CreateRecordFn = c.interceptDomainRecordCreate
@@ -168,28 +168,28 @@ func (client *client) interceptDropletDelete(ctx context.Context, id int) error 
 	return err
 }
 
-func (client *client) interceptDriveCreate(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error) {
-	d, err := client.real.Drives().CreateDrive(ctx, name, region, sizeGibiBytes, opts...)
+func (client *client) interceptVolumeCreate(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...volumes.CreateOpt) (volumes.Volume, error) {
+	d, err := client.real.Volumes().CreateVolume(ctx, name, region, sizeGibiBytes, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
-		client.drives[d.Struct().ID] = d.Struct()
+		client.volumes[d.Struct().ID] = d.Struct()
 	}
 	return d, err
 }
 
-func (client *client) interceptDriveDelete(ctx context.Context, id string) error {
-	err := client.real.Drives().DeleteDrive(ctx, id)
+func (client *client) interceptVolumeDelete(ctx context.Context, id string) error {
+	err := client.real.Volumes().DeleteVolume(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
-		delete(client.drives, id)
+		delete(client.volumes, id)
 	}
 	return err
 }
 
-func (client *client) interceptSnapshotCreate(ctx context.Context, driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error) {
-	d, err := client.real.Drives().CreateSnapshot(ctx, driveID, name, opts...)
+func (client *client) interceptSnapshotCreate(ctx context.Context, volumeID, name string, opts ...volumes.SnapshotOpt) (volumes.Snapshot, error) {
+	d, err := client.real.Volumes().CreateSnapshot(ctx, volumeID, name, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
@@ -199,7 +199,7 @@ func (client *client) interceptSnapshotCreate(ctx context.Context, driveID, name
 }
 
 func (client *client) interceptSnapshotDelete(ctx context.Context, id string) error {
-	err := client.real.Drives().DeleteSnapshot(ctx, id)
+	err := client.real.Volumes().DeleteSnapshot(ctx, id)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()

@@ -1,4 +1,4 @@
-package drives
+package volumes
 
 import (
 	"github.com/digitalocean/godo"

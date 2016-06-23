@@ -4,13 +4,13 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/digitalocean/godo"
 )
 
@@ -39,7 +39,7 @@ type Client interface {
 	Regions() regions.Client
 	Sizes() sizes.Client
 	FloatingIPs() floatingips.Client
-	Drives() drives.Client
+	Volumes() volumes.Client
 }
 
 // New creates a Client to the DigitalOcean cloud. Options are applied in order,
@@ -66,7 +66,7 @@ func New(opts ...ClientOpt) Client {
 		regions:     regions.New(opt.g),
 		sizes:       sizes.New(opt.g),
 		floatingips: floatingips.New(opt.g),
-		drives:      drives.New(opt.g),
+		volumes:     volumes.New(opt.g),
 	}
 
 	return c
@@ -84,7 +84,7 @@ type client struct {
 	regions     regions.Client
 	sizes       sizes.Client
 	floatingips floatingips.Client
-	drives      drives.Client
+	volumes     volumes.Client
 }
 
 func (svc *client) Droplets() droplets.Client       { return svc.droplets }
@@ -96,4 +96,4 @@ func (svc *client) Keys() keys.Client               { return svc.keys }
 func (svc *client) Regions() regions.Client         { return svc.regions }
 func (svc *client) Sizes() sizes.Client             { return svc.sizes }
 func (svc *client) FloatingIPs() floatingips.Client { return svc.floatingips }
-func (svc *client) Drives() drives.Client           { return svc.drives }
+func (svc *client) Volumes() volumes.Client         { return svc.volumes }

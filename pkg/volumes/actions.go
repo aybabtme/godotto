@@ -1,4 +1,4 @@
-package drives
+package volumes
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/robertkrimen/otto"
 	"golang.org/x/net/context"
 )
@@ -19,7 +19,7 @@ func applyAction(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.
 
 	svc := actionSvc{
 		ctx: ctx,
-		svc: client.Drives().Actions(),
+		svc: client.Volumes().Actions(),
 	}
 	for _, applier := range []struct {
 		Name   string
@@ -38,12 +38,12 @@ func applyAction(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.
 
 type actionSvc struct {
 	ctx context.Context
-	svc drives.ActionClient
+	svc volumes.ActionClient
 }
 
 func (svc *actionSvc) attach(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	ip := godojs.ArgDriveID(vm, all.Argument(0))
+	ip := godojs.ArgVolumeID(vm, all.Argument(0))
 	dropletID := godojs.ArgDropletID(vm, all.Argument(1))
 	err := svc.svc.Attach(svc.ctx, ip, dropletID)
 	if err != nil {
@@ -54,7 +54,7 @@ func (svc *actionSvc) attach(all otto.FunctionCall) otto.Value {
 
 func (svc *actionSvc) detach(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	dropletID := godojs.ArgDriveID(vm, all.Argument(0))
+	dropletID := godojs.ArgVolumeID(vm, all.Argument(0))
 	err := svc.svc.Detach(svc.ctx, dropletID)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())

@@ -8,8 +8,8 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/digitalocean/godo",
-			"Comment": "v0.9.0-39-ga27c5c1",
-			"Rev": "a27c5c1d739025d1ea9440c4d6dd7f9e6b014456"
+			"Comment": "v0.9.0-43-gbbb5d7d",
+			"Rev": "bbb5d7d360023ac99ae82a25205a4d38095124b9"
 		},
 		{
 			"ImportPath": "github.com/google/go-querystring/query",

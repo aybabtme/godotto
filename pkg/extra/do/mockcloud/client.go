@@ -16,13 +16,13 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"golang.org/x/net/context"
 )
 
@@ -39,7 +39,7 @@ type Mock struct {
 	MockRegions     *MockRegions
 	MockSizes       *MockSizes
 	MockFloatingIPs *MockFloatingIPs
-	MockDrives      *MockDrives
+	MockVolumes     *MockVolumes
 }
 
 func Client(client cloud.Client) *Mock {
@@ -53,7 +53,7 @@ func Client(client cloud.Client) *Mock {
 		MockRegions:     &MockRegions{wrap: client},
 		MockSizes:       &MockSizes{wrap: client},
 		MockFloatingIPs: &MockFloatingIPs{wrap: client, MockFloatingIPActions: &MockFloatingIPActions{wrap: client}},
-		MockDrives:      &MockDrives{wrap: client, MockDriveActions: &MockDriveActions{wrap: client}},
+		MockVolumes:     &MockVolumes{wrap: client, MockVolumeActions: &MockVolumeActions{wrap: client}},
 	}
 }
 
@@ -66,7 +66,7 @@ func (mock *Mock) Keys() keys.Client               { return mock.MockKeys }
 func (mock *Mock) Regions() regions.Client         { return mock.MockRegions }
 func (mock *Mock) Sizes() sizes.Client             { return mock.MockSizes }
 func (mock *Mock) FloatingIPs() floatingips.Client { return mock.MockFloatingIPs }
-func (mock *Mock) Drives() drives.Client           { return mock.MockDrives }
+func (mock *Mock) Volumes() volumes.Client         { return mock.MockVolumes }
 
 // Droplets
 
@@ -581,95 +581,95 @@ func (mock *MockFloatingIPActions) Unassign(ctx context.Context, ip string) erro
 	return mock.wrap.FloatingIPs().Actions().Unassign(ctx, ip)
 }
 
-// Drives
+// Volumes
 
-type MockDrives struct {
-	wrap             cloud.Client
-	MockDriveActions *MockDriveActions
-	CreateDriveFn    func(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error)
-	GetDriveFn       func(context.Context, string) (drives.Drive, error)
-	DeleteDriveFn    func(context.Context, string) error
-	ListDrivesFn     func(context.Context) (<-chan drives.Drive, <-chan error)
-	CreateSnapshotFn func(ctx context.Context, driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error)
-	GetSnapshotFn    func(context.Context, string) (drives.Snapshot, error)
-	DeleteSnapshotFn func(context.Context, string) error
-	ListSnapshotsFn  func(ctx context.Context, driveID string) (<-chan drives.Snapshot, <-chan error)
+type MockVolumes struct {
+	wrap              cloud.Client
+	MockVolumeActions *MockVolumeActions
+	CreateVolumeFn    func(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...volumes.CreateOpt) (volumes.Volume, error)
+	GetVolumeFn       func(context.Context, string) (volumes.Volume, error)
+	DeleteVolumeFn    func(context.Context, string) error
+	ListVolumesFn     func(context.Context) (<-chan volumes.Volume, <-chan error)
+	CreateSnapshotFn  func(ctx context.Context, volumeID, name string, opts ...volumes.SnapshotOpt) (volumes.Snapshot, error)
+	GetSnapshotFn     func(context.Context, string) (volumes.Snapshot, error)
+	DeleteSnapshotFn  func(context.Context, string) error
+	ListSnapshotsFn   func(ctx context.Context, volumeID string) (<-chan volumes.Snapshot, <-chan error)
 }
 
-func (mock *MockDrives) CreateDrive(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...drives.CreateOpt) (drives.Drive, error) {
-	if mock.CreateDriveFn != nil {
-		return mock.CreateDriveFn(ctx, name, region, sizeGibiBytes, opts...)
+func (mock *MockVolumes) CreateVolume(ctx context.Context, name, region string, sizeGibiBytes int64, opts ...volumes.CreateOpt) (volumes.Volume, error) {
+	if mock.CreateVolumeFn != nil {
+		return mock.CreateVolumeFn(ctx, name, region, sizeGibiBytes, opts...)
 	}
-	return mock.wrap.Drives().CreateDrive(ctx, name, region, sizeGibiBytes, opts...)
+	return mock.wrap.Volumes().CreateVolume(ctx, name, region, sizeGibiBytes, opts...)
 }
-func (mock *MockDrives) GetDrive(ctx context.Context, id string) (drives.Drive, error) {
-	if mock.GetDriveFn != nil {
-		return mock.GetDriveFn(ctx, id)
+func (mock *MockVolumes) GetVolume(ctx context.Context, id string) (volumes.Volume, error) {
+	if mock.GetVolumeFn != nil {
+		return mock.GetVolumeFn(ctx, id)
 	}
-	return mock.wrap.Drives().GetDrive(ctx, id)
+	return mock.wrap.Volumes().GetVolume(ctx, id)
 }
-func (mock *MockDrives) DeleteDrive(ctx context.Context, id string) error {
-	if mock.DeleteDriveFn != nil {
-		return mock.DeleteDriveFn(ctx, id)
+func (mock *MockVolumes) DeleteVolume(ctx context.Context, id string) error {
+	if mock.DeleteVolumeFn != nil {
+		return mock.DeleteVolumeFn(ctx, id)
 	}
-	return mock.wrap.Drives().DeleteDrive(ctx, id)
+	return mock.wrap.Volumes().DeleteVolume(ctx, id)
 }
-func (mock *MockDrives) ListDrives(ctx context.Context) (<-chan drives.Drive, <-chan error) {
-	if mock.ListDrivesFn != nil {
-		return mock.ListDrivesFn(ctx)
+func (mock *MockVolumes) ListVolumes(ctx context.Context) (<-chan volumes.Volume, <-chan error) {
+	if mock.ListVolumesFn != nil {
+		return mock.ListVolumesFn(ctx)
 	}
-	return mock.wrap.Drives().ListDrives(ctx)
+	return mock.wrap.Volumes().ListVolumes(ctx)
 }
-func (mock *MockDrives) CreateSnapshot(ctx context.Context, driveID, name string, opts ...drives.SnapshotOpt) (drives.Snapshot, error) {
+func (mock *MockVolumes) CreateSnapshot(ctx context.Context, volumeID, name string, opts ...volumes.SnapshotOpt) (volumes.Snapshot, error) {
 	if mock.CreateSnapshotFn != nil {
-		return mock.CreateSnapshotFn(ctx, driveID, name, opts...)
+		return mock.CreateSnapshotFn(ctx, volumeID, name, opts...)
 	}
-	return mock.wrap.Drives().CreateSnapshot(ctx, driveID, name, opts...)
+	return mock.wrap.Volumes().CreateSnapshot(ctx, volumeID, name, opts...)
 }
-func (mock *MockDrives) GetSnapshot(ctx context.Context, id string) (drives.Snapshot, error) {
+func (mock *MockVolumes) GetSnapshot(ctx context.Context, id string) (volumes.Snapshot, error) {
 	if mock.GetSnapshotFn != nil {
 		return mock.GetSnapshotFn(ctx, id)
 	}
-	return mock.wrap.Drives().GetSnapshot(ctx, id)
+	return mock.wrap.Volumes().GetSnapshot(ctx, id)
 }
-func (mock *MockDrives) DeleteSnapshot(ctx context.Context, id string) error {
+func (mock *MockVolumes) DeleteSnapshot(ctx context.Context, id string) error {
 	if mock.DeleteSnapshotFn != nil {
 		return mock.DeleteSnapshotFn(ctx, id)
 	}
-	return mock.wrap.Drives().DeleteSnapshot(ctx, id)
+	return mock.wrap.Volumes().DeleteSnapshot(ctx, id)
 }
-func (mock *MockDrives) ListSnapshots(ctx context.Context, driveID string) (<-chan drives.Snapshot, <-chan error) {
+func (mock *MockVolumes) ListSnapshots(ctx context.Context, volumeID string) (<-chan volumes.Snapshot, <-chan error) {
 	if mock.ListSnapshotsFn != nil {
-		return mock.ListSnapshotsFn(ctx, driveID)
+		return mock.ListSnapshotsFn(ctx, volumeID)
 	}
-	return mock.wrap.Drives().ListSnapshots(ctx, driveID)
+	return mock.wrap.Volumes().ListSnapshots(ctx, volumeID)
 }
 
-func (mock *MockDrives) Actions() drives.ActionClient {
-	if mock.MockDriveActions != nil {
-		return mock.MockDriveActions
+func (mock *MockVolumes) Actions() volumes.ActionClient {
+	if mock.MockVolumeActions != nil {
+		return mock.MockVolumeActions
 	}
-	return mock.wrap.Drives().Actions()
+	return mock.wrap.Volumes().Actions()
 }
 
-// Drive Actions
+// Volume Actions
 
-type MockDriveActions struct {
+type MockVolumeActions struct {
 	wrap     cloud.Client
-	AttachFn func(ctx context.Context, driveID string, dropletID int) error
-	DetachFn func(ctx context.Context, driveID string) error
+	AttachFn func(ctx context.Context, volumeID string, dropletID int) error
+	DetachFn func(ctx context.Context, volumeID string) error
 }
 
-func (mock *MockDriveActions) Attach(ctx context.Context, driveID string, dropletID int) error {
+func (mock *MockVolumeActions) Attach(ctx context.Context, volumeID string, dropletID int) error {
 	if mock.AttachFn != nil {
-		return mock.AttachFn(ctx, driveID, dropletID)
+		return mock.AttachFn(ctx, volumeID, dropletID)
 	}
-	return mock.wrap.Drives().Actions().Attach(ctx, driveID, dropletID)
+	return mock.wrap.Volumes().Actions().Attach(ctx, volumeID, dropletID)
 }
 
-func (mock *MockDriveActions) Detach(ctx context.Context, driveID string) error {
+func (mock *MockVolumeActions) Detach(ctx context.Context, volumeID string) error {
 	if mock.DetachFn != nil {
-		return mock.DetachFn(ctx, driveID)
+		return mock.DetachFn(ctx, volumeID)
 	}
-	return mock.wrap.Drives().Actions().Detach(ctx, driveID)
+	return mock.wrap.Volumes().Actions().Detach(ctx, volumeID)
 }

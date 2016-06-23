@@ -1,4 +1,4 @@
-package drives_test
+package volumes_test
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 func TestActionsApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives.actions;
+var pkg = cloud.volumes.actions;
 
 assert(pkg != null, "package should be loaded");
 assert(pkg.attach != null, "attach function should be defined");
@@ -24,7 +24,7 @@ assert(pkg.detach != null, "detach function should be defined");
 func TestActionsThrows(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
-	mock := cloud.MockDrives.MockDriveActions
+	mock := cloud.MockVolumes.MockVolumeActions
 	mock.AttachFn = func(ctx context.Context, ip string, did int) error {
 		return errors.New("throw me")
 	}
@@ -33,7 +33,7 @@ func TestActionsThrows(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives.actions;
+var pkg = cloud.volumes.actions;
 
 [
 
@@ -53,7 +53,7 @@ var pkg = cloud.drives.actions;
 
 func TestActionattach(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	mock := cloud.MockDrives.MockDriveActions
+	mock := cloud.MockVolumes.MockVolumeActions
 	mock.AttachFn = func(ctx context.Context, ip string, did int) error {
 		if want, got := "127.0.0.1", ip; got != want {
 			t.Fatalf("want %v got %v", want, got)
@@ -64,7 +64,7 @@ func TestActionattach(t *testing.T) {
 		return nil
 	}
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives.actions;
+var pkg = cloud.volumes.actions;
 pkg.attach("127.0.0.1", 42);
 	`)
 
@@ -72,7 +72,7 @@ pkg.attach("127.0.0.1", 42);
 
 func TestActiondetach(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	mock := cloud.MockDrives.MockDriveActions
+	mock := cloud.MockVolumes.MockVolumeActions
 
 	mock.DetachFn = func(ctx context.Context, ip string) error {
 		if want, got := "127.0.0.1", ip; got != want {
@@ -81,7 +81,7 @@ func TestActiondetach(t *testing.T) {
 		return nil
 	}
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives.actions;
+var pkg = cloud.volumes.actions;
 pkg.detach("127.0.0.1");
 	`)
 }

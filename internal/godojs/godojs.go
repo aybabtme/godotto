@@ -106,7 +106,7 @@ func ArgDroplet(vm *otto.Otto, v otto.Value) *godo.Droplet {
 		Networks:    ArgNetworks(vm, ottoutil.GetObject(vm, v, "networks", false)),
 		Kernel:      ArgKernel(vm, ottoutil.GetObject(vm, v, "kernel", false)),
 		Tags:        ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
-		DriveIDs:    ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "drives", false)),
+		VolumeIDs:   ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "volumes", false)),
 	}
 }
 
@@ -143,12 +143,12 @@ func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateReq
 			Fingerprint: key.Fingerprint,
 		})
 	})
-	driveArgs := ottoutil.GetObject(vm, v, "drives", false)
-	ottoutil.LoadArray(vm, driveArgs, func(v otto.Value) {
-		drive := ArgDrive(vm, v)
-		req.Drives = append(req.Drives, godo.DropletCreateDrive{
-			ID:   drive.ID,
-			Name: drive.Name,
+	volumeArgs := ottoutil.GetObject(vm, v, "volumes", false)
+	ottoutil.LoadArray(vm, volumeArgs, func(v otto.Value) {
+		volume := ArgVolume(vm, v)
+		req.Volumes = append(req.Volumes, godo.DropletCreateVolume{
+			ID:   volume.ID,
+			Name: volume.Name,
 		})
 	})
 	return req
@@ -327,14 +327,14 @@ func ArgRegionSlug(vm *otto.Otto, v otto.Value) string {
 	return slug
 }
 
-func ArgDrive(vm *otto.Otto, v otto.Value) *godo.Drive {
+func ArgVolume(vm *otto.Otto, v otto.Value) *godo.Volume {
 	if !v.IsDefined() || v.IsNull() {
 		return nil
 	}
 	if !v.IsObject() {
-		ottoutil.Throw(vm, "argument must be a Drive, got a %q", v.Class())
+		ottoutil.Throw(vm, "argument must be a Volume, got a %q", v.Class())
 	}
-	return &godo.Drive{
+	return &godo.Volume{
 		ID:            ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", false)),
 		Region:        ArgRegion(vm, ottoutil.GetObject(vm, v, "region", false)),
 		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", false)),
@@ -344,32 +344,32 @@ func ArgDrive(vm *otto.Otto, v otto.Value) *godo.Drive {
 	}
 }
 
-func ArgDriveCreateRequest(vm *otto.Otto, v otto.Value) *godo.DriveCreateRequest {
+func ArgVolumeCreateRequest(vm *otto.Otto, v otto.Value) *godo.VolumeCreateRequest {
 	if !v.IsDefined() || v.IsNull() {
 		return nil
 	}
 	if !v.IsObject() {
-		ottoutil.Throw(vm, "argument must be a Drive, got a %q", v.Class())
+		ottoutil.Throw(vm, "argument must be a Volume, got a %q", v.Class())
 	}
-	return &godo.DriveCreateRequest{
+	return &godo.VolumeCreateRequest{
 		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
 		Region:        ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
-		SizeGibiBytes: int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", true))),
+		SizeGigaBytes: int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", true))),
 		Description:   ottoutil.String(vm, ottoutil.GetObject(vm, v, "desc", false)),
 	}
 }
 
-func ArgDriveID(vm *otto.Otto, v otto.Value) string {
-	var driveID string
+func ArgVolumeID(vm *otto.Otto, v otto.Value) string {
+	var volumeID string
 	switch {
 	case v.IsString():
-		driveID = ottoutil.String(vm, v)
+		volumeID = ottoutil.String(vm, v)
 	case v.IsObject():
-		driveID = ArgDrive(vm, v).ID
+		volumeID = ArgVolume(vm, v).ID
 	default:
-		ottoutil.Throw(vm, "argument must be an Drive or a DriveID")
+		ottoutil.Throw(vm, "argument must be an Volume or a VolumeID")
 	}
-	return driveID
+	return volumeID
 }
 
 func ArgSnapshotCreateRequest(vm *otto.Otto, v otto.Value) *godo.SnapshotCreateRequest {
@@ -380,7 +380,7 @@ func ArgSnapshotCreateRequest(vm *otto.Otto, v otto.Value) *godo.SnapshotCreateR
 		ottoutil.Throw(vm, "argument must be a Snapshot, got a %q", v.Class())
 	}
 	return &godo.SnapshotCreateRequest{
-		DriveID:     ArgDriveID(vm, ottoutil.GetObject(vm, v, "drive", true)),
+		VolumeID:    ArgVolumeID(vm, ottoutil.GetObject(vm, v, "volume", true)),
 		Name:        ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
 		Description: ottoutil.String(vm, ottoutil.GetObject(vm, v, "desc", false)),
 	}
@@ -395,10 +395,10 @@ func ArgSnapshot(vm *otto.Otto, v otto.Value) *godo.Snapshot {
 	}
 	return &godo.Snapshot{
 		ID:            ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", false)),
-		DriveID:       ottoutil.String(vm, ottoutil.GetObject(vm, v, "drive_id", false)),
+		VolumeID:      ottoutil.String(vm, ottoutil.GetObject(vm, v, "volume_id", false)),
 		Region:        ArgRegion(vm, ottoutil.GetObject(vm, v, "region", false)),
 		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", false)),
-		SizeGibiBytes: int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", false))),
+		SizeGigaBytes: int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", false))),
 		Description:   ottoutil.String(vm, ottoutil.GetObject(vm, v, "desc", false)),
 	}
 }
@@ -575,7 +575,7 @@ func DomainRecordToVM(vm *otto.Otto, g *godo.DomainRecord) otto.Value {
 	})
 }
 
-func DriveToVM(vm *otto.Otto, g *godo.Drive) otto.Value {
+func VolumeToVM(vm *otto.Otto, g *godo.Volume) otto.Value {
 	if g == nil {
 		return otto.NullValue()
 	}
@@ -589,16 +589,16 @@ func DriveToVM(vm *otto.Otto, g *godo.Drive) otto.Value {
 	})
 }
 
-func DriveSnapshotToVM(vm *otto.Otto, g *godo.Snapshot) otto.Value {
+func VolumeSnapshotToVM(vm *otto.Otto, g *godo.Snapshot) otto.Value {
 	if g == nil {
 		return otto.NullValue()
 	}
 	return ottoutil.ToPkg(vm, map[string]interface{}{
 		"id":          g.ID,
-		"drive_id":    g.DriveID,
+		"volume_id":   g.VolumeID,
 		"name":        g.Name,
 		"region":      RegionToVM(vm, g.Region),
-		"size":        int64(g.SizeGibiBytes),
+		"size":        int64(g.SizeGigaBytes),
 		"description": g.Description,
 	})
 }
@@ -627,7 +627,7 @@ func DropletToVM(vm *otto.Otto, g *godo.Droplet) otto.Value {
 		"created_at":   g.Created,
 		"kernel":       KernelToVM(vm, g.Kernel),
 		"tags":         g.Tags,
-		"drives":       g.DriveIDs,
+		"volumes":      g.VolumeIDs,
 
 		// extra
 

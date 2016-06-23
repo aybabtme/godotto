@@ -6,7 +6,6 @@ import (
 	"github.com/aybabtme/godotto/pkg/accounts"
 	"github.com/aybabtme/godotto/pkg/actions"
 	"github.com/aybabtme/godotto/pkg/domains"
-	"github.com/aybabtme/godotto/pkg/drives"
 	"github.com/aybabtme/godotto/pkg/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/floatingips"
@@ -14,6 +13,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/keys"
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
+	"github.com/aybabtme/godotto/pkg/volumes"
 	"github.com/robertkrimen/otto"
 	"golang.org/x/net/context"
 )
@@ -39,7 +39,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"regions", regions.Apply},
 		{"floating_ips", floatingips.Apply},
 		{"sizes", sizes.Apply},
-		{"drives", drives.Apply},
+		{"volumes", volumes.Apply},
 	} {
 		svc, err := applier.Apply(ctx, vm, client)
 		if err != nil {

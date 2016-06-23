@@ -1,4 +1,4 @@
-package drives
+package volumes
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 
 	"github.com/robertkrimen/otto"
 )
@@ -21,9 +21,9 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		return q, err
 	}
 
-	svc := driveSvc{
+	svc := volumeSvc{
 		ctx: ctx,
-		svc: client.Drives(),
+		svc: client.Volumes(),
 	}
 
 	actions, err := applyAction(ctx, vm, client)
@@ -35,10 +35,10 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		Name   string
 		Method interface{}
 	}{
-		{"list_drives", svc.listDrive},
-		{"get_drive", svc.getDrive},
-		{"create_drive", svc.createDrive},
-		{"delete_drive", svc.deleteDrive},
+		{"list_volumes", svc.listVolume},
+		{"get_volume", svc.getVolume},
+		{"create_volume", svc.createVolume},
+		{"delete_volume", svc.deleteVolume},
 
 		{"list_snapshots", svc.listSnapshots},
 		{"get_snapshot", svc.getSnapshot},
@@ -55,85 +55,85 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	return root.Value(), nil
 }
 
-type driveSvc struct {
+type volumeSvc struct {
 	ctx context.Context
-	svc drives.Client
+	svc volumes.Client
 }
 
-func (svc *driveSvc) createDrive(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) createVolume(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
-	req := godojs.ArgDriveCreateRequest(vm, arg)
-	d, err := svc.svc.CreateDrive(
+	req := godojs.ArgVolumeCreateRequest(vm, arg)
+	d, err := svc.svc.CreateVolume(
 		svc.ctx,
-		req.Name, req.Region, req.SizeGibiBytes,
-		drives.SetDriveDescription(req.Description),
+		req.Name, req.Region, req.SizeGigaBytes,
+		volumes.SetVolumeDescription(req.Description),
 	)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	return godojs.DriveToVM(vm, d.Struct())
+	return godojs.VolumeToVM(vm, d.Struct())
 }
 
-func (svc *driveSvc) getDrive(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) getVolume(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	id := godojs.ArgDriveID(vm, all.Argument(0))
+	id := godojs.ArgVolumeID(vm, all.Argument(0))
 
-	d, err := svc.svc.GetDrive(svc.ctx, id)
+	d, err := svc.svc.GetVolume(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
-	return godojs.DriveToVM(vm, d.Struct())
+	return godojs.VolumeToVM(vm, d.Struct())
 }
 
-func (svc *driveSvc) deleteDrive(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) deleteVolume(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	id := godojs.ArgDriveID(vm, all.Argument(0))
+	id := godojs.ArgVolumeID(vm, all.Argument(0))
 
-	err := svc.svc.DeleteDrive(svc.ctx, id)
+	err := svc.svc.DeleteVolume(svc.ctx, id)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 	return q
 }
 
-func (svc *driveSvc) listDrive(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) listVolume(all otto.FunctionCall) otto.Value {
 
 	vm := all.Otto
 
-	var drives = make([]otto.Value, 0)
-	drivec, errc := svc.svc.ListDrives(svc.ctx)
-	for d := range drivec {
-		drives = append(drives, godojs.DriveToVM(vm, d.Struct()))
+	var volumes = make([]otto.Value, 0)
+	volumec, errc := svc.svc.ListVolumes(svc.ctx)
+	for d := range volumec {
+		volumes = append(volumes, godojs.VolumeToVM(vm, d.Struct()))
 	}
 	if err := <-errc; err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	v, err := vm.ToValue(drives)
+	v, err := vm.ToValue(volumes)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 	return v
 }
 
-func (svc *driveSvc) createSnapshot(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) createSnapshot(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
 	req := godojs.ArgSnapshotCreateRequest(vm, arg)
 
-	d, err := svc.svc.CreateSnapshot(svc.ctx, req.DriveID, req.Name,
-		drives.SetSnapshotDescription(req.Description),
+	d, err := svc.svc.CreateSnapshot(svc.ctx, req.VolumeID, req.Name,
+		volumes.SetSnapshotDescription(req.Description),
 	)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	return godojs.DriveSnapshotToVM(vm, d.Struct())
+	return godojs.VolumeSnapshotToVM(vm, d.Struct())
 }
 
-func (svc *driveSvc) getSnapshot(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) getSnapshot(all otto.FunctionCall) otto.Value {
 	var (
 		vm = all.Otto
 		id = godojs.ArgSnapshotID(vm, all.Argument(0))
@@ -143,10 +143,10 @@ func (svc *driveSvc) getSnapshot(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	return godojs.DriveSnapshotToVM(vm, d.Struct())
+	return godojs.VolumeSnapshotToVM(vm, d.Struct())
 }
 
-func (svc *driveSvc) deleteSnapshot(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) deleteSnapshot(all otto.FunctionCall) otto.Value {
 	var (
 		vm = all.Otto
 		id = godojs.ArgSnapshotID(vm, all.Argument(0))
@@ -158,17 +158,17 @@ func (svc *driveSvc) deleteSnapshot(all otto.FunctionCall) otto.Value {
 	return q
 }
 
-func (svc *driveSvc) listSnapshots(all otto.FunctionCall) otto.Value {
+func (svc *volumeSvc) listSnapshots(all otto.FunctionCall) otto.Value {
 
 	var (
-		vm      = all.Otto
-		driveID = godojs.ArgDriveID(vm, all.Argument(0))
+		vm       = all.Otto
+		volumeID = godojs.ArgVolumeID(vm, all.Argument(0))
 	)
 
 	var Snapshots = make([]otto.Value, 0)
-	snapshotc, errc := svc.svc.ListSnapshots(svc.ctx, driveID)
+	snapshotc, errc := svc.svc.ListSnapshots(svc.ctx, volumeID)
 	for d := range snapshotc {
-		Snapshots = append(Snapshots, godojs.DriveSnapshotToVM(vm, d.Struct()))
+		Snapshots = append(Snapshots, godojs.VolumeSnapshotToVM(vm, d.Struct()))
 	}
 	if err := <-errc; err != nil {
 		ottoutil.Throw(vm, err.Error())

@@ -1,4 +1,4 @@
-package drives_test
+package volumes_test
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
-	"github.com/aybabtme/godotto/pkg/extra/do/cloud/drives"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
 )
@@ -15,13 +15,13 @@ import (
 func TestApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 assert(pkg != null, "package should be loaded");
-assert(pkg.list_drives != null, "list_drives function should be defined");
-assert(pkg.get_drive != null, "get_drive function should be defined");
-assert(pkg.create_drive != null, "create_drive function should be defined");
-assert(pkg.delete_drive != null, "delete_drive function should be defined");
+assert(pkg.list_volumes != null, "list_volumes function should be defined");
+assert(pkg.get_volume != null, "get_volume function should be defined");
+assert(pkg.create_volume != null, "create_volume function should be defined");
+assert(pkg.delete_volume != null, "delete_volume function should be defined");
 
 assert(pkg.list_snapshots != null, "list_snapshots function should be defined");
 assert(pkg.get_snapshot != null, "get_snapshot function should be defined");
@@ -33,43 +33,43 @@ assert(pkg.create_snapshot != null, "create_snapshot function should be defined"
 func TestThrows(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
-	cloud.MockDrives.ListDrivesFn = func(_ context.Context) (<-chan drives.Drive, <-chan error) {
-		lc := make(chan drives.Drive)
+	cloud.MockVolumes.ListVolumesFn = func(_ context.Context) (<-chan volumes.Volume, <-chan error) {
+		lc := make(chan volumes.Volume)
 		close(lc)
 		ec := make(chan error, 1)
 		ec <- errors.New("throw me")
 		close(ec)
 		return lc, ec
 	}
-	cloud.MockDrives.GetDriveFn = func(_ context.Context, _ string) (drives.Drive, error) {
+	cloud.MockVolumes.GetVolumeFn = func(_ context.Context, _ string) (volumes.Volume, error) {
 		return nil, errors.New("throw me")
 	}
-	cloud.MockDrives.CreateDriveFn = func(_ context.Context, _, _ string, _ int64, _ ...drives.CreateOpt) (drives.Drive, error) {
+	cloud.MockVolumes.CreateVolumeFn = func(_ context.Context, _, _ string, _ int64, _ ...volumes.CreateOpt) (volumes.Volume, error) {
 		return nil, errors.New("throw me")
 	}
-	cloud.MockDrives.DeleteDriveFn = func(_ context.Context, _ string) error {
+	cloud.MockVolumes.DeleteVolumeFn = func(_ context.Context, _ string) error {
 		return errors.New("throw me")
 	}
-	cloud.MockDrives.ListSnapshotsFn = func(_ context.Context, _ string) (<-chan drives.Snapshot, <-chan error) {
-		lc := make(chan drives.Snapshot)
+	cloud.MockVolumes.ListSnapshotsFn = func(_ context.Context, _ string) (<-chan volumes.Snapshot, <-chan error) {
+		lc := make(chan volumes.Snapshot)
 		close(lc)
 		ec := make(chan error, 1)
 		ec <- errors.New("throw me")
 		close(ec)
 		return lc, ec
 	}
-	cloud.MockDrives.GetSnapshotFn = func(_ context.Context, _ string) (drives.Snapshot, error) {
+	cloud.MockVolumes.GetSnapshotFn = func(_ context.Context, _ string) (volumes.Snapshot, error) {
 		return nil, errors.New("throw me")
 	}
-	cloud.MockDrives.CreateSnapshotFn = func(_ context.Context, _, _ string, _ ...drives.SnapshotOpt) (drives.Snapshot, error) {
+	cloud.MockVolumes.CreateSnapshotFn = func(_ context.Context, _, _ string, _ ...volumes.SnapshotOpt) (volumes.Snapshot, error) {
 		return nil, errors.New("throw me")
 	}
-	cloud.MockDrives.DeleteSnapshotFn = func(_ context.Context, _ string) error {
+	cloud.MockVolumes.DeleteSnapshotFn = func(_ context.Context, _ string) error {
 		return errors.New("throw me")
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 var r = { name: "", slug: "", sizes: [], available: true, features: [] };
 var dr = {
@@ -81,16 +81,16 @@ var dr = {
 	droplet_ids: []
 };
 var snap = {
-	drive: "",
+	volume: "",
 	name: "",
 	desc: ""
 };
 
 [
-	{ name: "list_drives",         fn: function() { pkg.list_drives() } },
-	{ name: "get_drive",           fn: function() { pkg.get_drive("hello.com") } },
-	{ name: "create_drive",        fn: function() { pkg.create_drive(dr) } },
-	{ name: "delete_drive",        fn: function() { pkg.delete_drive("") } },
+	{ name: "list_volumes",         fn: function() { pkg.list_volumes() } },
+	{ name: "get_volume",           fn: function() { pkg.get_volume("hello.com") } },
+	{ name: "create_volume",        fn: function() { pkg.create_volume(dr) } },
+	{ name: "delete_volume",        fn: function() { pkg.delete_volume("") } },
 
 	{ name: "list_snapshots",      fn: function() { pkg.list_snapshots("") } },
 	{ name: "get_snapshot",        fn: function() { pkg.get_snapshot("") } },
@@ -108,11 +108,11 @@ var snap = {
 })`)
 }
 
-type drive struct {
-	*godo.Drive
+type volume struct {
+	*godo.Volume
 }
 
-func (k *drive) Struct() *godo.Drive { return k.Drive }
+func (k *volume) Struct() *godo.Volume { return k.Volume }
 
 type snapshot struct {
 	*godo.Snapshot
@@ -124,11 +124,11 @@ var (
 	region = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
 )
 
-func TestDriveList(t *testing.T) {
+func TestVolumeList(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.ListDrivesFn = func(_ context.Context) (<-chan drives.Drive, <-chan error) {
-		lc := make(chan drives.Drive, 1)
-		lc <- &drive{&godo.Drive{
+	cloud.MockVolumes.ListVolumesFn = func(_ context.Context) (<-chan volumes.Volume, <-chan error) {
+		lc := make(chan volumes.Volume, 1)
+		lc <- &volume{&godo.Volume{
 			ID:            "lol",
 			Region:        region,
 			Name:          "my_name",
@@ -142,9 +142,9 @@ func TestDriveList(t *testing.T) {
 		return lc, ec
 	}
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
-var list = pkg.list_drives();
+var list = pkg.list_volumes();
 assert(list != null, "should have received a list");
 assert(list.length > 0, "should have received some elements")
 
@@ -163,10 +163,10 @@ equals(d, want, "should have proper object");
 `)
 }
 
-func TestDriveGet(t *testing.T) {
+func TestVolumeGet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.GetDriveFn = func(_ context.Context, _ string) (drives.Drive, error) {
-		return &drive{&godo.Drive{
+	cloud.MockVolumes.GetVolumeFn = func(_ context.Context, _ string) (volumes.Volume, error) {
+		return &volume{&godo.Volume{
 			ID:            "lol",
 			Region:        region,
 			Name:          "my_name",
@@ -177,11 +177,11 @@ func TestDriveGet(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
 
-var d = pkg.get_drive("my_name")
+var d = pkg.get_volume("my_name")
 var want = {
 	id:          "lol",
 	region:      region,
@@ -194,10 +194,10 @@ equals(d, want, "should have proper object");
 `)
 }
 
-func TestDriveCreate(t *testing.T) {
+func TestVolumeCreate(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.CreateDriveFn = func(_ context.Context, _, _ string, _ int64, _ ...drives.CreateOpt) (drives.Drive, error) {
-		return &drive{&godo.Drive{
+	cloud.MockVolumes.CreateVolumeFn = func(_ context.Context, _, _ string, _ int64, _ ...volumes.CreateOpt) (volumes.Volume, error) {
+		return &volume{&godo.Volume{
 			ID:            "lol",
 			Region:        region,
 			Name:          "my_name",
@@ -208,11 +208,11 @@ func TestDriveCreate(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
 
-var d = pkg.create_drive({
+var d = pkg.create_volume({
 	name: "my_name",
 	size: 100,
 	region: region
@@ -229,10 +229,10 @@ equals(d, want, "should have proper object");
 `)
 }
 
-func TestDriveDelete(t *testing.T) {
+func TestVolumeDelete(t *testing.T) {
 	wantName := "my name"
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.DeleteDriveFn = func(_ context.Context, gotName string) error {
+	cloud.MockVolumes.DeleteVolumeFn = func(_ context.Context, gotName string) error {
 		if gotName != wantName {
 			t.Fatalf("want %q got %q", wantName, gotName)
 		}
@@ -240,26 +240,26 @@ func TestDriveDelete(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
-pkg.delete_drive("my name");
+pkg.delete_volume("my name");
 `)
 }
 
 func TestListSnapshot(t *testing.T) {
 	wantName := "my name"
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.ListSnapshotsFn = func(_ context.Context, gotName string) (<-chan drives.Snapshot, <-chan error) {
+	cloud.MockVolumes.ListSnapshotsFn = func(_ context.Context, gotName string) (<-chan volumes.Snapshot, <-chan error) {
 		if gotName != wantName {
 			t.Fatalf("want %q got %q", wantName, gotName)
 		}
-		lc := make(chan drives.Snapshot, 1)
+		lc := make(chan volumes.Snapshot, 1)
 		lc <- &snapshot{&godo.Snapshot{
 			ID:            "lol",
-			DriveID:       "lolzzzz",
+			VolumeID:      "lolzzzz",
 			Region:        region,
 			Name:          "my_name",
-			SizeGibiBytes: 100,
+			SizeGigaBytes: 100,
 			Description:   "lolz",
 		}}
 		close(lc)
@@ -269,7 +269,7 @@ func TestListSnapshot(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 var snapshots = pkg.list_snapshots("my name");
 assert(snapshots != null, "should have received a snapshots");
@@ -280,7 +280,7 @@ var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true
 var d = snapshots[0];
 var want = {
 	id:          "lol",
-	drive_id:    "lolzzzz",
+	volume_id:    "lolzzzz",
 	region:      region,
 	name:        "my_name",
 	size:        100,
@@ -293,29 +293,29 @@ equals(d, want, "should have proper object");
 func TestGetSnapshot(t *testing.T) {
 	wantName := "my_name"
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.GetSnapshotFn = func(_ context.Context, gotName string) (drives.Snapshot, error) {
+	cloud.MockVolumes.GetSnapshotFn = func(_ context.Context, gotName string) (volumes.Snapshot, error) {
 		if gotName != wantName {
 			t.Fatalf("want %q got %q", wantName, gotName)
 		}
 		return &snapshot{&godo.Snapshot{
 			ID:            "lol",
-			DriveID:       "lolzzzz",
+			VolumeID:      "lolzzzz",
 			Region:        region,
 			Name:          wantName,
-			SizeGibiBytes: 100,
+			SizeGigaBytes: 100,
 			Description:   "lolz",
 		}}, nil
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
 
 var d = pkg.get_snapshot("my_name", 42)
 var want = {
 	id:          "lol",
-	drive_id:    "lolzzzz",
+	volume_id:    "lolzzzz",
 	region:      region,
 	name:        "my_name",
 	size:        100,
@@ -327,37 +327,36 @@ equals(d, want, "should have proper object");
 
 func TestCreateSnapshot(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.CreateSnapshotFn = func(_ context.Context, _, _ string, _ ...drives.SnapshotOpt) (drives.Snapshot, error) {
+	cloud.MockVolumes.CreateSnapshotFn = func(_ context.Context, _, _ string, _ ...volumes.SnapshotOpt) (volumes.Snapshot, error) {
 		return &snapshot{&godo.Snapshot{
 			ID:            "lol",
-			DriveID:       "lolzzzz",
+			VolumeID:      "lolzzzz",
 			Region:        region,
 			Name:          "my_name",
-			SizeGibiBytes: 100,
+			SizeGigaBytes: 100,
 			Description:   "lolz",
 		}}, nil
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
 
 var arg = {
 	id:          "lol",
-	drive:       "lolzzzz",
+	volume:       "lolzzzz",
 	region:      region,
 	name:        "my_name",
-	size:        100,
 	description: "lolz",
 };
 var want = {
 	id:          "lol",
-	drive_id:       "lolzzzz",
+	volume_id:	 "lolzzzz",
 	region:      region,
 	name:        "my_name",
-	size:        100,
 	description: "lolz",
+	size:        100,
 };
 
 var d = pkg.create_snapshot(arg);
@@ -370,7 +369,7 @@ func TestDeleteSnapshot(t *testing.T) {
 	wantID := "my id"
 
 	cloud := mockcloud.Client(nil)
-	cloud.MockDrives.DeleteSnapshotFn = func(_ context.Context, gotID string) error {
+	cloud.MockVolumes.DeleteSnapshotFn = func(_ context.Context, gotID string) error {
 
 		if gotID != wantID {
 			t.Fatalf("want %v got %v", wantID, gotID)
@@ -379,7 +378,7 @@ func TestDeleteSnapshot(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.drives;
+var pkg = cloud.volumes;
 
 pkg.delete_snapshot("my id");
 `)

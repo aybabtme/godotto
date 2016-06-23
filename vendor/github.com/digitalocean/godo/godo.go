@@ -174,13 +174,7 @@ type ClientOpt func(*Client) error
 
 // New returns a new DIgitalOcean API client instance.
 func New(httpClient *http.Client, opts ...ClientOpt) (*Client, error) {
-	if httpClient == nil {
-		httpClient = http.DefaultClient
-	}
-
-	baseURL, _ := url.Parse(defaultBaseURL)
-
-	c := &Client{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
+	c := NewClient(httpClient)
 	for _, opt := range opts {
 		if err := opt(c); err != nil {
 			return nil, err
@@ -237,7 +231,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 
 	req.Header.Add("Content-Type", mediaType)
 	req.Header.Add("Accept", mediaType)
-	req.Header.Add("User-Agent", userAgent)
+	req.Header.Add("User-Agent", c.UserAgent)
 	return req, nil
 }
 
