@@ -2,6 +2,7 @@ package volumes
 
 import (
 	"fmt"
+	"log"
 
 	"golang.org/x/net/context"
 
@@ -122,7 +123,7 @@ func (svc *volumeSvc) createSnapshot(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
 	req := godojs.ArgSnapshotCreateRequest(vm, arg)
-
+	log.Printf("%#v", req)
 	d, err := svc.svc.CreateSnapshot(svc.ctx, req.VolumeID, req.Name,
 		volumes.SetSnapshotDescription(req.Description),
 	)

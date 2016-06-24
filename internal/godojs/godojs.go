@@ -346,7 +346,7 @@ func ArgVolume(vm *otto.Otto, v otto.Value) *godo.Volume {
 
 func ArgVolumeCreateRequest(vm *otto.Otto, v otto.Value) *godo.VolumeCreateRequest {
 	if !v.IsDefined() || v.IsNull() {
-		return nil
+		ottoutil.Throw(vm, "argument must be a Volume create request, got nothing")
 	}
 	if !v.IsObject() {
 		ottoutil.Throw(vm, "argument must be a Volume, got a %q", v.Class())
@@ -374,7 +374,7 @@ func ArgVolumeID(vm *otto.Otto, v otto.Value) string {
 
 func ArgSnapshotCreateRequest(vm *otto.Otto, v otto.Value) *godo.SnapshotCreateRequest {
 	if !v.IsDefined() || v.IsNull() {
-		return nil
+		ottoutil.Throw(vm, "argument must be a Snapshot create request, got nothing")
 	}
 	if !v.IsObject() {
 		ottoutil.Throw(vm, "argument must be a Snapshot, got a %q", v.Class())
