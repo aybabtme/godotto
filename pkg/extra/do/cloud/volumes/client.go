@@ -154,7 +154,7 @@ func (svc *client) CreateSnapshot(ctx context.Context, volumeID, name string, op
 	}
 	opt.req.VolumeID = volumeID
 	opt.req.Name = name
-	d, _, err := svc.g.Storage.CreateSnapshot(opt.req)
+	d, _, err := svc.g.Storage.(godo.BetaStorageService).CreateSnapshot(opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (svc *client) CreateSnapshot(ctx context.Context, volumeID, name string, op
 }
 
 func (svc *client) GetSnapshot(ctx context.Context, id string) (Snapshot, error) {
-	d, _, err := svc.g.Storage.GetSnapshot(id)
+	d, _, err := svc.g.Storage.(godo.BetaStorageService).GetSnapshot(id)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (svc *client) GetSnapshot(ctx context.Context, id string) (Snapshot, error)
 }
 
 func (svc *client) DeleteSnapshot(ctx context.Context, id string) error {
-	_, err := svc.g.Storage.DeleteSnapshot(id)
+	_, err := svc.g.Storage.(godo.BetaStorageService).DeleteSnapshot(id)
 	return err
 }
 
@@ -182,7 +182,7 @@ func (svc *client) ListSnapshots(ctx context.Context, volumeID string) (<-chan S
 		defer close(outc)
 		defer close(errc)
 		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Storage.ListSnapshots(volumeID, opt)
+			r, resp, err := svc.g.Storage.(godo.BetaStorageService).ListSnapshots(volumeID, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {
