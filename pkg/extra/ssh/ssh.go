@@ -127,15 +127,22 @@ func (svc *sshSvc) optionalConnectArgs(vm *otto.Otto, opts *connectOpts, v otto.
 }
 
 func (svc *sshSvc) connect(ctx context.Context, opts *connectOpts) (*ssh.Client, error) {
-	if opts.Timeout != 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
-		defer cancel()
+	if opts.Timeout == 0 {
+		opts.Timeout = time.Hour // always timeout after an hour
 	}
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+	defer cancel()
 
 	addr := net.JoinHostPort(opts.Hostname, opts.Port)
 	var err error
 	for {
+		// respect the cancelled contexts
+		select {
+		default:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
 		conn, derr := net.DialTimeout("tcp", addr, 2*time.Second)
 		if derr != nil {
 			if retryable(derr) {
