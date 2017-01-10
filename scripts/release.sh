@@ -23,19 +23,19 @@ set -u -e
 rm -rf /tmp/dorepl_build/
 
 mkdir -p /tmp/dorepl_build/linux
-GOOS=linux godep go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/linux/dorepl github.com/aybabtme/godotto/cmd/dorepl
+GOOS=linux go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/linux/dorepl github.com/aybabtme/godotto/cmd/dorepl
 pushd /tmp/dorepl_build/linux/
 tar cvzf /tmp/dorepl_build/dorepl_linux.tar.gz dorepl
 popd
 
 mkdir -p /tmp/dorepl_build/darwin
-GOOS=darwin godep go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/darwin/dorepl github.com/aybabtme/godotto/cmd/dorepl
+GOOS=darwin go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/darwin/dorepl github.com/aybabtme/godotto/cmd/dorepl
 pushd /tmp/dorepl_build/darwin/
 tar cvzf /tmp/dorepl_build/dorepl_darwin.tar.gz dorepl
 popd
 
 mkdir -p /tmp/dorepl_build/windows
-GOOS=windows godep go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/windows/dorepl.exe github.com/aybabtme/godotto/cmd/dorepl
+GOOS=windows go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/windows/dorepl.exe github.com/aybabtme/godotto/cmd/dorepl
 pushd /tmp/dorepl_build/windows/
 zip /tmp/dorepl_build/dorepl_windows.zip dorepl.exe
 popd
