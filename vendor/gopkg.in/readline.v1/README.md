@@ -158,7 +158,7 @@ Notice: `Meta`+`B` is equals with `Alt`+`B` in windows.
 | `Ctrl`+`I` / `Tab` | Command line completion                  |
 | `Ctrl`+`J`         | Line feed                                |
 | `Ctrl`+`K`         | Cut text to the end of line              |
-| `Ctrl`+`L`         | Clean screen (TODO)                      |
+| `Ctrl`+`L`         | Clear screen                             |
 | `Ctrl`+`M`         | Same as Enter key                        |
 | `Ctrl`+`N` / `↓`   | Next line (in history)                   |
 | `Ctrl`+`P` / `↑`   | Prev line (in history)                   |
@@ -222,6 +222,7 @@ If you test it otherwhere, whether it works fine or not, please let me know!
 * [abiosoft/ishell](https://github.com/abiosoft/ishell)
 * [robertkrimen/otto](https://github.com/robertkrimen/otto)
 * [Netflix/hal-9001](https://github.com/Netflix/hal-9001)
+* [docker/go-p9p](https://github.com/docker/go-p9p)
 
 # Feedback
 

@@ -1,9 +1,10 @@
 package actions
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Actions service.
@@ -30,7 +31,7 @@ type client struct {
 }
 
 func (svc *client) Get(ctx context.Context, id int) (Action, error) {
-	d, _, err := svc.g.Actions.Get(id)
+	d, _, err := svc.g.Actions.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +45,8 @@ func (svc *client) List(ctx context.Context) (<-chan Action, <-chan error) {
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Actions.List(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Actions.List(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

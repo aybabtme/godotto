@@ -142,7 +142,7 @@ func newError(rt *_runtime, name string, stackFramesToPop int, in ...interface{}
 	description := ""
 	length := len(in)
 
-	if rt != nil {
+	if rt != nil && rt.scope != nil {
 		scope := rt.scope
 
 		for i := 0; i < stackFramesToPop; i++ {
@@ -159,7 +159,7 @@ func newError(rt *_runtime, name string, stackFramesToPop int, in ...interface{}
 				if scope != nil {
 					frame.offset = int(at)
 				}
-				length -= 1
+				length--
 			}
 			if length > 0 {
 				description, in = in[0].(string), in[1:]

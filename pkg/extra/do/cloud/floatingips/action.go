@@ -1,8 +1,9 @@
 package floatingips
 
 import (
+	"context"
+
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // An ActionClient can interact with the DigitalOcean FloatingIPActions service.
@@ -16,11 +17,11 @@ type actionClient struct {
 }
 
 func (svc *actionClient) Assign(ctx context.Context, ip string, dropletID int) error {
-	_, _, err := svc.g.FloatingIPActions.Assign(ip, dropletID)
+	_, _, err := svc.g.FloatingIPActions.Assign(ctx, ip, dropletID)
 	return err
 }
 
 func (svc *actionClient) Unassign(ctx context.Context, ip string) error {
-	_, _, err := svc.g.FloatingIPActions.Unassign(ip)
+	_, _, err := svc.g.FloatingIPActions.Unassign(ctx, ip)
 	return err
 }

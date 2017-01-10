@@ -1,8 +1,9 @@
 package volumes
 
 import (
+	"context"
+
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // An ActionClient can interact with the DigitalOcean StorageAction service.
@@ -16,11 +17,11 @@ type actionClient struct {
 }
 
 func (svc *actionClient) Attach(ctx context.Context, driveID string, dropletID int) error {
-	_, _, err := svc.g.StorageActions.Attach(driveID, dropletID)
+	_, _, err := svc.g.StorageActions.Attach(ctx, driveID, dropletID)
 	return err
 }
 
 func (svc *actionClient) Detach(ctx context.Context, driveID string) error {
-	_, _, err := svc.g.StorageActions.Detach(driveID)
+	_, _, err := svc.g.StorageActions.Detach(ctx, driveID)
 	return err
 }

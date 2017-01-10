@@ -1,0 +1,63 @@
+hash: a8e6388876e529ccc435f8a22d46acdbe7845919c77ff991f1b1c662fc97693e
+updated: 2017-01-10T13:19:19.508195553-03:00
+imports:
+- name: github.com/digitalocean/godo
+  version: 299c06642e6e933841d66d28f1a4fb51275ee67f
+- name: github.com/golang/protobuf
+  version: 888eb0692c857ec880338addf316bd662d5e630e
+  subpackages:
+  - proto
+- name: github.com/google/go-querystring
+  version: 9235644dd9e52eeae6fa48efd539fdc351a0af53
+  subpackages:
+  - query
+- name: github.com/robertkrimen/otto
+  version: bf1c3795ba078da6905fe80bfbc3ed3d8c36e9aa
+  subpackages:
+  - ast
+  - dbg
+  - file
+  - parser
+  - registry
+  - token
+  - underscore
+- name: github.com/tent/http-link-go
+  version: ac974c61c2f990f4115b119354b5e0b47550e888
+- name: golang.org/x/crypto
+  version: 7c6cc321c680f03b9ef0764448e780704f486b51
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - ssh
+  - ssh/agent
+  - ssh/terminal
+- name: golang.org/x/net
+  version: 6a513affb38dc9788b449d59ffed099b8de18fa0
+  subpackages:
+  - context
+- name: golang.org/x/oauth2
+  version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+  subpackages:
+  - internal
+- name: golang.org/x/sys
+  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  subpackages:
+  - unix
+- name: google.golang.org/appengine
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
+- name: gopkg.in/readline.v1
+  version: 62c6fe6193755f722b8b8788aa7357be55a50ff1
+- name: gopkg.in/sourcemap.v1
+  version: eef8f47ab679652a7d3a4ee34c34314d255d2536
+  subpackages:
+  - base64vlq
+testImports: []

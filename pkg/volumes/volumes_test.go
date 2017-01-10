@@ -1,10 +1,9 @@
 package volumes_test
 
 import (
+	"context"
 	"errors"
 	"testing"
-
-	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
@@ -256,11 +255,10 @@ func TestListSnapshot(t *testing.T) {
 		lc := make(chan volumes.Snapshot, 1)
 		lc <- &snapshot{&godo.Snapshot{
 			ID:            "lol",
-			VolumeID:      "lolzzzz",
-			Region:        region,
+			ResourceID:    "lolzzzz",
+			Regions:       []string{region.Slug},
 			Name:          "my_name",
 			SizeGigaBytes: 100,
-			Description:   "lolz",
 		}}
 		close(lc)
 		ec := make(chan error)
@@ -275,16 +273,13 @@ var snapshots = pkg.list_snapshots("my name");
 assert(snapshots != null, "should have received a snapshots");
 assert(snapshots.length > 0, "should have received some elements")
 
-var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
-
 var d = snapshots[0];
 var want = {
 	id:          "lol",
 	volume_id:    "lolzzzz",
-	region:      region,
+	regions:     ["nyc3"],
 	name:        "my_name",
 	size:        100,
-	description: "lolz",
 };
 equals(d, want, "should have proper object");
 `)
@@ -299,11 +294,10 @@ func TestGetSnapshot(t *testing.T) {
 		}
 		return &snapshot{&godo.Snapshot{
 			ID:            "lol",
-			VolumeID:      "lolzzzz",
-			Region:        region,
+			ResourceID:    "lolzzzz",
+			Regions:       []string{region.Slug},
 			Name:          wantName,
 			SizeGigaBytes: 100,
-			Description:   "lolz",
 		}}, nil
 	}
 
@@ -316,10 +310,9 @@ var d = pkg.get_snapshot("my_name", 42)
 var want = {
 	id:          "lol",
 	volume_id:    "lolzzzz",
-	region:      region,
+	regions:      ["nyc3"],
 	name:        "my_name",
-	size:        100,
-	description: "lolz",
+	size:        100
 };
 equals(d, want, "should have proper object");
 `)
@@ -330,11 +323,10 @@ func TestCreateSnapshot(t *testing.T) {
 	cloud.MockVolumes.CreateSnapshotFn = func(_ context.Context, _, _ string, _ ...volumes.SnapshotOpt) (volumes.Snapshot, error) {
 		return &snapshot{&godo.Snapshot{
 			ID:            "lol",
-			VolumeID:      "lolzzzz",
-			Region:        region,
+			ResourceID:    "lolzzzz",
+			Regions:       []string{region.Slug},
 			Name:          "my_name",
 			SizeGigaBytes: 100,
-			Description:   "lolz",
 		}}, nil
 	}
 
@@ -353,9 +345,8 @@ var arg = {
 var want = {
 	id:          "lol",
 	volume_id:	 "lolzzzz",
-	region:      region,
+	regions:      ["nyc3"],
 	name:        "my_name",
-	description: "lolz",
 	size:        100,
 };
 

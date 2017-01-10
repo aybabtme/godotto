@@ -63,7 +63,7 @@ func main() {
 	gc := godo.NewClient(oauth2.NewClient(oauth2.NoContext,
 		oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *apiToken}),
 	))
-	acc, _, err := gc.Account.Get()
+	acc, _, err := gc.Account.Get(context.TODO())
 	if err != nil {
 		log.Fatalf("can't query DigitalOcean account, is your token valid?\n%v", err)
 	}

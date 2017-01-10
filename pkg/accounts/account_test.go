@@ -3,8 +3,7 @@ package accounts_test
 import (
 	"errors"
 	"testing"
-
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"

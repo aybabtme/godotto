@@ -1,10 +1,9 @@
 package volumes_test
 
 import (
+	"context"
 	"errors"
 	"testing"
-
-	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"

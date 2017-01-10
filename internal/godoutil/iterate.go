@@ -1,14 +1,15 @@
 package godoutil
 
 import (
+	"context"
+
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
-func IterateList(ctx context.Context, fn func(*godo.ListOptions) (*godo.Response, error)) error {
+func IterateList(ctx context.Context, fn func(context.Context, *godo.ListOptions) (*godo.Response, error)) error {
 	opt := &godo.ListOptions{Page: 1, PerPage: 200}
 	for {
-		resp, err := fn(opt)
+		resp, err := fn(ctx, opt)
 		if err != nil {
 			return err
 		}

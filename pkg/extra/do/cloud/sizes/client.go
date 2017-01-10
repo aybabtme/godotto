@@ -1,9 +1,10 @@
 package sizes
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean sizes service.
@@ -35,8 +36,8 @@ func (svc *client) List(ctx context.Context) (<-chan Size, <-chan error) {
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Sizes.List(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Sizes.List(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

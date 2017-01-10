@@ -1,6 +1,7 @@
 package floatingips
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aybabtme/godotto/internal/godojs"
@@ -8,7 +9,6 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/robertkrimen/otto"
-	"golang.org/x/net/context"
 )
 
 func applyAction(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {

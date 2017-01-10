@@ -1,9 +1,10 @@
 package images
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Images service.
@@ -36,7 +37,7 @@ type client struct {
 }
 
 func (svc *client) GetByID(ctx context.Context, id int) (Image, error) {
-	d, _, err := svc.g.Images.GetByID(id)
+	d, _, err := svc.g.Images.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (svc *client) GetByID(ctx context.Context, id int) (Image, error) {
 }
 
 func (svc *client) GetBySlug(ctx context.Context, slug string) (Image, error) {
-	d, _, err := svc.g.Images.GetBySlug(slug)
+	d, _, err := svc.g.Images.GetBySlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (svc *client) Update(ctx context.Context, id int, opts ...UpdateOpt) (Image
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Images.Update(id, opt.req)
+	d, _, err := svc.g.Images.Update(ctx, id, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func (svc *client) Update(ctx context.Context, id int, opts ...UpdateOpt) (Image
 }
 
 func (svc *client) Delete(ctx context.Context, id int) error {
-	_, err := svc.g.Images.Delete(id)
+	_, err := svc.g.Images.Delete(ctx, id)
 	return err
 }
 
@@ -101,7 +102,7 @@ func (svc *client) ListUser(ctx context.Context) (<-chan Image, <-chan error) {
 	return svc.listCommon(ctx, svc.g.Images.ListUser)
 }
 
-type listfunc func(*godo.ListOptions) ([]godo.Image, *godo.Response, error)
+type listfunc func(context.Context, *godo.ListOptions) ([]godo.Image, *godo.Response, error)
 
 func (svc *client) listCommon(ctx context.Context, listFn listfunc) (<-chan Image, <-chan error) {
 	outc := make(chan Image, 1)
@@ -110,8 +111,8 @@ func (svc *client) listCommon(ctx context.Context, listFn listfunc) (<-chan Imag
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := listFn(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := listFn(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

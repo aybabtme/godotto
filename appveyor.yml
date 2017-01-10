@@ -13,9 +13,10 @@ install:
   - echo %GOPATH%
   - go version
   - go env
-  - go get github.com/tools/godep
-  - c:\gopath\bin\godep version
+  - go get github.com/Masterminds/glide
+  - c:\gopath\bin\glide -v
 
 build_script:
-  - c:\gopath\bin\godep go test -v -cover ./...
-  - c:\gopath\bin\godep go build ./cmd/...
+  - c:\gopath\bin\glide install
+  - go test -v -cover ./cmd/... ./internal/... ./pkg/...
+  - go build ./cmd/...

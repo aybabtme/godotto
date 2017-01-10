@@ -1,7 +1,7 @@
 language: go
 go:
-  - 1.6
+  - 1.7
 sudo: false
 install:
-    - go get github.com/tools/godep
-script: $GOPATH/bin/godep version && $GOPATH/bin/godep go test ./...
+    - go get github.com/Masterminds/glide
+script: $GOPATH/bin/glide -version && go test $($GOPATH/bin/glide nv)

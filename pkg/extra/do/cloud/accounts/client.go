@@ -1,8 +1,9 @@
 package accounts
 
 import (
+	"context"
+
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Accounts service.
@@ -28,7 +29,7 @@ type client struct {
 }
 
 func (svc *client) Get(ctx context.Context) (Account, error) {
-	d, _, err := svc.g.Account.Get()
+	d, _, err := svc.g.Account.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
