@@ -1,10 +1,9 @@
 package spycloud_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
-
-	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"

@@ -12,6 +12,8 @@ That's it!
 package mockcloud
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/accounts"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
@@ -23,7 +25,6 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
-	"golang.org/x/net/context"
 )
 
 // Client

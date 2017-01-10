@@ -2,8 +2,7 @@ package sizes
 
 import (
 	"fmt"
-
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"

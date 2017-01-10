@@ -1,9 +1,10 @@
 package droplets
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Droplets service.
@@ -61,7 +62,7 @@ func (svc *client) Create(ctx context.Context, name, region, size, image string,
 	opt.req.Region = region
 	opt.req.Image.Slug = image
 
-	d, resp, err := svc.g.Droplets.Create(opt.req)
+	d, resp, err := svc.g.Droplets.Create(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func (svc *client) Create(ctx context.Context, name, region, size, image string,
 }
 
 func (svc *client) Get(ctx context.Context, id int) (Droplet, error) {
-	d, _, err := svc.g.Droplets.Get(id)
+	d, _, err := svc.g.Droplets.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (svc *client) Get(ctx context.Context, id int) (Droplet, error) {
 }
 
 func (svc *client) Delete(ctx context.Context, id int) error {
-	resp, err := svc.g.Droplets.Delete(id)
+	resp, err := svc.g.Droplets.Delete(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -92,8 +93,8 @@ func (svc *client) List(ctx context.Context) (<-chan Droplet, <-chan error) {
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Droplets.List(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Droplets.List(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

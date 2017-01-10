@@ -1,9 +1,10 @@
 package domains
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Domains service.
@@ -63,7 +64,7 @@ func (svc *client) Create(ctx context.Context, name, ip string, opts ...CreateOp
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Domains.Create(opt.req)
+	d, _, err := svc.g.Domains.Create(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,7 @@ func (svc *client) Create(ctx context.Context, name, ip string, opts ...CreateOp
 }
 
 func (svc *client) Get(ctx context.Context, name string) (Domain, error) {
-	d, _, err := svc.g.Domains.Get(name)
+	d, _, err := svc.g.Domains.Get(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (svc *client) Get(ctx context.Context, name string) (Domain, error) {
 }
 
 func (svc *client) Delete(ctx context.Context, name string) error {
-	_, err := svc.g.Domains.Delete(name)
+	_, err := svc.g.Domains.Delete(ctx, name)
 	return err
 }
 
@@ -90,8 +91,8 @@ func (svc *client) List(ctx context.Context) (<-chan Domain, <-chan error) {
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Domains.List(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Domains.List(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {
@@ -139,7 +140,7 @@ func (svc *client) CreateRecord(ctx context.Context, name string, opts ...Record
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Domains.CreateRecord(name, opt.req)
+	d, _, err := svc.g.Domains.CreateRecord(ctx, name, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +148,7 @@ func (svc *client) CreateRecord(ctx context.Context, name string, opts ...Record
 }
 
 func (svc *client) GetRecord(ctx context.Context, name string, id int) (Record, error) {
-	d, _, err := svc.g.Domains.Record(name, id)
+	d, _, err := svc.g.Domains.Record(ctx, name, id)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +160,7 @@ func (svc *client) UpdateRecord(ctx context.Context, name string, id int, opts .
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Domains.EditRecord(name, id, opt.req)
+	d, _, err := svc.g.Domains.EditRecord(ctx, name, id, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +168,7 @@ func (svc *client) UpdateRecord(ctx context.Context, name string, id int, opts .
 }
 
 func (svc *client) DeleteRecord(ctx context.Context, name string, id int) error {
-	_, err := svc.g.Domains.DeleteRecord(name, id)
+	_, err := svc.g.Domains.DeleteRecord(ctx, name, id)
 	return err
 }
 
@@ -178,8 +179,8 @@ func (svc *client) ListRecord(ctx context.Context, name string) (<-chan Record, 
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Domains.Records(name, opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Domains.Records(ctx, name, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

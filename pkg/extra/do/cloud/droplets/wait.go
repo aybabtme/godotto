@@ -1,6 +1,7 @@
 package droplets
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // waitForActions loops through each actions in godo links and wait until they finish
@@ -21,7 +21,7 @@ func waitForActions(ctx context.Context, cloud *godo.Client, links *godo.Links) 
 	}
 
 	for _, actionLink := range links.Actions {
-		action, _, err := actionLink.Get(cloud)
+		action, _, err := actionLink.Get(ctx, cloud)
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func waitForAction(ctx context.Context, cloud *godo.Client, action *godo.Action)
 	for attempt := 0.0; ; attempt += 1.0 {
 
 		var err error
-		action, _, err = cloud.Actions.Get(action.ID)
+		action, _, err = cloud.Actions.Get(ctx, action.ID)
 		if err != nil {
 			return err
 		}

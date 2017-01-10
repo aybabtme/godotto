@@ -1,6 +1,7 @@
 package spycloud
 
 import (
+	"context"
 	"sync"
 
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
@@ -11,7 +12,6 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Spy lets you see what's been created by a client.

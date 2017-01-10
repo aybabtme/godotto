@@ -394,12 +394,13 @@ func ArgSnapshot(vm *otto.Otto, v otto.Value) *godo.Snapshot {
 		ottoutil.Throw(vm, "argument must be a Snapshot, got a %q", v.Class())
 	}
 	return &godo.Snapshot{
-		ID:            ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", false)),
-		VolumeID:      ottoutil.String(vm, ottoutil.GetObject(vm, v, "volume_id", false)),
-		Region:        ArgRegion(vm, ottoutil.GetObject(vm, v, "region", false)),
+		ID:         ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", false)),
+		ResourceID: ottoutil.String(vm, ottoutil.GetObject(vm, v, "volume_id", false)),
+		Regions: []string{
+			ArgRegion(vm, ottoutil.GetObject(vm, v, "region", false)).Slug,
+		},
 		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", false)),
-		SizeGigaBytes: int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", false))),
-		Description:   ottoutil.String(vm, ottoutil.GetObject(vm, v, "desc", false)),
+		SizeGigaBytes: float64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", false))),
 	}
 }
 
@@ -594,12 +595,11 @@ func VolumeSnapshotToVM(vm *otto.Otto, g *godo.Snapshot) otto.Value {
 		return otto.NullValue()
 	}
 	return ottoutil.ToPkg(vm, map[string]interface{}{
-		"id":          g.ID,
-		"volume_id":   g.VolumeID,
-		"name":        g.Name,
-		"region":      RegionToVM(vm, g.Region),
-		"size":        int64(g.SizeGigaBytes),
-		"description": g.Description,
+		"id":        g.ID,
+		"volume_id": g.ResourceID,
+		"name":      g.Name,
+		"regions":   g.Regions,
+		"size":      int64(g.SizeGigaBytes),
 	})
 }
 

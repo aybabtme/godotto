@@ -1,9 +1,8 @@
 package regions
 
 import (
+	"context"
 	"fmt"
-
-	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/internal/godojs"
 	"github.com/aybabtme/godotto/internal/ottoutil"

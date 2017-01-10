@@ -1,9 +1,10 @@
 package volumes
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Volumes service.
@@ -71,7 +72,7 @@ func (svc *client) CreateVolume(ctx context.Context, name, region string, sizeGi
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Storage.CreateVolume(opt.req)
+	d, _, err := svc.g.Storage.CreateVolume(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (svc *client) CreateVolume(ctx context.Context, name, region string, sizeGi
 }
 
 func (svc *client) GetVolume(ctx context.Context, name string) (Volume, error) {
-	d, _, err := svc.g.Storage.GetVolume(name)
+	d, _, err := svc.g.Storage.GetVolume(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +88,7 @@ func (svc *client) GetVolume(ctx context.Context, name string) (Volume, error) {
 }
 
 func (svc *client) DeleteVolume(ctx context.Context, name string) error {
-	_, err := svc.g.Storage.DeleteVolume(name)
+	_, err := svc.g.Storage.DeleteVolume(ctx, name)
 	return err
 }
 
@@ -98,8 +99,8 @@ func (svc *client) ListVolumes(ctx context.Context) (<-chan Volume, <-chan error
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Storage.ListVolumes(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Storage.ListVolumes(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {
@@ -154,7 +155,7 @@ func (svc *client) CreateSnapshot(ctx context.Context, volumeID, name string, op
 	}
 	opt.req.VolumeID = volumeID
 	opt.req.Name = name
-	d, _, err := svc.g.Storage.(godo.BetaStorageService).CreateSnapshot(opt.req)
+	d, _, err := svc.g.Storage.CreateSnapshot(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +163,7 @@ func (svc *client) CreateSnapshot(ctx context.Context, volumeID, name string, op
 }
 
 func (svc *client) GetSnapshot(ctx context.Context, id string) (Snapshot, error) {
-	d, _, err := svc.g.Storage.(godo.BetaStorageService).GetSnapshot(id)
+	d, _, err := svc.g.Storage.GetSnapshot(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +171,7 @@ func (svc *client) GetSnapshot(ctx context.Context, id string) (Snapshot, error)
 }
 
 func (svc *client) DeleteSnapshot(ctx context.Context, id string) error {
-	_, err := svc.g.Storage.(godo.BetaStorageService).DeleteSnapshot(id)
+	_, err := svc.g.Storage.DeleteSnapshot(ctx, id)
 	return err
 }
 
@@ -181,8 +182,8 @@ func (svc *client) ListSnapshots(ctx context.Context, volumeID string) (<-chan S
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Storage.(godo.BetaStorageService).ListSnapshots(volumeID, opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Storage.ListSnapshots(ctx, volumeID, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

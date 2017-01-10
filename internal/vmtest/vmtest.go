@@ -52,7 +52,7 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 			if err != nil {
 				ottoutil.Throw(vm, err.Error())
 			}
-			msg += "\n" + call.CallerLocation() + " | " + format
+			msg += "\n" + format
 		}
 		ottoutil.Throw(vm, msg)
 		return otto.UndefinedValue()
@@ -72,7 +72,7 @@ func Run(t testing.TB, cloud cloud.Client, src string, opts ...RunOption) {
 			if err != nil {
 				ottoutil.Throw(vm, err.Error())
 			}
-			msg += "\n" + call.CallerLocation() + " | " + format
+			msg += "\n" + format
 		}
 		ottoutil.Throw(vm, msg)
 		return otto.UndefinedValue()

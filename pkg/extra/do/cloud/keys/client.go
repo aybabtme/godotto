@@ -1,9 +1,10 @@
 package keys
 
 import (
+	"context"
+
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
-	"golang.org/x/net/context"
 )
 
 // A Client can interact with the DigitalOcean Domains service.
@@ -57,7 +58,7 @@ func (svc *client) Create(ctx context.Context, name, publicKey string, opts ...C
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Keys.Create(opt.req)
+	d, _, err := svc.g.Keys.Create(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (svc *client) Create(ctx context.Context, name, publicKey string, opts ...C
 }
 
 func (svc *client) GetByID(ctx context.Context, id int) (Key, error) {
-	d, _, err := svc.g.Keys.GetByID(id)
+	d, _, err := svc.g.Keys.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (svc *client) GetByID(ctx context.Context, id int) (Key, error) {
 }
 
 func (svc *client) GetByFingerprint(ctx context.Context, fp string) (Key, error) {
-	d, _, err := svc.g.Keys.GetByFingerprint(fp)
+	d, _, err := svc.g.Keys.GetByFingerprint(ctx, fp)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func (svc *client) UpdateByID(ctx context.Context, id int, opts ...UpdateOpt) (K
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Keys.UpdateByID(id, opt.req)
+	d, _, err := svc.g.Keys.UpdateByID(ctx, id, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +115,7 @@ func (svc *client) UpdateByFingerprint(ctx context.Context, fp string, opts ...U
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.Keys.UpdateByFingerprint(fp, opt.req)
+	d, _, err := svc.g.Keys.UpdateByFingerprint(ctx, fp, opt.req)
 	if err != nil {
 		return nil, err
 	}
@@ -122,12 +123,12 @@ func (svc *client) UpdateByFingerprint(ctx context.Context, fp string, opts ...U
 }
 
 func (svc *client) DeleteByID(ctx context.Context, id int) error {
-	_, err := svc.g.Keys.DeleteByID(id)
+	_, err := svc.g.Keys.DeleteByID(ctx, id)
 	return err
 }
 
 func (svc *client) DeleteByFingerprint(ctx context.Context, fp string) error {
-	_, err := svc.g.Keys.DeleteByFingerprint(fp)
+	_, err := svc.g.Keys.DeleteByFingerprint(ctx, fp)
 	return err
 }
 
@@ -138,8 +139,8 @@ func (svc *client) List(ctx context.Context) (<-chan Key, <-chan error) {
 	go func() {
 		defer close(outc)
 		defer close(errc)
-		err := godoutil.IterateList(ctx, func(opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Keys.List(opt)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Keys.List(ctx, opt)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

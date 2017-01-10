@@ -1,11 +1,10 @@
 package actions_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
-
-	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
