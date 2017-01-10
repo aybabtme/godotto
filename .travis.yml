@@ -3,5 +3,5 @@ go:
   - 1.7
 sudo: false
 install:
-    - curl https://glide.sh/get | sh
-script: $GOPATH/bin/glide version && go test $($GOPATH/bin/glide nv)
+    - go get github.com/Masterminds/glide
+script: $GOPATH/bin/glide -version && go test $($GOPATH/bin/glide nv)
