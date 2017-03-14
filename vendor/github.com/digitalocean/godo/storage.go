@@ -16,7 +16,7 @@ const (
 // endpoints of the Digital Ocean API.
 // See: https://developers.digitalocean.com/documentation/v2#storage
 type StorageService interface {
-	ListVolumes(context.Context, *ListOptions) ([]Volume, *Response, error)
+	ListVolumes(context.Context, *ListVolumeParams) ([]Volume, *Response, error)
 	GetVolume(context.Context, string) (*Volume, *Response, error)
 	CreateVolume(context.Context, *VolumeCreateRequest) (*Volume, *Response, error)
 	DeleteVolume(context.Context, string) (*Response, error)
@@ -30,6 +30,13 @@ type StorageService interface {
 // DigitalOcean API.
 type StorageServiceOp struct {
 	client *Client
+}
+
+// ListVolumeParams stores the options you can set for a ListVolumeCall
+type ListVolumeParams struct {
+	Region      string       `json:"region"`
+	Name        string       `json:"name"`
+	ListOptions *ListOptions `json:"list_options,omitempty"`
 }
 
 var _ StorageService = &StorageServiceOp{}
@@ -69,10 +76,20 @@ type VolumeCreateRequest struct {
 }
 
 // ListVolumes lists all storage volumes.
-func (svc *StorageServiceOp) ListVolumes(ctx context.Context, opt *ListOptions) ([]Volume, *Response, error) {
-	path, err := addOptions(storageAllocPath, opt)
-	if err != nil {
-		return nil, nil, err
+func (svc *StorageServiceOp) ListVolumes(ctx context.Context, params *ListVolumeParams) ([]Volume, *Response, error) {
+	path := storageAllocPath
+	if params != nil {
+		if params.Region != "" && params.Name != "" {
+			path = fmt.Sprintf("%s?name=%s&region=%s", path, params.Name, params.Region)
+		}
+
+		if params.ListOptions != nil {
+			var err error
+			path, err = addOptions(path, params.ListOptions)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 
 	req, err := svc.client.NewRequest(ctx, "GET", path, nil)

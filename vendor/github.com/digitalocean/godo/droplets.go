@@ -39,24 +39,26 @@ var _ DropletsService = &DropletsServiceOp{}
 
 // Droplet represents a DigitalOcean Droplet
 type Droplet struct {
-	ID          int       `json:"id,float64,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	Memory      int       `json:"memory,omitempty"`
-	Vcpus       int       `json:"vcpus,omitempty"`
-	Disk        int       `json:"disk,omitempty"`
-	Region      *Region   `json:"region,omitempty"`
-	Image       *Image    `json:"image,omitempty"`
-	Size        *Size     `json:"size,omitempty"`
-	SizeSlug    string    `json:"size_slug,omitempty"`
-	BackupIDs   []int     `json:"backup_ids,omitempty"`
-	SnapshotIDs []int     `json:"snapshot_ids,omitempty"`
-	Locked      bool      `json:"locked,bool,omitempty"`
-	Status      string    `json:"status,omitempty"`
-	Networks    *Networks `json:"networks,omitempty"`
-	Created     string    `json:"created_at,omitempty"`
-	Kernel      *Kernel   `json:"kernel,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
-	VolumeIDs   []string  `json:"volume_ids"`
+	ID               int           `json:"id,float64,omitempty"`
+	Name             string        `json:"name,omitempty"`
+	Memory           int           `json:"memory,omitempty"`
+	Vcpus            int           `json:"vcpus,omitempty"`
+	Disk             int           `json:"disk,omitempty"`
+	Region           *Region       `json:"region,omitempty"`
+	Image            *Image        `json:"image,omitempty"`
+	Size             *Size         `json:"size,omitempty"`
+	SizeSlug         string        `json:"size_slug,omitempty"`
+	BackupIDs        []int         `json:"backup_ids,omitempty"`
+	NextBackupWindow *BackupWindow `json:"next_backup_window,omitempty"`
+	SnapshotIDs      []int         `json:"snapshot_ids,omitempty"`
+	Features         []string      `json:"features,omitempty"`
+	Locked           bool          `json:"locked,bool,omitempty"`
+	Status           string        `json:"status,omitempty"`
+	Networks         *Networks     `json:"networks,omitempty"`
+	Created          string        `json:"created_at,omitempty"`
+	Kernel           *Kernel       `json:"kernel,omitempty"`
+	Tags             []string      `json:"tags,omitempty"`
+	VolumeIDs        []string      `json:"volume_ids"`
 }
 
 // PublicIPv4 returns the public IPv4 address for the Droplet.
@@ -89,15 +91,15 @@ func (d *Droplet) PrivateIPv4() (string, error) {
 	return "", nil
 }
 
-// PublicIPv6 returns the private IPv6 address for the Droplet.
+// PublicIPv6 returns the public IPv6 address for the Droplet.
 func (d *Droplet) PublicIPv6() (string, error) {
 	if d.Networks == nil {
 		return "", errNoNetworks
 	}
 
-	for _, v4 := range d.Networks.V6 {
-		if v4.Type == "public" {
-			return v4.IPAddress, nil
+	for _, v6 := range d.Networks.V6 {
+		if v6.Type == "public" {
+			return v6.IPAddress, nil
 		}
 	}
 
@@ -109,6 +111,12 @@ type Kernel struct {
 	ID      int    `json:"id,float64,omitempty"`
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
+}
+
+// BackupWindow object
+type BackupWindow struct {
+	Start *Timestamp `json:"start,omitempty"`
+	End   *Timestamp `json:"end,omitempty"`
 }
 
 // Convert Droplet to a string
