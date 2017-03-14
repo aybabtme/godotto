@@ -1,5 +1,5 @@
-hash: 470514d4bcabc5e441aea883ccfb9cb1a13f614ba4133b5d5005b4831f6a8e27
-updated: 2017-03-13T20:00:45.28693447-06:00
+hash: 638a88235b0313e1d41dd635cd156c8095c5cecd2ab677f5020cac10f1a222f8
+updated: 2017-03-14T12:11:08.38774126-04:00
 imports:
 - name: github.com/digitalocean/godo
   version: 84099941ba2381607e1b05ffd4822781af86675e
@@ -8,7 +8,7 @@ imports:
   subpackages:
   - proto
 - name: github.com/google/go-querystring
-  version: 9235644dd9e52eeae6fa48efd539fdc351a0af53
+  version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
   subpackages:
   - query
 - name: github.com/robertkrimen/otto
@@ -24,7 +24,7 @@ imports:
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
-  version: 7c6cc321c680f03b9ef0764448e780704f486b51
+  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
   subpackages:
   - curve25519
   - ed25519
@@ -37,7 +37,7 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/oauth2
-  version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+  version: 1611bb46e67abc64a71ecc5c3ae67f1cbbc2b921
   subpackages:
   - internal
 - name: golang.org/x/sys
@@ -57,7 +57,7 @@ imports:
 - name: gopkg.in/readline.v1
   version: 62c6fe6193755f722b8b8788aa7357be55a50ff1
 - name: gopkg.in/sourcemap.v1
-  version: eef8f47ab679652a7d3a4ee34c34314d255d2536
+  version: 6e83acea0053641eff084973fee085f0c193c61a
   subpackages:
   - base64vlq
 testImports: []
