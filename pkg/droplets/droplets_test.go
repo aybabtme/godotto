@@ -89,7 +89,7 @@ var (
 	region = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
 	size   = &godo.Size{Slug: "lol", Memory: 1, Vcpus: 2, Disk: 2, PriceMonthly: 1.0, PriceHourly: 0.1, Regions: []string{"lol"}, Available: true, Transfer: 1.0}
 	image  = &godo.Image{ID: 42, Name: "derp", Type: "herp", Distribution: "coreos", Slug: "coreos-stable", Public: true, Regions: []string{"atlantis"}}
-	d      = &godo.Droplet{ID: 42, Name: "my_name", Memory: 20, Vcpus: 21, Disk: 22, Region: region, Image: image, Size: size, SnapshotIDs: []int{42}, BackupIDs: []int{43}, Networks: &godo.Networks{}, Status: "loling", Tags: []string{"derp"}, VolumeIDs: []string{""}}
+	d      = &godo.Droplet{ID: 42, Name: "my_name", Memory: 20, Vcpus: 21, Disk: 22, Region: region, Image: image, Size: size, SnapshotIDs: []int{42}, BackupIDs: []int{43}, Networks: &godo.Networks{}, Status: "loling", Tags: []string{"test"}, VolumeIDs: []string{""}}
 )
 
 type droplet struct {
@@ -132,7 +132,7 @@ var want = {
   snapshot_ids: [ 42 ],
   status: "loling",
   networks: {"v4":{}, "v6":{}},
-  tags: ["derp"],
+  tags: ["test"],
   created_at: "",
   volumes: [""],
   size_slug: "",
@@ -172,7 +172,7 @@ var want = {
   status: "loling",
   vcpus: 21,
   networks: {"v4":{}, "v6":{}},
-  tags: ["derp"],
+  tags: ["test"],
   created_at: "",
   volumes: [""],
   size_slug: "",
@@ -208,6 +208,7 @@ var d = pkg.create({
 	private_networking: true,
 	user_data:    "lolll",
 	monitoring:   true,
+	tags:					["test"],
 });
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
@@ -228,7 +229,7 @@ var want = {
   status: "loling",
   vcpus: 21,
   networks: {"v4":{}, "v6":{}},
-  tags: ["derp"],
+  tags: ["test"],
   created_at: "",
   volumes: [""],
   size_slug: "",
