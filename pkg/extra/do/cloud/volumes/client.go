@@ -100,7 +100,8 @@ func (svc *client) ListVolumes(ctx context.Context) (<-chan Volume, <-chan error
 		defer close(outc)
 		defer close(errc)
 		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
-			r, resp, err := svc.g.Storage.ListVolumes(ctx, opt)
+			lvp := &godo.ListVolumeParams{ListOptions: opt}
+			r, resp, err := svc.g.Storage.ListVolumes(ctx, lvp)
 			for _, d := range r {
 				dd := d // copy ranged over variable
 				select {

@@ -1,8 +1,8 @@
-hash: a8e6388876e529ccc435f8a22d46acdbe7845919c77ff991f1b1c662fc97693e
-updated: 2017-01-10T13:19:19.508195553-03:00
+hash: 470514d4bcabc5e441aea883ccfb9cb1a13f614ba4133b5d5005b4831f6a8e27
+updated: 2017-03-13T20:00:45.28693447-06:00
 imports:
 - name: github.com/digitalocean/godo
-  version: 299c06642e6e933841d66d28f1a4fb51275ee67f
+  version: 84099941ba2381607e1b05ffd4822781af86675e
 - name: github.com/golang/protobuf
   version: 888eb0692c857ec880338addf316bd662d5e630e
   subpackages:

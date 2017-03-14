@@ -1,9 +1,7 @@
 package: github.com/aybabtme/godotto
 import:
 - package: github.com/digitalocean/godo
-  version: 299c06642e6e933841d66d28f1a4fb51275ee67f
 - package: github.com/robertkrimen/otto
-  version: bf1c3795ba078da6905fe80bfbc3ed3d8c36e9aa
   subpackages:
   - underscore
 - package: golang.org/x/crypto
@@ -16,4 +14,3 @@ import:
   - context
 - package: golang.org/x/oauth2
 - package: gopkg.in/readline.v1
-  version: ^1.4.0
