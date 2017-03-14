@@ -1,7 +1,6 @@
 package godotto
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/aybabtme/godotto/pkg/accounts"
@@ -16,6 +15,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/sizes"
 	"github.com/aybabtme/godotto/pkg/volumes"
 	"github.com/robertkrimen/otto"
+	"github.com/x/net/context"
 )
 
 var q = otto.NullValue()
