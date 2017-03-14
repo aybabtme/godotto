@@ -134,6 +134,7 @@ func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateReq
 		IPv6:              ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "ipv6", false)),
 		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "private_networking", false)),
 		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "user_data", false)),
+		Monitoring:        ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "monitoring", false)),
 	}
 	sshArgs := ottoutil.GetObject(vm, v, "ssh_keys", false)
 	ottoutil.LoadArray(vm, sshArgs, func(v otto.Value) {
