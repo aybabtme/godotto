@@ -24,6 +24,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 )
 
@@ -41,6 +42,7 @@ type Mock struct {
 	MockSizes       *MockSizes
 	MockFloatingIPs *MockFloatingIPs
 	MockVolumes     *MockVolumes
+	MockTags        *MockTags
 }
 
 func Client(client cloud.Client) *Mock {
@@ -55,6 +57,7 @@ func Client(client cloud.Client) *Mock {
 		MockSizes:       &MockSizes{wrap: client},
 		MockFloatingIPs: &MockFloatingIPs{wrap: client, MockFloatingIPActions: &MockFloatingIPActions{wrap: client}},
 		MockVolumes:     &MockVolumes{wrap: client, MockVolumeActions: &MockVolumeActions{wrap: client}},
+		MockTags:        &MockTags{wrap: client},
 	}
 }
 
@@ -68,6 +71,7 @@ func (mock *Mock) Regions() regions.Client         { return mock.MockRegions }
 func (mock *Mock) Sizes() sizes.Client             { return mock.MockSizes }
 func (mock *Mock) FloatingIPs() floatingips.Client { return mock.MockFloatingIPs }
 func (mock *Mock) Volumes() volumes.Client         { return mock.MockVolumes }
+func (mock *Mock) Tags() tags.Client               { return mock.MockTags }
 
 // Droplets
 
@@ -673,4 +677,20 @@ func (mock *MockVolumeActions) Detach(ctx context.Context, volumeID string) erro
 		return mock.DetachFn(ctx, volumeID)
 	}
 	return mock.wrap.Volumes().Actions().Detach(ctx, volumeID)
+}
+
+// Tags
+
+type MockTags struct {
+	wrap     cloud.Client
+	CreateFn func(ctx context.Context, name string, opt ...tags.CreateOpt) (tags.Tag, error)
+	GetFn    func(ctx context.Context, id int) (droplets.Droplet, error)
+}
+
+func (mock *MockTags) Create(ctx context.Context, name string, opts ...tags.CreateOpt) (tags.Tag, error) {
+	if mock.CreateFn != nil {
+		return mock.CreateFn(ctx, name, opts...)
+	}
+
+	return mock.wrap.Tags().Create(ctx, name, opts...)
 }

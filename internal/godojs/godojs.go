@@ -123,6 +123,14 @@ func ArgDropletID(vm *otto.Otto, v otto.Value) int {
 	return did
 }
 
+func ArgTagCreateRequest(vm *otto.Otto, v otto.Value) *godo.TagCreateRequest {
+	req := &godo.TagCreateRequest{
+		Name: ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+	}
+
+	return req
+}
+
 func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateRequest {
 	image := ArgImage(vm, ottoutil.GetObject(vm, v, "image", true))
 	req := &godo.DropletCreateRequest{
@@ -664,6 +672,17 @@ func ImageToVM(vm *otto.Otto, g *godo.Image) otto.Value {
 		"public":        g.Public,
 		"regions":       g.Regions,
 		"min_disk_size": int64(g.MinDiskSize),
+	})
+}
+
+func TagToVM(vm *otto.Otto, g *godo.Tag) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"name":      g.Name,
+		"resources": g.Resources,
 	})
 }
 
