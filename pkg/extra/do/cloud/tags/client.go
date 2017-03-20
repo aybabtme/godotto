@@ -3,6 +3,7 @@ package tags
 import (
 	"context"
 
+	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
 )
 
@@ -11,7 +12,7 @@ type Client interface {
 	Create(ctx context.Context, name string, opt ...CreateOpt) (Tag, error)
 	Get(ctx context.Context, name string) (Tag, error)
 	//Delete(ctx context.Context, name string) error
-	//List(ctx context.Context) (<-chan Tag, <-chan error)
+	List(ctx context.Context) (<-chan Tag, <-chan error)
 	TagResources(ctx context.Context, name string, res []godo.Resource) error
 	UntagResources(ctx context.Context, name string, res []godo.Resource) error
 }
@@ -101,6 +102,42 @@ func (svc *client) Create(ctx context.Context, name string, opts ...CreateOpt) (
 	return &tag{g: svc.g, t: t}, nil
 }
 
+func (svc *client) Get(ctx context.Context, name string) (Tag, error) {
+	t, _, err := svc.g.Tags.Get(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tag{g: svc.g, t: t}, nil
+}
+
+func (svc *client) List(ctx context.Context) (<-chan Tag, <-chan error) {
+	outc := make(chan Tag, 1)
+	errc := make(chan error, 1)
+
+	go func() {
+		defer close(outc)
+		defer close(errc)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Tags.List(ctx, opt)
+			for _, t := range r {
+				tt := t // copy ranged over variable
+				select {
+				case outc <- &tag{g: svc.g, t: &tt}:
+				case <-ctx.Done():
+					return resp, err
+				}
+			}
+			return resp, err
+		})
+		if err != nil {
+			errc <- err
+		}
+	}()
+
+	return outc, errc
+}
+
 func (svc *client) TagResources(ctx context.Context, name string, res []godo.Resource) error {
 	opt := svc.defaultTagResourcesOpts()
 	opt.req.Resources = res
@@ -123,13 +160,4 @@ func (svc *client) UntagResources(ctx context.Context, name string, res []godo.R
 	}
 
 	return nil
-}
-
-func (svc *client) Get(ctx context.Context, name string) (Tag, error) {
-	t, _, err := svc.g.Tags.Get(ctx, name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &tag{g: svc.g, t: t}, nil
 }

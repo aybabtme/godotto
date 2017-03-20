@@ -686,6 +686,7 @@ type MockTags struct {
 	wrap     cloud.Client
 	CreateFn func(ctx context.Context, name string, opt ...tags.CreateOpt) (tags.Tag, error)
 	GetFn    func(ctx context.Context, name string) (tags.Tag, error)
+	ListFn   func(ctx context.Context) (<-chan tags.Tag, <-chan error)
 	TagFn    func(ctx context.Context, name string, res []godo.Resource) error
 	UntagFn  func(ctx context.Context, name string, res []godo.Resource) error
 }
@@ -704,6 +705,14 @@ func (mock *MockTags) Get(ctx context.Context, name string) (tags.Tag, error) {
 	}
 
 	return mock.wrap.Tags().Get(ctx, name)
+}
+
+func (mock *MockTags) List(ctx context.Context) (<-chan tags.Tag, <-chan error) {
+	if mock.ListFn != nil {
+		return mock.ListFn(ctx)
+	}
+
+	return mock.wrap.Tags().List(ctx)
 }
 
 func (mock *MockTags) TagResources(ctx context.Context, name string, res []godo.Resource) error {

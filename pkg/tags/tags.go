@@ -30,6 +30,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}{
 		{"create", svc.create},
 		{"get", svc.get},
+		{"list", svc.list},
 		{"tag_resources", svc.tag_resources},
 		{"untag_resources", svc.untag_resources},
 	} {
@@ -72,6 +73,26 @@ func (svc *tagSvc) get(all otto.FunctionCall) otto.Value {
 	}
 
 	return godojs.TagToVM(vm, t.Struct())
+}
+
+func (svc *tagSvc) list(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	var tags = make([]otto.Value, 0)
+	tagc, errc := svc.svc.List(svc.ctx)
+	for t := range tagc {
+		tags = append(tags, godojs.TagToVM(vm, t.Struct()))
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	v, err := vm.ToValue(tags)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
 }
 
 func (svc *tagSvc) tag_resources(all otto.FunctionCall) otto.Value {
