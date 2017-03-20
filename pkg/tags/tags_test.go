@@ -35,6 +35,18 @@ func TestTagThrows(t *testing.T) {
 		return nil, errors.New("throw me")
 	}
 
+	cloud.MockTags.GetFn = func(_ context.Context, _ string) (tags.Tag, error) {
+		return nil, errors.New("throw me")
+	}
+
+	cloud.MockTags.TagFn = func(_ context.Context, _ string, _ []godo.Resource) error {
+		return errors.New("throw me")
+	}
+
+	cloud.MockTags.UntagFn = func(_ context.Context, _ string, _ []godo.Resource) error {
+		return errors.New("throw me")
+	}
+
 	vmtest.Run(t, cloud, `
 		var pkg = cloud.tags;
 
@@ -44,8 +56,16 @@ func TestTagThrows(t *testing.T) {
 			name: name	
 		};
 
+		var testTag = {
+			name: name,
+			resources: []
+		};
+
 		[
-		{ name: "create", fn: function() { pkg.create(tag) } }	
+		{ name: "create", fn: function() { pkg.create(tag) } },	
+		{ name: "get", fn: function() { pkg.get(name) } },
+		{ name: "tag_resources", fn: function() { pkg.tag_resources(testTag) } },
+		{ name: "untag_resources", fn: function() { pkg.untag_resources(testTag) } },
 		].forEach(function(kv) {
 			var name = kv.name;
 			var fn = kv.fn;
@@ -74,6 +94,27 @@ func TestTagCreate(t *testing.T) {
 		var pkg = cloud.tags;
 
 		var tag = pkg.create({
+			name: "test"	
+		});
+
+		var want = {
+			name: "test"
+		}
+
+		equals(tag, want, "should have proper object");
+	`)
+}
+
+func TestTagGet(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockTags.GetFn = func(_ context.Context, name string) (tags.Tag, error) {
+		return &tag{testTag}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.tags;
+
+		var tag = pkg.get({
 			name: "test"	
 		});
 
