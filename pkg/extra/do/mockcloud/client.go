@@ -26,6 +26,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
+	"github.com/digitalocean/godo"
 )
 
 // Client
@@ -685,6 +686,8 @@ type MockTags struct {
 	wrap     cloud.Client
 	CreateFn func(ctx context.Context, name string, opt ...tags.CreateOpt) (tags.Tag, error)
 	GetFn    func(ctx context.Context, id int) (droplets.Droplet, error)
+	TagFn    func(ctx context.Context, name string, res []godo.Resource) error
+	UntagFn  func(ctx context.Context, name string, res []godo.Resource) error
 }
 
 func (mock *MockTags) Create(ctx context.Context, name string, opts ...tags.CreateOpt) (tags.Tag, error) {
@@ -693,4 +696,20 @@ func (mock *MockTags) Create(ctx context.Context, name string, opts ...tags.Crea
 	}
 
 	return mock.wrap.Tags().Create(ctx, name, opts...)
+}
+
+func (mock *MockTags) TagResources(ctx context.Context, name string, res []godo.Resource) error {
+	if mock.TagFn != nil {
+		return mock.TagFn(ctx, name, res)
+	}
+
+	return mock.wrap.Tags().TagResources(ctx, name, res)
+}
+
+func (mock *MockTags) UntagResources(ctx context.Context, name string, res []godo.Resource) error {
+	if mock.UntagFn != nil {
+		return mock.UntagFn(ctx, name, res)
+	}
+
+	return mock.wrap.Tags().UntagResources(ctx, name, res)
 }

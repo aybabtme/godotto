@@ -131,6 +131,40 @@ func ArgTagCreateRequest(vm *otto.Otto, v otto.Value) *godo.TagCreateRequest {
 	return req
 }
 
+func ArgTagTagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.TagResourcesRequest {
+	req := &godo.TagResourcesRequest{}
+
+	resArgs := ottoutil.GetObject(vm, v, "resources", true)
+	ottoutil.LoadArray(vm, resArgs, func(v otto.Value) {
+		res := ArgResource(vm, v)
+		req.Resources = append(req.Resources, godo.Resource{
+			ID:   res.ID,
+			Type: res.Type,
+		})
+	})
+
+	return req
+}
+
+func ArgResource(vm *otto.Otto, v otto.Value) *godo.Resource {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a Resource, got a %q", v.Class())
+	}
+
+	return &godo.Resource{
+		ID:   ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", true)),
+		Type: ArgResourceType(vm, ottoutil.GetObject(vm, v, "type", true)),
+	}
+}
+
+func ArgResourceType(vm *otto.Otto, v otto.Value) godo.ResourceType {
+	return godo.ResourceType(ottoutil.String(vm, v))
+}
+
 func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateRequest {
 	image := ArgImage(vm, ottoutil.GetObject(vm, v, "image", true))
 	req := &godo.DropletCreateRequest{

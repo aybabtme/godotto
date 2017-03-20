@@ -29,6 +29,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		Method interface{}
 	}{
 		{"create", svc.create},
+		{"tag_resources", svc.tag_resources},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -55,4 +56,22 @@ func (svc *tagSvc) create(all otto.FunctionCall) otto.Value {
 	}
 
 	return godojs.TagToVM(vm, t.Struct())
+}
+
+func (svc *tagSvc) tag_resources(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	arg := all.Argument(0)
+
+	req := godojs.ArgTagTagResourcesRequest(vm, arg)
+	name, err := ottoutil.GetObject(vm, arg, "name", true).ToString()
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	err = svc.svc.TagResources(svc.ctx, name, req.Resources)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return otto.Value{}
 }

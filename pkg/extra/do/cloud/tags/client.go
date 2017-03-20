@@ -12,10 +12,16 @@ type Client interface {
 	//Get(ctx context.Context, name string) (Tag, error)
 	//Delete(ctx context.Context, name string) error
 	//List(ctx context.Context) (<-chan Tag, <-chan error)
+	TagResources(ctx context.Context, name string, res []godo.Resource) error
+	UntagResources(ctx context.Context, name string, res []godo.Resource) error
 }
 
 type Tag interface {
 	Struct() *godo.Tag
+}
+
+type Resource interface {
+	Struct() *godo.Resource
 }
 
 func New(g *godo.Client) Client {
@@ -33,9 +39,19 @@ type CreateOpt func(*createOpt)
 
 func (svc *client) defaultCreateOpts() *createOpt {
 	return &createOpt{
-		req: &godo.TagCreateRequest{
-			Name: "",
-		},
+		req: &godo.TagCreateRequest{},
+	}
+}
+
+func (svc *client) defaultTagResourcesOpts() *tagResourcesOpt {
+	return &tagResourcesOpt{
+		req: &godo.TagResourcesRequest{},
+	}
+}
+
+func (svc *client) defaultUntagResourcesOpts() *untagResourcesOpt {
+	return &untagResourcesOpt{
+		req: &godo.UntagResourcesRequest{},
 	}
 }
 
@@ -47,12 +63,27 @@ type createOpt struct {
 	req *godo.TagCreateRequest
 }
 
+type tagResourcesOpt struct {
+	req *godo.TagResourcesRequest
+}
+
+type untagResourcesOpt struct {
+	req *godo.UntagResourcesRequest
+}
+
 type tag struct {
 	g *godo.Client
 	t *godo.Tag
 }
 
+type resource struct {
+	g *godo.Client
+	r *godo.Resource
+}
+
 func (svc *tag) Struct() *godo.Tag { return svc.t }
+
+func (svc *resource) Struct() *godo.Resource { return svc.r }
 
 func (svc *client) Create(ctx context.Context, name string, opts ...CreateOpt) (Tag, error) {
 	opt := svc.defaultCreateOpts()
@@ -68,4 +99,27 @@ func (svc *client) Create(ctx context.Context, name string, opts ...CreateOpt) (
 	}
 
 	return &tag{g: svc.g, t: t}, nil
+}
+
+func (svc *client) TagResources(ctx context.Context, name string, res []godo.Resource) error {
+	opt := svc.defaultTagResourcesOpts()
+	opt.req.Resources = res
+
+	_, err := svc.g.Tags.TagResources(ctx, name, opt.req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) UntagResources(ctx context.Context, name string, res []godo.Resource) error {
+	opt := svc.defaultUntagResourcesOpts()
+
+	_, err := svc.g.Tags.UntagResources(ctx, name, opt.req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

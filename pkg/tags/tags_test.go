@@ -22,6 +22,7 @@ func TestTagApply(t *testing.T) {
 	var pkg = cloud.tags;
 	assert(pkg != null, "package should be loaded");
 	assert(pkg.create != null, "create function should be defined");
+	assert(pkg.tag_resources != null, "tag_resources function should be defined.");
 	`)
 }
 
@@ -79,5 +80,26 @@ func TestTagCreate(t *testing.T) {
 		}
 
 		equals(tag, want, "should have proper object");
+	`)
+}
+
+func TestTagTagResources(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockTags.TagFn = func(_ context.Context, name string, res []godo.Resource) error {
+		// Won't return an error
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.tags;
+		pkg.tag_resources({
+			name: "test",
+			resources: [
+				{
+					id: "12345567",
+					type: "droplet"
+				}	
+			]
+		});
 	`)
 }
