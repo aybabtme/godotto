@@ -146,6 +146,21 @@ func ArgTagTagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.TagResourcesRe
 	return req
 }
 
+func ArgTagUntagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.UntagResourcesRequest {
+	req := &godo.UntagResourcesRequest{}
+
+	resArgs := ottoutil.GetObject(vm, v, "resources", true)
+	ottoutil.LoadArray(vm, resArgs, func(v otto.Value) {
+		res := ArgResource(vm, v)
+		req.Resources = append(req.Resources, godo.Resource{
+			ID:   res.ID,
+			Type: res.Type,
+		})
+	})
+
+	return req
+}
+
 func ArgResource(vm *otto.Otto, v otto.Value) *godo.Resource {
 	if !v.IsDefined() || v.IsNull() {
 		return nil

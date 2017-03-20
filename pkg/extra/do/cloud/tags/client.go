@@ -115,6 +115,7 @@ func (svc *client) TagResources(ctx context.Context, name string, res []godo.Res
 
 func (svc *client) UntagResources(ctx context.Context, name string, res []godo.Resource) error {
 	opt := svc.defaultUntagResourcesOpts()
+	opt.req.Resources = res
 
 	_, err := svc.g.Tags.UntagResources(ctx, name, opt.req)
 	if err != nil {

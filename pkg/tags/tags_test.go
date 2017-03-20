@@ -23,6 +23,7 @@ func TestTagApply(t *testing.T) {
 	assert(pkg != null, "package should be loaded");
 	assert(pkg.create != null, "create function should be defined");
 	assert(pkg.tag_resources != null, "tag_resources function should be defined.");
+	assert(pkg.untag_resources != null, "tag_resources function should be defined.");
 	`)
 }
 
@@ -93,6 +94,27 @@ func TestTagTagResources(t *testing.T) {
 	vmtest.Run(t, cloud, `
 		var pkg = cloud.tags;
 		pkg.tag_resources({
+			name: "test",
+			resources: [
+				{
+					id: "12345567",
+					type: "droplet"
+				}	
+			]
+		});
+	`)
+}
+
+func TestTagUntagResources(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockTags.UntagFn = func(_ context.Context, name string, res []godo.Resource) error {
+		// Won't return an error
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.tags;
+		pkg.untag_resources({
 			name: "test",
 			resources: [
 				{
