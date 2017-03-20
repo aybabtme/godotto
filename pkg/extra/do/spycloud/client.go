@@ -111,6 +111,7 @@ type client struct {
 	records     map[int]*godo.DomainRecord
 	floatingips map[string]*godo.FloatingIP
 	keys        map[int]*godo.Key
+	tags        map[string]*godo.Tag
 }
 
 func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
@@ -125,6 +126,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 		records:     make(map[int]*godo.DomainRecord),
 		floatingips: make(map[string]*godo.FloatingIP),
 		keys:        make(map[int]*godo.Key),
+		tags:        make(map[string]*godo.Tag),
 	}
 
 	// capture all create/delete actions

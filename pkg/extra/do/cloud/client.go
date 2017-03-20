@@ -69,6 +69,7 @@ func New(opts ...ClientOpt) Client {
 		sizes:       sizes.New(opt.g),
 		floatingips: floatingips.New(opt.g),
 		volumes:     volumes.New(opt.g),
+		tags:        tags.New(opt.g),
 	}
 
 	return c
