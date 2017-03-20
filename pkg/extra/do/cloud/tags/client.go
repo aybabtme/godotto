@@ -9,7 +9,7 @@ import (
 // A Client can interact with the DigitalOcean Tags service
 type Client interface {
 	Create(ctx context.Context, name string, opt ...CreateOpt) (Tag, error)
-	//Get(ctx context.Context, name string) (Tag, error)
+	Get(ctx context.Context, name string) (Tag, error)
 	//Delete(ctx context.Context, name string) error
 	//List(ctx context.Context) (<-chan Tag, <-chan error)
 	TagResources(ctx context.Context, name string, res []godo.Resource) error
@@ -123,4 +123,13 @@ func (svc *client) UntagResources(ctx context.Context, name string, res []godo.R
 	}
 
 	return nil
+}
+
+func (svc *client) Get(ctx context.Context, name string) (Tag, error) {
+	t, _, err := svc.g.Tags.Get(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tag{g: svc.g, t: t}, nil
 }

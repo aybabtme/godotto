@@ -685,7 +685,7 @@ func (mock *MockVolumeActions) Detach(ctx context.Context, volumeID string) erro
 type MockTags struct {
 	wrap     cloud.Client
 	CreateFn func(ctx context.Context, name string, opt ...tags.CreateOpt) (tags.Tag, error)
-	GetFn    func(ctx context.Context, id int) (droplets.Droplet, error)
+	GetFn    func(ctx context.Context, name string) (tags.Tag, error)
 	TagFn    func(ctx context.Context, name string, res []godo.Resource) error
 	UntagFn  func(ctx context.Context, name string, res []godo.Resource) error
 }
@@ -696,6 +696,14 @@ func (mock *MockTags) Create(ctx context.Context, name string, opts ...tags.Crea
 	}
 
 	return mock.wrap.Tags().Create(ctx, name, opts...)
+}
+
+func (mock *MockTags) Get(ctx context.Context, name string) (tags.Tag, error) {
+	if mock.GetFn != nil {
+		return mock.GetFn(ctx, name)
+	}
+
+	return mock.wrap.Tags().Get(ctx, name)
 }
 
 func (mock *MockTags) TagResources(ctx context.Context, name string, res []godo.Resource) error {

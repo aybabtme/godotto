@@ -24,6 +24,7 @@ func TestTagApply(t *testing.T) {
 	assert(pkg.create != null, "create function should be defined");
 	assert(pkg.tag_resources != null, "tag_resources function should be defined.");
 	assert(pkg.untag_resources != null, "tag_resources function should be defined.");
+	assert(pkg.get != null, "get function should be defined");
 	`)
 }
 

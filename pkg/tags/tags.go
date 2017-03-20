@@ -59,6 +59,20 @@ func (svc *tagSvc) create(all otto.FunctionCall) otto.Value {
 	return godojs.TagToVM(vm, t.Struct())
 }
 
+func (svc *tagSvc) get(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	arg := all.Argument(0)
+
+	tag := ottoutil.String(vm, arg)
+
+	t, err := svc.svc.Get(svc.ctx, tag)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return godojs.TagToVM(vm, t.Struct())
+}
+
 func (svc *tagSvc) tag_resources(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
