@@ -31,6 +31,15 @@ func TestTagApply(t *testing.T) {
 func TestTagThrows(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
+	cloud.MockTags.ListFn = func(_ context.Context) (<-chan tags.Tag, <-chan error) {
+		lc := make(chan tags.Tag)
+		close(lc)
+		ec := make(chan error, 1)
+		ec <- errors.New("throw me")
+		close(ec)
+		return lc, ec
+	}
+
 	cloud.MockTags.CreateFn = func(_ context.Context, _ string, _ ...tags.CreateOpt) (tags.Tag, error) {
 		return nil, errors.New("throw me")
 	}
@@ -64,6 +73,7 @@ func TestTagThrows(t *testing.T) {
 		[
 		{ name: "create", fn: function() { pkg.create(tag) } },	
 		{ name: "get", fn: function() { pkg.get(name) } },
+		{ name: "list", fn: function() { pkg.list() } },
 		{ name: "tag_resources", fn: function() { pkg.tag_resources(testTag) } },
 		{ name: "untag_resources", fn: function() { pkg.untag_resources(testTag) } },
 		].forEach(function(kv) {
@@ -123,6 +133,33 @@ func TestTagGet(t *testing.T) {
 		}
 
 		equals(tag, want, "should have proper object");
+	`)
+}
+
+func TestTagList(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockTags.ListFn = func(_ context.Context) (<-chan tags.Tag, <-chan error) {
+		lc := make(chan tags.Tag, 1)
+		lc <- &tag{testTag}
+		close(lc)
+		ec := make(chan error)
+		close(ec)
+		return lc, ec
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.tags;
+
+		var list = pkg.list();
+		assert(list != null, "should have received a list");
+		assert(list.length > 0, "should have received some elements")
+
+		var want = {
+			name: "test"	
+		};
+
+		var t = list[0];
+		equals(t, want, "should have proper object");
 	`)
 }
 
