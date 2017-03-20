@@ -29,6 +29,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		Method interface{}
 	}{
 		{"create", svc.create},
+		{"get", svc.get},
 		{"tag_resources", svc.tag_resources},
 		{"untag_resources", svc.untag_resources},
 	} {
