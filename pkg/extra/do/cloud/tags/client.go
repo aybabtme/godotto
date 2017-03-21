@@ -11,7 +11,7 @@ import (
 type Client interface {
 	Create(ctx context.Context, name string, opt ...CreateOpt) (Tag, error)
 	Get(ctx context.Context, name string) (Tag, error)
-	//Delete(ctx context.Context, name string) error
+	Delete(ctx context.Context, name string) error
 	List(ctx context.Context) (<-chan Tag, <-chan error)
 	TagResources(ctx context.Context, name string, res []godo.Resource) error
 	UntagResources(ctx context.Context, name string, res []godo.Resource) error
@@ -136,6 +136,15 @@ func (svc *client) List(ctx context.Context) (<-chan Tag, <-chan error) {
 	}()
 
 	return outc, errc
+}
+
+func (svc *client) Delete(ctx context.Context, name string) error {
+	_, err := svc.g.Tags.Delete(ctx, name)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (svc *client) TagResources(ctx context.Context, name string, res []godo.Resource) error {

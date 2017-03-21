@@ -22,9 +22,11 @@ func TestTagApply(t *testing.T) {
 	var pkg = cloud.tags;
 	assert(pkg != null, "package should be loaded");
 	assert(pkg.create != null, "create function should be defined");
-	assert(pkg.tag_resources != null, "tag_resources function should be defined.");
-	assert(pkg.untag_resources != null, "tag_resources function should be defined.");
+	assert(pkg.tag_resources != null, "tag_resources function should be defined");
+	assert(pkg.untag_resources != null, "tag_resources function should be defined");
 	assert(pkg.get != null, "get function should be defined");
+	assert(pkg.list != null, "list function should be defined");
+	assert(pkg.delete != null, "delete function should be defined");
 	`)
 }
 
@@ -56,6 +58,10 @@ func TestTagThrows(t *testing.T) {
 		return errors.New("throw me")
 	}
 
+	cloud.MockTags.DeleteFn = func(_ context.Context, _ string) error {
+		return errors.New("throw me")
+	}
+
 	vmtest.Run(t, cloud, `
 		var pkg = cloud.tags;
 
@@ -74,8 +80,9 @@ func TestTagThrows(t *testing.T) {
 		{ name: "create", fn: function() { pkg.create(tag) } },	
 		{ name: "get", fn: function() { pkg.get(name) } },
 		{ name: "list", fn: function() { pkg.list() } },
+		{ name: "delete", fn: function() { pkg.delete() } },
 		{ name: "tag_resources", fn: function() { pkg.tag_resources(testTag) } },
-		{ name: "untag_resources", fn: function() { pkg.untag_resources(testTag) } },
+		{ name: "untag_resources", fn: function() { pkg.untag_resources(testTag) } }
 		].forEach(function(kv) {
 			var name = kv.name;
 			var fn = kv.fn;
@@ -160,6 +167,23 @@ func TestTagList(t *testing.T) {
 
 		var t = list[0];
 		equals(t, want, "should have proper object");
+	`)
+}
+
+func TestTagDelete(t *testing.T) {
+	wantName := "test"
+	cloud := mockcloud.Client(nil)
+	cloud.MockTags.DeleteFn = func(_ context.Context, gotName string) error {
+		if gotName != wantName {
+			t.Fatalf("want %v got %v", wantName, gotName)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.tags;
+		pkg.delete("test");
 	`)
 }
 

@@ -31,6 +31,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"create", svc.create},
 		{"get", svc.get},
 		{"list", svc.list},
+		{"delete", svc.delete},
 		{"tag_resources", svc.tag_resources},
 		{"untag_resources", svc.untag_resources},
 	} {
@@ -93,6 +94,19 @@ func (svc *tagSvc) list(all otto.FunctionCall) otto.Value {
 	}
 
 	return v
+}
+
+func (svc *tagSvc) delete(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	arg := all.Argument(0)
+
+	tag := ottoutil.String(vm, arg)
+	err := svc.svc.Delete(svc.ctx, tag)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
 }
 
 func (svc *tagSvc) tag_resources(all otto.FunctionCall) otto.Value {

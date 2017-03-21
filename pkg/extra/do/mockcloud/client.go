@@ -687,6 +687,7 @@ type MockTags struct {
 	CreateFn func(ctx context.Context, name string, opt ...tags.CreateOpt) (tags.Tag, error)
 	GetFn    func(ctx context.Context, name string) (tags.Tag, error)
 	ListFn   func(ctx context.Context) (<-chan tags.Tag, <-chan error)
+	DeleteFn func(ctx context.Context, name string) error
 	TagFn    func(ctx context.Context, name string, res []godo.Resource) error
 	UntagFn  func(ctx context.Context, name string, res []godo.Resource) error
 }
@@ -713,6 +714,14 @@ func (mock *MockTags) List(ctx context.Context) (<-chan tags.Tag, <-chan error) 
 	}
 
 	return mock.wrap.Tags().List(ctx)
+}
+
+func (mock *MockTags) Delete(ctx context.Context, name string) error {
+	if mock.DeleteFn != nil {
+		return mock.DeleteFn(ctx, name)
+	}
+
+	return mock.wrap.Tags().Delete(ctx, name)
 }
 
 func (mock *MockTags) TagResources(ctx context.Context, name string, res []godo.Resource) error {
