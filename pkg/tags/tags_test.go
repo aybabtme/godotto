@@ -189,7 +189,22 @@ func TestTagDelete(t *testing.T) {
 
 func TestTagTagResources(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockTags.TagFn = func(_ context.Context, name string, res []godo.Resource) error {
+	wantName := "test"
+	cloud.MockTags.TagFn = func(_ context.Context, gotName string, res []godo.Resource) error {
+		if gotName != wantName {
+			t.Fatalf("want %v got %v", wantName, gotName)
+		}
+
+		wantRes := godo.Resource{
+			ID:   "1234567",
+			Type: "droplet",
+		}
+
+		gotRes := res[0]
+		if wantRes != gotRes {
+			t.Fatalf("want %v got %v", wantRes, gotRes)
+		}
+
 		// Won't return an error
 		return nil
 	}
@@ -200,7 +215,7 @@ func TestTagTagResources(t *testing.T) {
 			name: "test",
 			resources: [
 				{
-					id: "12345567",
+					id: "1234567",
 					type: "droplet"
 				}	
 			]
@@ -210,7 +225,21 @@ func TestTagTagResources(t *testing.T) {
 
 func TestTagUntagResources(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockTags.UntagFn = func(_ context.Context, name string, res []godo.Resource) error {
+	wantName := "test"
+	cloud.MockTags.UntagFn = func(_ context.Context, gotName string, res []godo.Resource) error {
+		if gotName != wantName {
+			t.Fatalf("want %v got %v", wantName, gotName)
+		}
+
+		wantRes := godo.Resource{
+			ID:   "1234567",
+			Type: "droplet",
+		}
+
+		gotRes := res[0]
+		if wantRes != gotRes {
+			t.Fatalf("want %v got %v", wantRes, gotRes)
+		}
 		// Won't return an error
 		return nil
 	}
@@ -221,7 +250,7 @@ func TestTagUntagResources(t *testing.T) {
 			name: "test",
 			resources: [
 				{
-					id: "12345567",
+					id: "1234567",
 					type: "droplet"
 				}	
 			]

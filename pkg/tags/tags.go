@@ -32,8 +32,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"get", svc.get},
 		{"list", svc.list},
 		{"delete", svc.delete},
-		{"tag_resources", svc.tag_resources},
-		{"untag_resources", svc.untag_resources},
+		{"tag_resources", svc.tagResources},
+		{"untag_resources", svc.untagResources},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -109,7 +109,7 @@ func (svc *tagSvc) delete(all otto.FunctionCall) otto.Value {
 	return q
 }
 
-func (svc *tagSvc) tag_resources(all otto.FunctionCall) otto.Value {
+func (svc *tagSvc) tagResources(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
 
@@ -127,7 +127,7 @@ func (svc *tagSvc) tag_resources(all otto.FunctionCall) otto.Value {
 	return q
 }
 
-func (svc *tagSvc) untag_resources(all otto.FunctionCall) otto.Value {
+func (svc *tagSvc) untagResources(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	arg := all.Argument(0)
 
