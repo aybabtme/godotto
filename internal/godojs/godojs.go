@@ -123,6 +123,63 @@ func ArgDropletID(vm *otto.Otto, v otto.Value) int {
 	return did
 }
 
+func ArgTagCreateRequest(vm *otto.Otto, v otto.Value) *godo.TagCreateRequest {
+	req := &godo.TagCreateRequest{
+		Name: ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+	}
+
+	return req
+}
+
+func ArgTagTagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.TagResourcesRequest {
+	req := &godo.TagResourcesRequest{}
+
+	resArgs := ottoutil.GetObject(vm, v, "resources", true)
+	ottoutil.LoadArray(vm, resArgs, func(v otto.Value) {
+		res := ArgResource(vm, v)
+		req.Resources = append(req.Resources, godo.Resource{
+			ID:   res.ID,
+			Type: res.Type,
+		})
+	})
+
+	return req
+}
+
+func ArgTagUntagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.UntagResourcesRequest {
+	req := &godo.UntagResourcesRequest{}
+
+	resArgs := ottoutil.GetObject(vm, v, "resources", true)
+	ottoutil.LoadArray(vm, resArgs, func(v otto.Value) {
+		res := ArgResource(vm, v)
+		req.Resources = append(req.Resources, godo.Resource{
+			ID:   res.ID,
+			Type: res.Type,
+		})
+	})
+
+	return req
+}
+
+func ArgResource(vm *otto.Otto, v otto.Value) *godo.Resource {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a Resource, got a %q", v.Class())
+	}
+
+	return &godo.Resource{
+		ID:   ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", true)),
+		Type: ArgResourceType(vm, ottoutil.GetObject(vm, v, "type", true)),
+	}
+}
+
+func ArgResourceType(vm *otto.Otto, v otto.Value) godo.ResourceType {
+	return godo.ResourceType(ottoutil.String(vm, v))
+}
+
 func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateRequest {
 	image := ArgImage(vm, ottoutil.GetObject(vm, v, "image", true))
 	req := &godo.DropletCreateRequest{
@@ -135,6 +192,7 @@ func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateReq
 		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "private_networking", false)),
 		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "user_data", false)),
 		Monitoring:        ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "monitoring", false)),
+		Tags:              ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
 	}
 	sshArgs := ottoutil.GetObject(vm, v, "ssh_keys", false)
 	ottoutil.LoadArray(vm, sshArgs, func(v otto.Value) {
@@ -663,6 +721,17 @@ func ImageToVM(vm *otto.Otto, g *godo.Image) otto.Value {
 		"public":        g.Public,
 		"regions":       g.Regions,
 		"min_disk_size": int64(g.MinDiskSize),
+	})
+}
+
+func TagToVM(vm *otto.Otto, g *godo.Tag) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"name":      g.Name,
+		"resources": g.Resources,
 	})
 }
 

@@ -177,5 +177,9 @@ func enumerateLeftover(spy func(...spycloud.Spy)) {
 			once.Do(print)
 			log.Printf("- Key: %q", v.ID)
 		}),
+		spycloud.Tags(func(v *godo.Tag) {
+			once.Do(print)
+			log.Printf("- Tag: %q", v.Name)
+		}),
 	)
 }

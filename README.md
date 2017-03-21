@@ -81,7 +81,6 @@ https://github.com/aybabtme/godotto/releases/download/0.2.7/dorepl_windows.zip
 * `Droplet Actions`
 * `Image Actions`
 * `Floating IP Actions`
-* `Tags`
 
 ## license
 

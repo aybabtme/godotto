@@ -9,6 +9,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
@@ -87,6 +88,14 @@ func Keys(fn func(*godo.Key)) Spy {
 	}
 }
 
+func Tags(fn func(*godo.Tag)) Spy {
+	return func(c *client) {
+		for _, v := range c.tags {
+			fn(v)
+		}
+	}
+}
+
 // Client wraps a client with a spy, which allows looking at
 // the resources that currently exist in the client.
 func Client(cloud cloud.Client) (cloud.Client, func(...Spy)) {
@@ -111,6 +120,7 @@ type client struct {
 	records     map[int]*godo.DomainRecord
 	floatingips map[string]*godo.FloatingIP
 	keys        map[int]*godo.Key
+	tags        map[string]*godo.Tag
 }
 
 func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
@@ -125,6 +135,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 		records:     make(map[int]*godo.DomainRecord),
 		floatingips: make(map[string]*godo.FloatingIP),
 		keys:        make(map[int]*godo.Key),
+		tags:        make(map[string]*godo.Tag),
 	}
 
 	// capture all create/delete actions
@@ -144,6 +155,8 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock.MockKeys.CreateFn = c.interceptKeyCreate
 	mock.MockKeys.DeleteByIDFn = c.interceptKeyDeleteByID
 	mock.MockKeys.DeleteByFingerprintFn = c.interceptKeyDeleteByFingerprint
+	mock.MockTags.CreateFn = c.interceptTagCreate
+	mock.MockTags.DeleteFn = c.interceptTagDelete
 
 	return c, mock
 }
@@ -302,5 +315,27 @@ func (client *client) interceptKeyDeleteByFingerprint(ctx context.Context, fp st
 		}
 		delete(client.keys, id)
 	}
+	return err
+}
+
+func (client *client) interceptTagCreate(ctx context.Context, name string, opt ...tags.CreateOpt) (tags.Tag, error) {
+	t, err := client.real.Tags().Create(ctx, name, opt...)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		client.tags[t.Struct().Name] = t.Struct()
+	}
+
+	return t, err
+}
+
+func (client *client) interceptTagDelete(ctx context.Context, name string) error {
+	err := client.real.Tags().Delete(ctx, name)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		delete(client.tags, name)
+	}
+
 	return err
 }

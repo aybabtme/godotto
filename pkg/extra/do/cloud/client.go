@@ -10,6 +10,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/digitalocean/godo"
 )
@@ -40,6 +41,7 @@ type Client interface {
 	Sizes() sizes.Client
 	FloatingIPs() floatingips.Client
 	Volumes() volumes.Client
+	Tags() tags.Client
 }
 
 // New creates a Client to the DigitalOcean cloud. Options are applied in order,
@@ -67,6 +69,7 @@ func New(opts ...ClientOpt) Client {
 		sizes:       sizes.New(opt.g),
 		floatingips: floatingips.New(opt.g),
 		volumes:     volumes.New(opt.g),
+		tags:        tags.New(opt.g),
 	}
 
 	return c
@@ -85,6 +88,7 @@ type client struct {
 	sizes       sizes.Client
 	floatingips floatingips.Client
 	volumes     volumes.Client
+	tags        tags.Client
 }
 
 func (svc *client) Droplets() droplets.Client       { return svc.droplets }
@@ -97,3 +101,4 @@ func (svc *client) Regions() regions.Client         { return svc.regions }
 func (svc *client) Sizes() sizes.Client             { return svc.sizes }
 func (svc *client) FloatingIPs() floatingips.Client { return svc.floatingips }
 func (svc *client) Volumes() volumes.Client         { return svc.volumes }
+func (svc *client) Tags() tags.Client               { return svc.tags }

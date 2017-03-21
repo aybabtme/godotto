@@ -14,6 +14,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/keys"
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
+	"github.com/aybabtme/godotto/pkg/tags"
 	"github.com/aybabtme/godotto/pkg/volumes"
 	"github.com/robertkrimen/otto"
 )
@@ -40,6 +41,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"floating_ips", floatingips.Apply},
 		{"sizes", sizes.Apply},
 		{"volumes", volumes.Apply},
+		{"tags", tags.Apply},
 	} {
 		svc, err := applier.Apply(ctx, vm, client)
 		if err != nil {
