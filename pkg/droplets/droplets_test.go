@@ -208,7 +208,7 @@ var d = pkg.create({
 	private_networking: true,
 	user_data:    "lolll",
 	monitoring:   true,
-	tags:					["test"],
+	tags:         ["test"],
 });
 
 var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };

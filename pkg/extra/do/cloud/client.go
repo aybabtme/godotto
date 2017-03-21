@@ -101,5 +101,4 @@ func (svc *client) Regions() regions.Client         { return svc.regions }
 func (svc *client) Sizes() sizes.Client             { return svc.sizes }
 func (svc *client) FloatingIPs() floatingips.Client { return svc.floatingips }
 func (svc *client) Volumes() volumes.Client         { return svc.volumes }
-
-func (svc *client) Tags() tags.Client { return svc.tags }
+func (svc *client) Tags() tags.Client               { return svc.tags }
