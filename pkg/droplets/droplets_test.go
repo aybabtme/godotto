@@ -61,6 +61,7 @@ var d = {
   memory: 20,
   name: "my_name",
   public_ipv4: "127.0.0.1",
+  public_ipv6: "::1",
   networks: {"v4":[], "v6":[]},
   region: region,
   size: size,
@@ -136,7 +137,8 @@ var want = {
   created_at: "",
   volumes: [""],
   size_slug: "",
-  public_ipv4: ""
+  public_ipv4: "",
+  public_ipv6: "",
   vcpus: 21
 };
 
@@ -176,7 +178,8 @@ var want = {
   created_at: "",
   volumes: [""],
   size_slug: "",
-  public_ipv4: ""
+  public_ipv4: "",
+  public_ipv6: ""
 };
 
 var d = pkg.get(42)
@@ -233,7 +236,8 @@ var want = {
   created_at: "",
   volumes: [""],
   size_slug: "",
-  public_ipv4: ""
+  public_ipv4: "",
+  public_ipv6: ""
 };
 
 equals(d, want, "should have proper object");
