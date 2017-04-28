@@ -161,7 +161,7 @@ func ArgTagUntagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.UntagResourc
 	return req
 }
 
-func ArgLoadBalancerRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalancerRequest {
+func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalancerRequest {
 	healthCheck := ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false))
 	stickySessions := ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false))
 	req := &godo.LoadBalancerRequest{

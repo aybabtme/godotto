@@ -12,6 +12,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/floatingips"
 	"github.com/aybabtme/godotto/pkg/images"
 	"github.com/aybabtme/godotto/pkg/keys"
+	"github.com/aybabtme/godotto/pkg/loadbalancers"
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
 	"github.com/aybabtme/godotto/pkg/tags"
@@ -42,6 +43,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"sizes", sizes.Apply},
 		{"volumes", volumes.Apply},
 		{"tags", tags.Apply},
+		{"load_balancers", loadbalancers.Apply},
 	} {
 		svc, err := applier.Apply(ctx, vm, client)
 		if err != nil {
