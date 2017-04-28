@@ -365,3 +365,14 @@ func (client *client) interceptLoadBalancerCreate(ctx context.Context, name, reg
 
 	return l, err
 }
+
+func (client *client) interceptLoadBalancerDelete(ctx context.Context, id string) error {
+	err := client.real.LoadBalancers().Delete(ctx, id)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		delete(client.loadbalancers, id)
+	}
+
+	return err
+}

@@ -8,6 +8,7 @@ import (
 
 type Client interface {
 	Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...CreateOpt) (LoadBalancer, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type LoadBalancer interface {
@@ -60,6 +61,15 @@ func (svc *client) Create(ctx context.Context, name, region string, forwardingRu
 	}
 
 	return &loadBalancer{g: svc.g, l: l}, nil
+}
+
+func (svc *client) Delete(ctx context.Context, id string) error {
+	_, err := svc.g.LoadBalancers.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type loadBalancer struct {

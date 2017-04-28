@@ -749,6 +749,7 @@ func (mock *MockTags) UntagResources(ctx context.Context, name string, res []god
 type MockLoadBalancers struct {
 	wrap     cloud.Client
 	CreateFn func(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opt ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error)
+	DeleteFn func(ctx context.Context, id string) error
 }
 
 func (mock *MockLoadBalancers) Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
@@ -757,4 +758,12 @@ func (mock *MockLoadBalancers) Create(ctx context.Context, name, region string, 
 	}
 
 	return mock.wrap.LoadBalancers().Create(ctx, name, region, forwardingRules, opts...)
+}
+
+func (mock *MockLoadBalancers) Delete(ctx context.Context, id string) error {
+	if mock.DeleteFn != nil {
+		return mock.DeleteFn(ctx, id)
+	}
+
+	return mock.wrap.LoadBalancers().Delete(ctx, id)
 }

@@ -57,3 +57,16 @@ func (svc *loadBalancersSvc) create(all otto.FunctionCall) otto.Value {
 
 	return godojs.LoadBalancerToVM(vm, l.Struct())
 }
+
+func (svc *loadBalancersSvc) delete(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	arg := all.Argument(0)
+
+	lbId := godojs.ArgLoadBalancerID(vm, arg)
+
+	err := svc.svc.Delete(svc.ctx, lbId)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+	return q
+}
