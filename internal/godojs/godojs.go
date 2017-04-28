@@ -169,14 +169,19 @@ func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalance
 		DropletIDs:          ottoutil.IntSlice(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
 		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false)),
 		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false)),
+		ForwardingRules:     ArgForwardingRules(vm, ottoutil.GetObject(vm, v, "forwarding_rules", true)),
 		Tag:                 ottoutil.String(vm, ottoutil.GetObject(vm, v, "tag", false)),
 		RedirectHttpToHttps: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "redirect_http_to_https", false)),
 	}
 
-	ruleArgs := ottoutil.GetObject(vm, v, "forwarding_rules", true)
-	ottoutil.LoadArray(vm, ruleArgs, func(v otto.Value) {
+	return req
+}
+
+func ArgForwardingRules(vm *otto.Otto, v otto.Value) []godo.ForwardingRule {
+	rules := make([]godo.ForwardingRule, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
 		rule := ArgForwardingRule(vm, v)
-		req.ForwardingRules = append(req.ForwardingRules, godo.ForwardingRule{
+		rules = append(rules, godo.ForwardingRule{
 			EntryProtocol:  rule.EntryProtocol,
 			EntryPort:      rule.EntryPort,
 			TargetProtocol: rule.TargetProtocol,
@@ -186,7 +191,45 @@ func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalance
 		})
 	})
 
-	return req
+	return rules
+}
+
+func ArgLoadBalancer(vm *otto.Otto, v otto.Value) *godo.LoadBalancer {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a LoadBalancer, got a %q", v.Class())
+	}
+
+	return &godo.LoadBalancer{
+		ID:                  ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", false)),
+		Name:                ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", false)),
+		IP:                  ottoutil.String(vm, ottoutil.GetObject(vm, v, "ip", false)),
+		Algorithm:           ottoutil.String(vm, ottoutil.GetObject(vm, v, "algorithm", false)),
+		Status:              ottoutil.String(vm, ottoutil.GetObject(vm, v, "status", false)),
+		ForwardingRules:     ArgForwardingRules(vm, ottoutil.GetObject(vm, v, "forwarding_rules", false)),
+		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false)),
+		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sesions", false)),
+		Region:              ArgRegion(vm, ottoutil.GetObject(vm, v, "region", false)),
+		Tag:                 ottoutil.String(vm, ottoutil.GetObject(vm, v, "tag", false)),
+		DropletIDs:          ottoutil.IntSlice(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		RedirectHttpToHttps: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "redirect_http_to_https", false)),
+	}
+}
+
+func ArgLoadBalancerID(vm *otto.Otto, v otto.Value) string {
+	var lbID string
+	switch {
+	case v.IsString():
+		lbID = ottoutil.String(vm, v)
+	case v.IsObject():
+		lbID = ArgLoadBalancer(vm, v).ID
+	default:
+		ottoutil.Throw(vm, "argument must be a LoadBalancer or LoadBalancerID")
+	}
+
+	return lbID
 }
 
 func ArgHealthCheck(vm *otto.Otto, v otto.Value) *godo.HealthCheck {
