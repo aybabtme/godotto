@@ -162,27 +162,13 @@ func ArgTagUntagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.UntagResourc
 }
 
 func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalancerRequest {
-	healthCheck := ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false))
-	stickySessions := ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false))
 	req := &godo.LoadBalancerRequest{
-		Name:       ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
-		Algorithm:  ottoutil.String(vm, ottoutil.GetObject(vm, v, "algorithm", false)),
-		Region:     ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", false)),
-		DropletIDs: ottoutil.IntSlice(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
-		HealthCheck: &godo.HealthCheck{
-			Protocol:               healthCheck.Protocol,
-			Port:                   healthCheck.Port,
-			Path:                   healthCheck.Path,
-			CheckIntervalSeconds:   healthCheck.CheckIntervalSeconds,
-			ResponseTimeoutSeconds: healthCheck.ResponseTimeoutSeconds,
-			HealthyThreshold:       healthCheck.HealthyThreshold,
-			UnhealthyThreshold:     healthCheck.UnhealthyThreshold,
-		},
-		StickySessions: &godo.StickySessions{
-			Type:             stickySessions.Type,
-			CookieName:       stickySessions.CookieName,
-			CookieTtlSeconds: stickySessions.CookieTtlSeconds,
-		},
+		Name:                ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+		Algorithm:           ottoutil.String(vm, ottoutil.GetObject(vm, v, "algorithm", false)),
+		Region:              ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", false)),
+		DropletIDs:          ottoutil.IntSlice(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false)),
+		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false)),
 		Tag:                 ottoutil.String(vm, ottoutil.GetObject(vm, v, "tag", false)),
 		RedirectHttpToHttps: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "redirect_http_to_https", false)),
 	}
@@ -229,7 +215,7 @@ func ArgStickySessions(vm *otto.Otto, v otto.Value) *godo.StickySessions {
 	}
 
 	if !v.IsObject() {
-		ottoutil.Throw(vm, "argument must be a HealthCheck, got a %q", v.Class())
+		ottoutil.Throw(vm, "argument must be a StickySessions, got a %q", v.Class())
 	}
 
 	return &godo.StickySessions{
@@ -245,7 +231,7 @@ func ArgForwardingRule(vm *otto.Otto, v otto.Value) *godo.ForwardingRule {
 	}
 
 	if !v.IsObject() {
-		ottoutil.Throw(vm, "argument must be a HealthCheck, got a %q", v.Class())
+		ottoutil.Throw(vm, "argument must be a ForwardingRule, got a %q", v.Class())
 	}
 
 	return &godo.ForwardingRule{

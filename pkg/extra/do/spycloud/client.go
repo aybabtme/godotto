@@ -141,15 +141,16 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock := mockcloud.Client(cloud)
 
 	c := &client{
-		real:        cloud,
-		droplets:    make(map[int]*godo.Droplet),
-		volumes:     make(map[string]*godo.Volume),
-		snapshots:   make(map[string]*godo.Snapshot),
-		domains:     make(map[string]*godo.Domain),
-		records:     make(map[int]*godo.DomainRecord),
-		floatingips: make(map[string]*godo.FloatingIP),
-		keys:        make(map[int]*godo.Key),
-		tags:        make(map[string]*godo.Tag),
+		real:          cloud,
+		droplets:      make(map[int]*godo.Droplet),
+		volumes:       make(map[string]*godo.Volume),
+		snapshots:     make(map[string]*godo.Snapshot),
+		domains:       make(map[string]*godo.Domain),
+		records:       make(map[int]*godo.DomainRecord),
+		floatingips:   make(map[string]*godo.FloatingIP),
+		keys:          make(map[int]*godo.Key),
+		tags:          make(map[string]*godo.Tag),
+		loadbalancers: make(map[string]*godo.LoadBalancer),
 	}
 
 	// capture all create/delete actions
