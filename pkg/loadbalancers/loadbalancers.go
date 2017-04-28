@@ -14,7 +14,7 @@ import (
 var q = otto.Value{}
 
 func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value, error) {
-	root, err := vm.Object(`{}`)
+	root, err := vm.Object(`({})`)
 	if err != nil {
 		return q, err
 	}

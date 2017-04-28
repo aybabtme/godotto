@@ -9,6 +9,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/loadbalancers"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
@@ -88,9 +89,21 @@ func Keys(fn func(*godo.Key)) Spy {
 	}
 }
 
+// Tags lets you visit all the tags that are still created by the spied upon
+// client.
 func Tags(fn func(*godo.Tag)) Spy {
 	return func(c *client) {
 		for _, v := range c.tags {
+			fn(v)
+		}
+	}
+}
+
+// Load Balancers lets you visit all the load balancers that are still created
+// by the spied upon client.
+func LoadBalancers(fn func(*godo.LoadBalancer)) Spy {
+	return func(c *client) {
+		for _, v := range c.loadbalancers {
 			fn(v)
 		}
 	}
@@ -112,15 +125,16 @@ func Client(cloud cloud.Client) (cloud.Client, func(...Spy)) {
 type client struct {
 	real cloud.Client
 
-	mu          sync.Mutex
-	droplets    map[int]*godo.Droplet
-	volumes     map[string]*godo.Volume
-	snapshots   map[string]*godo.Snapshot
-	domains     map[string]*godo.Domain
-	records     map[int]*godo.DomainRecord
-	floatingips map[string]*godo.FloatingIP
-	keys        map[int]*godo.Key
-	tags        map[string]*godo.Tag
+	mu            sync.Mutex
+	droplets      map[int]*godo.Droplet
+	volumes       map[string]*godo.Volume
+	snapshots     map[string]*godo.Snapshot
+	domains       map[string]*godo.Domain
+	records       map[int]*godo.DomainRecord
+	floatingips   map[string]*godo.FloatingIP
+	keys          map[int]*godo.Key
+	tags          map[string]*godo.Tag
+	loadbalancers map[string]*godo.LoadBalancer
 }
 
 func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
@@ -157,7 +171,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock.MockKeys.DeleteByFingerprintFn = c.interceptKeyDeleteByFingerprint
 	mock.MockTags.CreateFn = c.interceptTagCreate
 	mock.MockTags.DeleteFn = c.interceptTagDelete
-
+	mock.MockLoadBalancers.CreateFn = c.interceptLoadBalancerCreate
 	return c, mock
 }
 
@@ -338,4 +352,15 @@ func (client *client) interceptTagDelete(ctx context.Context, name string) error
 	}
 
 	return err
+}
+
+func (client *client) interceptLoadBalancerCreate(ctx context.Context, name, region string, rules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
+	l, err := client.real.LoadBalancers().Create(ctx, name, region, rules)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		client.loadbalancers[l.Struct().ID] = l.Struct()
+	}
+
+	return l, err
 }
