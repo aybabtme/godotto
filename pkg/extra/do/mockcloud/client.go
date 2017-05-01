@@ -750,6 +750,7 @@ type MockLoadBalancers struct {
 	wrap     cloud.Client
 	CreateFn func(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opt ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error)
 	DeleteFn func(ctx context.Context, id string) error
+	ListFn   func(ctx context.Context) (<-chan loadbalancers.LoadBalancer, <-chan error)
 }
 
 func (mock *MockLoadBalancers) Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
@@ -766,4 +767,12 @@ func (mock *MockLoadBalancers) Delete(ctx context.Context, id string) error {
 	}
 
 	return mock.wrap.LoadBalancers().Delete(ctx, id)
+}
+
+func (mock *MockLoadBalancers) List(ctx context.Context) (<-chan loadbalancers.LoadBalancer, <-chan error) {
+	if mock.ListFn != nil {
+		return mock.ListFn(ctx)
+	}
+
+	return mock.wrap.LoadBalancers().List(ctx)
 }

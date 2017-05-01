@@ -29,6 +29,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		Method interface{}
 	}{
 		{"create", svc.create},
+		{"list", svc.list},
+		{"delete", svc.delete},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -69,4 +71,24 @@ func (svc *loadBalancersSvc) delete(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 	return q
+}
+
+func (svc *loadBalancersSvc) list(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	var lbs = make([]otto.Value, 0)
+	lbc, errc := svc.svc.List(svc.ctx)
+	for l := range lbc {
+		lbs = append(lbs, godojs.LoadBalancerToVM(vm, l.Struct()))
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	v, err := vm.ToValue(lbs)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
 }

@@ -173,6 +173,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock.MockTags.CreateFn = c.interceptTagCreate
 	mock.MockTags.DeleteFn = c.interceptTagDelete
 	mock.MockLoadBalancers.CreateFn = c.interceptLoadBalancerCreate
+	mock.MockLoadBalancers.DeleteFn = c.interceptLoadBalancerDelete
 	return c, mock
 }
 
