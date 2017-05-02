@@ -870,19 +870,19 @@ func LoadBalancerToVM(vm *otto.Otto, g *godo.LoadBalancer) otto.Value {
 	}
 
 	return ottoutil.ToPkg(vm, map[string]interface{}{
-		"id":               g.ID,
-		"name":             g.Name,
-		"ip":               g.IP,
-		"algorithm":        g.Algorithm,
-		"status":           g.Status,
-		"created_at":       g.Created,
-		"forwarding_rules": ForwardingRulesToVM(vm, g.ForwardingRules),
-		"health_check":     HealthCheckToVM(vm, g.HealthCheck),
-		"sticky_sessions":  StickySessionsToVM(vm, g.StickySessions),
-		"droplet_ids":      intsToInt64s(g.DropletIDs),
-		"tag":              g.Tag,
-		"redirect_http_to_https": g.RedirectHttpToHttps,
+		"id":                     g.ID,
+		"name":                   g.Name,
+		"ip":                     g.IP,
+		"algorithm":              g.Algorithm,
+		"status":                 g.Status,
+		"created_at":             g.Created,
+		"forwarding_rules":       ForwardingRulesToVM(vm, g.ForwardingRules),
+		"health_check":           HealthCheckToVM(vm, g.HealthCheck),
+		"sticky_sessions":        StickySessionsToVM(vm, g.StickySessions),
 		"region":                 RegionToVM(vm, g.Region),
+		"tag":                    g.Tag,
+		"droplet_ids":            intsToInt64s(g.DropletIDs),
+		"redirect_http_to_https": g.RedirectHttpToHttps,
 	})
 }
 
