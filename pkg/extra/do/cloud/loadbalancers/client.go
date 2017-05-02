@@ -13,8 +13,8 @@ type Client interface {
 	List(ctx context.Context) (<-chan LoadBalancer, <-chan error)
 	AddDroplets(ctx context.Context, lbId string, dropletIDs ...int) error
 	RemoveDroplets(ctx context.Context, lbId string, dropletIDs ...int) error
-	//AddForwardingRules(ctx context.Context, lbID string, rules ...godo.ForwardingRule) error
-	//RemoveForwardingRules(ctx context.Context, lbID string, rules ...godo.ForwardingRule) error
+	AddForwardingRules(ctx context.Context, lbID string, rules ...godo.ForwardingRule) error
+	RemoveForwardingRules(ctx context.Context, lbID string, rules ...godo.ForwardingRule) error
 }
 
 type LoadBalancer interface {
@@ -116,6 +116,24 @@ func (svc *client) AddDroplets(ctx context.Context, lbId string, dropletIds ...i
 
 func (svc *client) RemoveDroplets(ctx context.Context, lbId string, dropletIds ...int) error {
 	_, err := svc.g.LoadBalancers.RemoveDroplets(ctx, lbId, dropletIds...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) AddForwardingRules(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error {
+	_, err := svc.g.LoadBalancers.AddForwardingRules(ctx, lbId, rules...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) RemoveForwardingRules(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error {
+	_, err := svc.g.LoadBalancers.RemoveForwardingRules(ctx, lbId, rules...)
 	if err != nil {
 		return err
 	}

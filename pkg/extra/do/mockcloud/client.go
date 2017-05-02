@@ -796,3 +796,19 @@ func (mock *MockLoadBalancers) RemoveDroplets(ctx context.Context, lbId string, 
 
 	return mock.wrap.LoadBalancers().RemoveDroplets(ctx, lbId, dropletIDs...)
 }
+
+func (mock *MockLoadBalancers) AddForwardingRules(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error {
+	if mock.AddForwardingRulesFn != nil {
+		return mock.AddForwardingRulesFn(ctx, lbId, rules...)
+	}
+
+	return mock.wrap.LoadBalancers().AddForwardingRules(ctx, lbId, rules...)
+}
+
+func (mock *MockLoadBalancers) RemoveForwardingRules(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error {
+	if mock.RemoveForwardingRulesFn != nil {
+		return mock.RemoveForwardingRulesFn(ctx, lbId, rules...)
+	}
+
+	return mock.wrap.LoadBalancers().RemoveForwardingRules(ctx, lbId, rules...)
+}

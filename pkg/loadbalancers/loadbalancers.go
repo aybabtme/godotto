@@ -33,6 +33,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"delete", svc.delete},
 		{"add_droplets", svc.addDroplets},
 		{"remove_droplets", svc.removeDroplets},
+		{"add_forwarding_rules", svc.addForwardingRules},
+		{"remove_forwarding_rules", svc.removeForwardingRules},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -115,6 +117,32 @@ func (svc *loadBalancersSvc) removeDroplets(all otto.FunctionCall) otto.Value {
 	dropletIds := ottoutil.IntSlice(vm, all.Argument(1))
 
 	err := svc.svc.RemoveDroplets(svc.ctx, lbId, dropletIds...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *loadBalancersSvc) addForwardingRules(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
+	rules := godojs.ArgForwardingRules(vm, all.Argument(1))
+
+	err := svc.svc.AddForwardingRules(svc.ctx, lbId, rules...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *loadBalancersSvc) removeForwardingRules(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
+	rules := godojs.ArgForwardingRules(vm, all.Argument(1))
+
+	err := svc.svc.RemoveForwardingRules(svc.ctx, lbId, rules...)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
