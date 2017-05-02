@@ -11,6 +11,10 @@ type Client interface {
 	Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...CreateOpt) (LoadBalancer, error)
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) (<-chan LoadBalancer, <-chan error)
+	AddDroplets(ctx context.Context, lbId string, dropletIDs ...int) error
+	RemoveDroplets(ctx context.Context, lbId string, dropletIDs ...int) error
+	//AddForwardingRules(ctx context.Context, lbID string, rules ...godo.ForwardingRule) error
+	//RemoveForwardingRules(ctx context.Context, lbID string, rules ...godo.ForwardingRule) error
 }
 
 type LoadBalancer interface {
@@ -99,6 +103,24 @@ func (svc *client) List(ctx context.Context) (<-chan LoadBalancer, <-chan error)
 	}()
 
 	return outc, errc
+}
+
+func (svc *client) AddDroplets(ctx context.Context, lbId string, dropletIds ...int) error {
+	_, err := svc.g.LoadBalancers.AddDroplets(ctx, lbId, dropletIds...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) RemoveDroplets(ctx context.Context, lbId string, dropletIds ...int) error {
+	_, err := svc.g.LoadBalancers.RemoveDroplets(ctx, lbId, dropletIds...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type loadBalancer struct {

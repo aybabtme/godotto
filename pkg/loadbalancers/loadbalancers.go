@@ -31,6 +31,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"create", svc.create},
 		{"list", svc.list},
 		{"delete", svc.delete},
+		{"add_droplets", svc.addDroplets},
+		{"remove_droplets", svc.removeDroplets},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -91,4 +93,31 @@ func (svc *loadBalancersSvc) list(all otto.FunctionCall) otto.Value {
 	}
 
 	return v
+}
+
+func (svc *loadBalancersSvc) addDroplets(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
+	dropletIds := ottoutil.IntSlice(vm, all.Argument(1))
+
+	err := svc.svc.AddDroplets(svc.ctx, lbId, dropletIds...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *loadBalancersSvc) removeDroplets(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
+	dropletIds := ottoutil.IntSlice(vm, all.Argument(1))
+
+	err := svc.svc.RemoveDroplets(svc.ctx, lbId, dropletIds...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
 }

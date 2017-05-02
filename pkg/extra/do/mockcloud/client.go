@@ -747,10 +747,14 @@ func (mock *MockTags) UntagResources(ctx context.Context, name string, res []god
 // Load Balancers
 
 type MockLoadBalancers struct {
-	wrap     cloud.Client
-	CreateFn func(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opt ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error)
-	DeleteFn func(ctx context.Context, id string) error
-	ListFn   func(ctx context.Context) (<-chan loadbalancers.LoadBalancer, <-chan error)
+	wrap                    cloud.Client
+	CreateFn                func(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opt ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error)
+	DeleteFn                func(ctx context.Context, id string) error
+	ListFn                  func(ctx context.Context) (<-chan loadbalancers.LoadBalancer, <-chan error)
+	AddDropletsFn           func(ctx context.Context, lbId string, dropletIDs ...int) error
+	RemoveDropletsFn        func(ctx context.Context, lbId string, dropletIDs ...int) error
+	AddForwardingRulesFn    func(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error
+	RemoveForwardingRulesFn func(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error
 }
 
 func (mock *MockLoadBalancers) Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
@@ -775,4 +779,20 @@ func (mock *MockLoadBalancers) List(ctx context.Context) (<-chan loadbalancers.L
 	}
 
 	return mock.wrap.LoadBalancers().List(ctx)
+}
+
+func (mock *MockLoadBalancers) AddDroplets(ctx context.Context, lbId string, dropletIDs ...int) error {
+	if mock.AddDropletsFn != nil {
+		return mock.AddDropletsFn(ctx, lbId, dropletIDs...)
+	}
+
+	return mock.wrap.LoadBalancers().AddDroplets(ctx, lbId, dropletIDs...)
+}
+
+func (mock *MockLoadBalancers) RemoveDroplets(ctx context.Context, lbId string, dropletIDs ...int) error {
+	if mock.RemoveDropletsFn != nil {
+		return mock.RemoveDropletsFn(ctx, lbId, dropletIDs...)
+	}
+
+	return mock.wrap.LoadBalancers().RemoveDroplets(ctx, lbId, dropletIDs...)
 }
