@@ -876,13 +876,70 @@ func LoadBalancerToVM(vm *otto.Otto, g *godo.LoadBalancer) otto.Value {
 		"algorithm":        g.Algorithm,
 		"status":           g.Status,
 		"created_at":       g.Created,
-		"forwarding_rules": g.ForwardingRules,
-		"health_check":     g.HealthCheck,
-		"sticky_sessions":  g.StickySessions,
+		"forwarding_rules": ForwardingRulesToVM(vm, g.ForwardingRules),
+		"health_check":     HealthCheckToVM(vm, g.HealthCheck),
+		"sticky_sessions":  StickySessionsToVM(vm, g.StickySessions),
 		"droplet_ids":      intsToInt64s(g.DropletIDs),
 		"tag":              g.Tag,
 		"redirect_http_to_https": g.RedirectHttpToHttps,
 		"region":                 RegionToVM(vm, g.Region),
+	})
+}
+
+func ForwardingRulesToVM(vm *otto.Otto, g []godo.ForwardingRule) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	var rules = make([]otto.Value, 0)
+	for _, rule := range g {
+		rules = append(rules, ForwardingRuleToVM(vm, rule))
+	}
+
+	v, err := vm.ToValue(rules)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
+}
+
+func ForwardingRuleToVM(vm *otto.Otto, g godo.ForwardingRule) otto.Value {
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"entry_protocol":  g.EntryProtocol,
+		"entry_port":      g.EntryPort,
+		"target_protocol": g.TargetProtocol,
+		"target_port":     g.TargetPort,
+		"certificate_id":  g.CertificateID,
+		"tls_passthrough": g.TlsPassthrough,
+	})
+}
+
+func HealthCheckToVM(vm *otto.Otto, g *godo.HealthCheck) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"protocol": g.Protocol,
+		"port":     g.Port,
+		"path":     g.Path,
+		"check_interval_seconds":   g.CheckIntervalSeconds,
+		"response_timeout_seconds": g.ResponseTimeoutSeconds,
+		"unhealthy_threshold":      g.UnhealthyThreshold,
+		"healthy_threshold":        g.HealthyThreshold,
+	})
+}
+
+func StickySessionsToVM(vm *otto.Otto, g *godo.StickySessions) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"type":               g.Type,
+		"cookie_name":        g.CookieName,
+		"cookie_ttl_seconds": g.CookieTtlSeconds,
 	})
 }
 
