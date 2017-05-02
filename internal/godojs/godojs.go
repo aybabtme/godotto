@@ -243,7 +243,7 @@ func ArgHealthCheck(vm *otto.Otto, v otto.Value) *godo.HealthCheck {
 
 	return &godo.HealthCheck{
 		Protocol:               ottoutil.String(vm, ottoutil.GetObject(vm, v, "protocol", false)),
-		Port:                   ottoutil.Int(vm, ottoutil.GetObject(vm, v, "port", true)),
+		Port:                   ottoutil.Int(vm, ottoutil.GetObject(vm, v, "port", false)),
 		Path:                   ottoutil.String(vm, ottoutil.GetObject(vm, v, "path", false)),
 		CheckIntervalSeconds:   ottoutil.Int(vm, ottoutil.GetObject(vm, v, "check_interval_seconds", false)),
 		ResponseTimeoutSeconds: ottoutil.Int(vm, ottoutil.GetObject(vm, v, "response_timeout_seconds", false)),
@@ -278,10 +278,10 @@ func ArgForwardingRule(vm *otto.Otto, v otto.Value) *godo.ForwardingRule {
 	}
 
 	return &godo.ForwardingRule{
-		EntryProtocol:  ottoutil.String(vm, ottoutil.GetObject(vm, v, "entry_protocol", true)),
-		EntryPort:      ottoutil.Int(vm, ottoutil.GetObject(vm, v, "entry_port", true)),
-		TargetProtocol: ottoutil.String(vm, ottoutil.GetObject(vm, v, "target_protocol", true)),
-		TargetPort:     ottoutil.Int(vm, ottoutil.GetObject(vm, v, "target_port", true)),
+		EntryProtocol:  ottoutil.String(vm, ottoutil.GetObject(vm, v, "entry_protocol", false)),
+		EntryPort:      ottoutil.Int(vm, ottoutil.GetObject(vm, v, "entry_port", false)),
+		TargetProtocol: ottoutil.String(vm, ottoutil.GetObject(vm, v, "target_protocol", false)),
+		TargetPort:     ottoutil.Int(vm, ottoutil.GetObject(vm, v, "target_port", false)),
 		CertificateID:  ottoutil.String(vm, ottoutil.GetObject(vm, v, "certificate_id", false)),
 		TlsPassthrough: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "tls_passthrough", false)),
 	}
