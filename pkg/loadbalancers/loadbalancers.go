@@ -29,6 +29,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		Method interface{}
 	}{
 		{"create", svc.create},
+		{"get", svc.get},
 		{"list", svc.list},
 		{"delete", svc.delete},
 		{"add_droplets", svc.addDroplets},
@@ -57,6 +58,19 @@ func (svc *loadBalancersSvc) create(all otto.FunctionCall) otto.Value {
 	req := godojs.ArgLoadBalancerCreateRequest(vm, arg)
 
 	l, err := svc.svc.Create(svc.ctx, req.Name, req.Region, req.ForwardingRules, loadbalancers.UseGodoCreate(req))
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return godojs.LoadBalancerToVM(vm, l.Struct())
+}
+
+func (svc *loadBalancersSvc) get(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+	arg := all.Argument(0)
+
+	lbId := godojs.ArgLoadBalancerID(vm, arg)
+	l, err := svc.svc.Get(svc.ctx, lbId)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

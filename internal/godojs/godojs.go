@@ -882,6 +882,7 @@ func LoadBalancerToVM(vm *otto.Otto, g *godo.LoadBalancer) otto.Value {
 		"droplet_ids":      intsToInt64s(g.DropletIDs),
 		"tag":              g.Tag,
 		"redirect_http_to_https": g.RedirectHttpToHttps,
+		"region":                 RegionToVM(vm, g.Region),
 	})
 }
 

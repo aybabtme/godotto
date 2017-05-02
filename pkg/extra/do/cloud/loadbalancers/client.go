@@ -9,6 +9,7 @@ import (
 
 type Client interface {
 	Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...CreateOpt) (LoadBalancer, error)
+	Get(ctx context.Context, id string) (LoadBalancer, error)
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) (<-chan LoadBalancer, <-chan error)
 	AddDroplets(ctx context.Context, lbId string, dropletIDs ...int) error
@@ -62,6 +63,15 @@ func (svc *client) Create(ctx context.Context, name, region string, forwardingRu
 	opt.req.ForwardingRules = forwardingRules
 
 	l, _, err := svc.g.LoadBalancers.Create(ctx, opt.req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &loadBalancer{g: svc.g, l: l}, nil
+}
+
+func (svc *client) Get(ctx context.Context, id string) (LoadBalancer, error) {
+	l, _, err := svc.g.LoadBalancers.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
