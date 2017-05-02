@@ -115,7 +115,7 @@ func (svc *loadBalancersSvc) addDroplets(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
 	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
-	dropletIds := ottoutil.IntSlice(vm, all.Argument(1))
+	dropletIds := godojs.ArgDropletIDs(vm, all.Argument(1))
 
 	err := svc.svc.AddDroplets(svc.ctx, lbId, dropletIds...)
 	if err != nil {
@@ -128,7 +128,7 @@ func (svc *loadBalancersSvc) addDroplets(all otto.FunctionCall) otto.Value {
 func (svc *loadBalancersSvc) removeDroplets(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
-	dropletIds := ottoutil.IntSlice(vm, all.Argument(1))
+	dropletIds := godojs.ArgDropletIDs(vm, all.Argument(1))
 
 	err := svc.svc.RemoveDroplets(svc.ctx, lbId, dropletIds...)
 	if err != nil {

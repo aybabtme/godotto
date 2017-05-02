@@ -166,7 +166,7 @@ func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalance
 		Name:                ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
 		Algorithm:           ottoutil.String(vm, ottoutil.GetObject(vm, v, "algorithm", false)),
 		Region:              ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", false)),
-		DropletIDs:          ottoutil.IntSlice(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		DropletIDs:          ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
 		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false)),
 		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false)),
 		ForwardingRules:     ArgForwardingRules(vm, ottoutil.GetObject(vm, v, "forwarding_rules", true)),
@@ -175,6 +175,16 @@ func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalance
 	}
 
 	return req
+}
+
+func ArgDropletIDs(vm *otto.Otto, v otto.Value) []int {
+	ids := make([]int, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		did := ArgDropletID(vm, v)
+		ids = append(ids, did)
+	})
+
+	return ids
 }
 
 func ArgForwardingRules(vm *otto.Otto, v otto.Value) []godo.ForwardingRule {
@@ -213,7 +223,7 @@ func ArgLoadBalancer(vm *otto.Otto, v otto.Value) *godo.LoadBalancer {
 		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sesions", false)),
 		Region:              ArgRegion(vm, ottoutil.GetObject(vm, v, "region", false)),
 		Tag:                 ottoutil.String(vm, ottoutil.GetObject(vm, v, "tag", false)),
-		DropletIDs:          ottoutil.IntSlice(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		DropletIDs:          ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
 		RedirectHttpToHttps: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "redirect_http_to_https", false)),
 	}
 }
