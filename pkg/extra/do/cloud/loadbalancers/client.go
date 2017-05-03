@@ -10,6 +10,7 @@ import (
 type Client interface {
 	Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...CreateOpt) (LoadBalancer, error)
 	Get(ctx context.Context, id string) (LoadBalancer, error)
+	Update(ctx context.Context, id string, opts ...UpdateOpt) (LoadBalancer, error)
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) (<-chan LoadBalancer, <-chan error)
 	AddDroplets(ctx context.Context, lbId string, dropletIDs ...int) error
@@ -63,6 +64,37 @@ func (svc *client) Create(ctx context.Context, name, region string, forwardingRu
 	opt.req.ForwardingRules = forwardingRules
 
 	l, _, err := svc.g.LoadBalancers.Create(ctx, opt.req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &loadBalancer{g: svc.g, l: l}, nil
+}
+
+// UpdateOpt is an optional argument to Update.
+type UpdateOpt func(*updateOpt)
+
+func UseGodoLoadBalancer(req *godo.LoadBalancerRequest) UpdateOpt {
+	return func(opt *updateOpt) { opt.req = req }
+}
+
+type updateOpt struct {
+	req *godo.LoadBalancerRequest
+}
+
+func (svc *client) defaultUpdateOpts() *updateOpt {
+	return &updateOpt{
+		req: &godo.LoadBalancerRequest{},
+	}
+}
+
+func (svc *client) Update(ctx context.Context, id string, opts ...UpdateOpt) (LoadBalancer, error) {
+	opt := svc.defaultUpdateOpts()
+	for _, fn := range opts {
+		fn(opt)
+	}
+
+	l, _, err := svc.g.LoadBalancers.Update(ctx, id, opt.req)
 	if err != nil {
 		return nil, err
 	}

@@ -30,6 +30,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}{
 		{"create", svc.create},
 		{"get", svc.get},
+		{"update", svc.update},
 		{"list", svc.list},
 		{"delete", svc.delete},
 		{"add_droplets", svc.addDroplets},
@@ -71,6 +72,19 @@ func (svc *loadBalancersSvc) get(all otto.FunctionCall) otto.Value {
 
 	lbId := godojs.ArgLoadBalancerID(vm, arg)
 	l, err := svc.svc.Get(svc.ctx, lbId)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return godojs.LoadBalancerToVM(vm, l.Struct())
+}
+
+func (svc *loadBalancersSvc) update(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	lbId := godojs.ArgLoadBalancerID(vm, all.Argument(0))
+	req := godojs.ArgLoadBalancerUpdate(vm, all.Argument(1))
+	l, err := svc.svc.Update(svc.ctx, lbId, loadbalancers.UseGodoLoadBalancer(req))
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

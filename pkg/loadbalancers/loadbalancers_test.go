@@ -21,6 +21,7 @@ func TestLoadBalancerApply(t *testing.T) {
 	assert(pkg != null, "package should be loaded");
 	assert(pkg.create != null, "create function should be defined");
 	assert(pkg.delete != null, "delete function should be defined");
+	assert(pkg.update != null, "update function should be defined");
 	assert(pkg.get != null, "get function shouled be defined");
 	assert(pkg.add_droplets != null, "add_droplets function should be defined");
 	assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
@@ -46,6 +47,10 @@ func TestLoadBalancerThrows(t *testing.T) {
 	}
 
 	cloud.MockLoadBalancers.GetFn = func(_ context.Context, _ string) (loadbalancers.LoadBalancer, error) {
+		return nil, errors.New("throw me")
+	}
+
+	cloud.MockLoadBalancers.UpdateFn = func(_ context.Context, _ string, _ ...loadbalancers.UpdateOpt) (loadbalancers.LoadBalancer, error) {
 		return nil, errors.New("throw me")
 	}
 
@@ -357,6 +362,67 @@ func TestLoadBalancersList(t *testing.T) {
 	var l = list[0];
 
 	equals(l, want, "should have proper object");
+	`)
+}
+
+func TestLoadBalancerUpdate(t *testing.T) {
+	wantId := "test-uuid"
+	cloud := mockcloud.Client(nil)
+
+	cloud.MockLoadBalancers.UpdateFn = func(_ context.Context, gotId string, opts ...loadbalancers.UpdateOpt) (loadbalancers.LoadBalancer, error) {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+		return &loadBalancer{&godo.LoadBalancer{ID: "test-uuid", Name: "new-name", HealthCheck: healthCheck, StickySessions: stickySessions, ForwardingRules: forwardingRules, DropletIDs: []int{3164444, 3164445}, Status: "new", Algorithm: "round_robin", Region: region}}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+
+		var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+		var want = {
+			"id": "test-uuid",
+			"name": "new-name",
+			"ip": "",
+			"algorithm": "round_robin",
+			"status": "new",
+			"created_at": "",
+		"forwarding_rules": [
+			{
+				"entry_protocol": "http",
+				"entry_port": 80,
+				"target_protocol": "http",
+				"target_port": 80,
+				"certificate_id": "",
+				"tls_passthrough": false
+			}
+			],
+
+			"health_check": {
+				"protocol": "http",
+				"port": 80,
+				"path": "/",
+				"check_interval_seconds": 10,
+				"response_timeout_seconds": 5,
+				"healthy_threshold": 5,
+				"unhealthy_threshold": 3
+			},
+			"sticky_sessions": {
+				"type": "none",
+				cookie_name: "",
+				cookie_ttl_seconds: 0,
+			},
+			"region": region,
+			"tag": "",
+			"droplet_ids": [
+			3164444,
+			3164445
+			],
+			"redirect_http_to_https": false
+		};
+
+		var l = pkg.update("test-uuid", want);
+		equals(l, want, "should have proper object");
 	`)
 }
 
