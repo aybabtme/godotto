@@ -932,12 +932,12 @@ func HealthCheckToVM(vm *otto.Otto, g *godo.HealthCheck) otto.Value {
 
 	return ottoutil.ToPkg(vm, map[string]interface{}{
 		"protocol": g.Protocol,
-		"port":     g.Port,
+		"port":     int64(g.Port),
 		"path":     g.Path,
-		"check_interval_seconds":   g.CheckIntervalSeconds,
-		"response_timeout_seconds": g.ResponseTimeoutSeconds,
-		"unhealthy_threshold":      g.UnhealthyThreshold,
-		"healthy_threshold":        g.HealthyThreshold,
+		"check_interval_seconds":   int64(g.CheckIntervalSeconds),
+		"response_timeout_seconds": int64(g.ResponseTimeoutSeconds),
+		"unhealthy_threshold":      int64(g.UnhealthyThreshold),
+		"healthy_threshold":        int64(g.HealthyThreshold),
 	})
 }
 
@@ -949,7 +949,7 @@ func StickySessionsToVM(vm *otto.Otto, g *godo.StickySessions) otto.Value {
 	return ottoutil.ToPkg(vm, map[string]interface{}{
 		"type":               g.Type,
 		"cookie_name":        g.CookieName,
-		"cookie_ttl_seconds": g.CookieTtlSeconds,
+		"cookie_ttl_seconds": int64(g.CookieTtlSeconds),
 	})
 }
 
