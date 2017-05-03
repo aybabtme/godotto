@@ -377,3 +377,186 @@ func TestLoadBalancerDelete(t *testing.T) {
 			pkg.delete("test-uuid");
 	`)
 }
+
+func TestLoadBalancerGet(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockLoadBalancers.GetFn = func(_ context.Context, id string) (loadbalancers.LoadBalancer, error) {
+		return &loadBalancer{l}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+		var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
+		var want = {
+			"id": "test-uuid",
+			"name": "example-lb-01",
+			"ip": "",
+			"algorithm": "round_robin",
+			"status": "new",
+			"created_at": "",
+		"forwarding_rules": [
+			{
+				"entry_protocol": "http",
+				"entry_port": 80,
+				"target_protocol": "http",
+				"target_port": 80,
+				"certificate_id": "",
+				"tls_passthrough": false
+			}
+			],
+
+			"health_check": {
+				"protocol": "http",
+				"port": 80,
+				"path": "/",
+				"check_interval_seconds": 10,
+				"response_timeout_seconds": 5,
+				"healthy_threshold": 5,
+				"unhealthy_threshold": 3
+			},
+			"sticky_sessions": {
+				"type": "none",
+				cookie_name: "",
+				cookie_ttl_seconds: 0,
+			},
+			"region": region,
+			"tag": "",
+			"droplet_ids": [
+			3164444,
+			3164445
+			],
+			"redirect_http_to_https": false
+		};
+
+		var l = pkg.get('test-uuid');
+
+		equals(l, want, "should have proper object");
+	`)
+}
+
+func TestLoadBalancerAddForwardingRules(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockLoadBalancers.AddForwardingRulesFn = func(_ context.Context, gotId string, rules ...godo.ForwardingRule) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantRule := godo.ForwardingRule{
+			EntryProtocol:  "http",
+			EntryPort:      81,
+			TargetProtocol: "http",
+			TargetPort:     81,
+			CertificateID:  "",
+			TlsPassthrough: false,
+		}
+
+		gotRule := rules[0]
+
+		if wantRule != gotRule {
+			t.Fatalf("want %v got %v", wantRule, gotRule)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+		pkg.add_forwarding_rules("test-uuid", [{
+			entry_protocol: "http", 
+			entry_port: 81, 
+			target_protocol: "http", 
+			target_port: 81
+		}
+		]);
+	`)
+}
+
+func TestLoadBalancerRemoveForwardingRules(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockLoadBalancers.RemoveForwardingRulesFn = func(_ context.Context, gotId string, rules ...godo.ForwardingRule) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantRule := godo.ForwardingRule{
+			EntryProtocol:  "http",
+			EntryPort:      81,
+			TargetProtocol: "http",
+			TargetPort:     81,
+			CertificateID:  "",
+			TlsPassthrough: false,
+		}
+
+		gotRule := rules[0]
+
+		if wantRule != gotRule {
+			t.Fatalf("want %v got %v", wantRule, gotRule)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+		pkg.remove_forwarding_rules("test-uuid", [{
+			entry_protocol: "http", 
+			entry_port: 81, 
+			target_protocol: "http", 
+			target_port: 81
+		}
+		]);
+	`)
+}
+
+func TestLoadBalancerAddDroplets(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockLoadBalancers.AddDropletsFn = func(_ context.Context, gotId string, dropletIds ...int) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantDropletId := 42
+
+		gotDropletId := dropletIds[0]
+		if wantDropletId != gotDropletId {
+			t.Fatalf("want %v got %v", wantDropletId, gotDropletId)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+
+		pkg.add_droplets("test-uuid", [42]);
+	`)
+}
+
+func TestLoadBalancerRemoveDroplets(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockLoadBalancers.RemoveDropletsFn = func(_ context.Context, gotId string, dropletIds ...int) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantDropletId := 42
+
+		gotDropletId := dropletIds[0]
+		if wantDropletId != gotDropletId {
+			t.Fatalf("want %v got %v", wantDropletId, gotDropletId)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+
+		pkg.remove_droplets("test-uuid", [42]);
+	`)
+}
