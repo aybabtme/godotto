@@ -11,6 +11,8 @@ import (
 	"github.com/digitalocean/godo"
 )
 
+var testLb *godo.LoadBalancer = &godo.LoadBalancer{}
+
 func TestLoadBalancerApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
@@ -71,7 +73,7 @@ func TestLoadBalancerThrows(t *testing.T) {
 		var pkg = cloud.load_balancers;
 
 		var lb = {
-				id: "4de7ac8b-495b-4884-9a69-1050c6793cd6",
+				id: "12-34-56-78",
 				name: "example-lb-01",
 				ip: "138.197.50.73",
 				algorithm: "least_connections",
@@ -166,5 +168,151 @@ func TestLoadBalancerThrows(t *testing.T) {
 				equals("throw me", e.message, name + "should send the right exception!");
 			}
 		 });
+	`)
+}
+
+var (
+	region          = &godo.Region{Name: "newyork3", Slug: "nyc3", Sizes: []string{"small"}, Available: true, Features: []string{"all"}}
+	forwardingRules = []godo.ForwardingRule{
+		{
+			EntryProtocol:  "http",
+			EntryPort:      80,
+			TargetProtocol: "http",
+			TargetPort:     80,
+			CertificateID:  "",
+			TlsPassthrough: false,
+		},
+		{
+			EntryProtocol:  "https",
+			EntryPort:      444,
+			TargetProtocol: "https",
+			TargetPort:     443,
+			CertificateID:  "",
+			TlsPassthrough: false,
+		},
+	}
+
+	healthCheck = &godo.HealthCheck{
+		Protocol:               "http",
+		Port:                   80,
+		Path:                   "/",
+		CheckIntervalSeconds:   10,
+		ResponseTimeoutSeconds: 5,
+		HealthyThreshold:       5,
+		UnhealthyThreshold:     3,
+	}
+
+	stickySessions = &godo.StickySessions{
+		Type: "none",
+	}
+
+	l = &godo.LoadBalancer{ID: "4de7ac8b-495b-4884-9a69-1050c6793cd6", Name: "example-lb-01", HealthCheck: healthCheck, StickySessions: stickySessions, ForwardingRules: forwardingRules, DropletIDs: []int{3164444, 3164445}, Status: "new", Algorithm: "round_robin", Region: region}
+)
+
+type loadBalancer struct {
+	*godo.LoadBalancer
+}
+
+func (k *loadBalancer) Struct() *godo.LoadBalancer { return k.LoadBalancer }
+
+func TestLoadBalancerCreate(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+
+	cloud.MockLoadBalancers.CreateFn = func(_ context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
+		return &loadBalancer{l}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+		var pkg = cloud.load_balancers;
+
+		var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+
+		var l = pkg.create({
+			"name": "example-lb-01",
+			"region": "nyc3",
+			"forwarding_rules": [
+			{
+				"entry_protocol": "http",
+				"entry_port": 80,
+				"target_protocol": "http",
+				"target_port": 80,
+				"certificate_id": "",
+				"tls_passthrough": false
+			},
+			{
+				"entry_protocol": "https",
+				"entry_port": 444,
+				"target_protocol": "https",
+				"target_port": 443,
+				"tls_passthrough": true
+			}
+			],
+			"health_check": {
+				"protocol": "http",
+				"port": 80,
+				"path": "/",
+				"check_interval_seconds": 10,
+				"response_timeout_seconds": 5,
+				"healthy_threshold": 5,
+				"unhealthy_threshold": 3
+			},
+			"sticky_sessions": {
+				"type": "none"
+			},
+			"droplet_ids": [
+			3164444,
+			3164445
+			]
+		});
+
+		var want = {
+			"id": "4de7ac8b-495b-4884-9a69-1050c6793cd6",
+			"name": "example-lb-01",
+			"ip": "",
+			"algorithm": "round_robin",
+			"status": "new",
+			"created_at": "",
+			"forwarding_rules": [
+			{
+				"entry_protocol": "http",
+				"entry_port": 80,
+				"target_protocol": "http",
+				"target_port": 80,
+				"certificate_id": "",
+				"tls_passthrough": false
+			},
+			{
+				"entry_protocol": "https",
+				"entry_port": 444,
+				"target_protocol": "https",
+				"target_port": 443,
+				"certificate_id": "",
+				"tls_passthrough": true
+			}
+			],
+			"health_check": {
+				"protocol": "http",
+				"port": 80,
+				"path": "/",
+				"check_interval_seconds": 10,
+				"response_timeout_seconds": 5,
+				"healthy_threshold": 5,
+				"unhealthy_threshold": 3
+			},
+			"sticky_sessions": {
+				"type": "none",
+				cookie_name: "",
+				cookie_ttl_seconds: 0,
+			},
+			"region": region,
+			"tag": "",
+			"droplet_ids": [
+			3164444,
+			3164445
+			],
+			"redirect_http_to_https": false
+		};
+
+		equals(l, want, "should have proper object");
 	`)
 }
