@@ -901,7 +901,7 @@ func ForwardingRulesToVM(vm *otto.Otto, g []godo.ForwardingRule) otto.Value {
 		return otto.NullValue()
 	}
 
-	var rules = make([]otto.Value, 0)
+	var rules = make([]map[string]interface{}, 0)
 	for _, rule := range g {
 		rules = append(rules, ForwardingRuleToVM(vm, rule))
 	}
@@ -914,15 +914,15 @@ func ForwardingRulesToVM(vm *otto.Otto, g []godo.ForwardingRule) otto.Value {
 	return v
 }
 
-func ForwardingRuleToVM(vm *otto.Otto, g godo.ForwardingRule) otto.Value {
-	return ottoutil.ToPkg(vm, map[string]interface{}{
+func ForwardingRuleToVM(vm *otto.Otto, g godo.ForwardingRule) map[string]interface{} {
+	return map[string]interface{}{
 		"entry_protocol":  g.EntryProtocol,
-		"entry_port":      g.EntryPort,
+		"entry_port":      int64(g.EntryPort),
 		"target_protocol": g.TargetProtocol,
-		"target_port":     g.TargetPort,
+		"target_port":     int64(g.TargetPort),
 		"certificate_id":  g.CertificateID,
 		"tls_passthrough": g.TlsPassthrough,
-	})
+	}
 }
 
 func HealthCheckToVM(vm *otto.Otto, g *godo.HealthCheck) otto.Value {

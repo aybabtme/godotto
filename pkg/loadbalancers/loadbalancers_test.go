@@ -182,14 +182,6 @@ var (
 			CertificateID:  "",
 			TlsPassthrough: false,
 		},
-		{
-			EntryProtocol:  "https",
-			EntryPort:      444,
-			TargetProtocol: "https",
-			TargetPort:     443,
-			CertificateID:  "",
-			TlsPassthrough: false,
-		},
 	}
 
 	healthCheck = &godo.HealthCheck{
@@ -238,13 +230,6 @@ func TestLoadBalancerCreate(t *testing.T) {
 				"target_port": 80,
 				"certificate_id": "",
 				"tls_passthrough": false
-			},
-			{
-				"entry_protocol": "https",
-				"entry_port": 444,
-				"target_protocol": "https",
-				"target_port": 443,
-				"tls_passthrough": true
 			}
 			],
 			"health_check": {
@@ -280,16 +265,9 @@ func TestLoadBalancerCreate(t *testing.T) {
 				"target_port": 80,
 				"certificate_id": "",
 				"tls_passthrough": false
-			},
-			{
-				"entry_protocol": "https",
-				"entry_port": 444,
-				"target_protocol": "https",
-				"target_port": 443,
-				"certificate_id": "",
-				"tls_passthrough": true
 			}
 			],
+
 			"health_check": {
 				"protocol": "http",
 				"port": 80,
