@@ -183,7 +183,7 @@ func ArgLoadBalancerUpdate(vm *otto.Otto, v otto.Value) *godo.LoadBalancerReques
 		Algorithm:           ottoutil.String(vm, ottoutil.GetObject(vm, v, "algorithm", false)),
 		Region:              ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
 		DropletIDs:          ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
-		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false)),
+		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", true)),
 		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false)),
 		ForwardingRules:     ArgForwardingRules(vm, ottoutil.GetObject(vm, v, "forwarding_rules", true)),
 		Tag:                 ottoutil.String(vm, ottoutil.GetObject(vm, v, "tag", false)),
