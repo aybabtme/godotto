@@ -181,5 +181,9 @@ func enumerateLeftover(spy func(...spycloud.Spy)) {
 			once.Do(print)
 			log.Printf("- Tag: %q", v.Name)
 		}),
+		spycloud.LoadBalancers(func(v *godo.LoadBalancer) {
+			once.Do(print)
+			log.Printf("- Load Balancer: %q", v.Name)
+		}),
 	)
 }

@@ -116,7 +116,27 @@ func deepEqual(lhs, rhs interface{}) (bool, string) {
 			}
 		}
 		return true, ""
+	case []map[string]interface{}:
+		rhsv, ok := rhs.([]map[string]interface{})
+		if !ok {
+			return false, fmt.Sprintf("type %T != %T", lhs, rhs)
+		}
 
+		if len(lhsv) != len(rhsv) {
+			return false, fmt.Sprintf("len(lhs) = %v, len(rhs) = %v", len(lhsv), len(rhsv))
+		}
+
+		for k, v := range lhsv {
+			if ok, cause := deepEqual(v, rhsv[k]); !ok {
+				return false, fmt.Sprintf("lhs-key %v: %s", k, cause)
+			}
+		}
+		for k, v := range rhsv {
+			if ok, cause := deepEqual(v, lhsv[k]); !ok {
+				return false, fmt.Sprintf("rhs-key %v: %s", k, cause)
+			}
+		}
+		return true, ""
 	default:
 		return reflect.DeepEqual(lhs, rhs), fmt.Sprintf("lhs=%#v (%T)\nrhs=%#v  (%T)", lhs, lhs, rhs, rhs)
 	}

@@ -22,6 +22,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/loadbalancers"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
@@ -32,47 +33,50 @@ import (
 // Client
 
 type Mock struct {
-	wrap            cloud.Client
-	MockDroplets    *MockDroplets
-	MockAccounts    *MockAccounts
-	MockActions     *MockActions
-	MockDomains     *MockDomains
-	MockImages      *MockImages
-	MockKeys        *MockKeys
-	MockRegions     *MockRegions
-	MockSizes       *MockSizes
-	MockFloatingIPs *MockFloatingIPs
-	MockVolumes     *MockVolumes
-	MockTags        *MockTags
+	wrap              cloud.Client
+	MockDroplets      *MockDroplets
+	MockAccounts      *MockAccounts
+	MockActions       *MockActions
+	MockDomains       *MockDomains
+	MockImages        *MockImages
+	MockKeys          *MockKeys
+	MockRegions       *MockRegions
+	MockSizes         *MockSizes
+	MockFloatingIPs   *MockFloatingIPs
+	MockVolumes       *MockVolumes
+	MockTags          *MockTags
+	MockLoadBalancers *MockLoadBalancers
 }
 
 func Client(client cloud.Client) *Mock {
 	return &Mock{wrap: client,
-		MockDroplets:    &MockDroplets{wrap: client, MockDropletActions: &MockDropletActions{wrap: client}},
-		MockAccounts:    &MockAccounts{wrap: client},
-		MockActions:     &MockActions{wrap: client},
-		MockDomains:     &MockDomains{wrap: client},
-		MockImages:      &MockImages{wrap: client},
-		MockKeys:        &MockKeys{wrap: client},
-		MockRegions:     &MockRegions{wrap: client},
-		MockSizes:       &MockSizes{wrap: client},
-		MockFloatingIPs: &MockFloatingIPs{wrap: client, MockFloatingIPActions: &MockFloatingIPActions{wrap: client}},
-		MockVolumes:     &MockVolumes{wrap: client, MockVolumeActions: &MockVolumeActions{wrap: client}},
-		MockTags:        &MockTags{wrap: client},
+		MockDroplets:      &MockDroplets{wrap: client, MockDropletActions: &MockDropletActions{wrap: client}},
+		MockAccounts:      &MockAccounts{wrap: client},
+		MockActions:       &MockActions{wrap: client},
+		MockDomains:       &MockDomains{wrap: client},
+		MockImages:        &MockImages{wrap: client},
+		MockKeys:          &MockKeys{wrap: client},
+		MockRegions:       &MockRegions{wrap: client},
+		MockSizes:         &MockSizes{wrap: client},
+		MockFloatingIPs:   &MockFloatingIPs{wrap: client, MockFloatingIPActions: &MockFloatingIPActions{wrap: client}},
+		MockVolumes:       &MockVolumes{wrap: client, MockVolumeActions: &MockVolumeActions{wrap: client}},
+		MockTags:          &MockTags{wrap: client},
+		MockLoadBalancers: &MockLoadBalancers{wrap: client},
 	}
 }
 
-func (mock *Mock) Droplets() droplets.Client       { return mock.MockDroplets }
-func (mock *Mock) Accounts() accounts.Client       { return mock.MockAccounts }
-func (mock *Mock) Actions() actions.Client         { return mock.MockActions }
-func (mock *Mock) Domains() domains.Client         { return mock.MockDomains }
-func (mock *Mock) Images() images.Client           { return mock.MockImages }
-func (mock *Mock) Keys() keys.Client               { return mock.MockKeys }
-func (mock *Mock) Regions() regions.Client         { return mock.MockRegions }
-func (mock *Mock) Sizes() sizes.Client             { return mock.MockSizes }
-func (mock *Mock) FloatingIPs() floatingips.Client { return mock.MockFloatingIPs }
-func (mock *Mock) Volumes() volumes.Client         { return mock.MockVolumes }
-func (mock *Mock) Tags() tags.Client               { return mock.MockTags }
+func (mock *Mock) Droplets() droplets.Client           { return mock.MockDroplets }
+func (mock *Mock) Accounts() accounts.Client           { return mock.MockAccounts }
+func (mock *Mock) Actions() actions.Client             { return mock.MockActions }
+func (mock *Mock) Domains() domains.Client             { return mock.MockDomains }
+func (mock *Mock) Images() images.Client               { return mock.MockImages }
+func (mock *Mock) Keys() keys.Client                   { return mock.MockKeys }
+func (mock *Mock) Regions() regions.Client             { return mock.MockRegions }
+func (mock *Mock) Sizes() sizes.Client                 { return mock.MockSizes }
+func (mock *Mock) FloatingIPs() floatingips.Client     { return mock.MockFloatingIPs }
+func (mock *Mock) Volumes() volumes.Client             { return mock.MockVolumes }
+func (mock *Mock) Tags() tags.Client                   { return mock.MockTags }
+func (mock *Mock) LoadBalancers() loadbalancers.Client { return mock.MockLoadBalancers }
 
 // Droplets
 
@@ -738,4 +742,91 @@ func (mock *MockTags) UntagResources(ctx context.Context, name string, res []god
 	}
 
 	return mock.wrap.Tags().UntagResources(ctx, name, res)
+}
+
+// Load Balancers
+
+type MockLoadBalancers struct {
+	wrap                    cloud.Client
+	CreateFn                func(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opt ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error)
+	GetFn                   func(ctx context.Context, lbId string) (loadbalancers.LoadBalancer, error)
+	UpdateFn                func(ctx context.Context, lbId string, opts ...loadbalancers.UpdateOpt) (loadbalancers.LoadBalancer, error)
+	DeleteFn                func(ctx context.Context, id string) error
+	ListFn                  func(ctx context.Context) (<-chan loadbalancers.LoadBalancer, <-chan error)
+	AddDropletsFn           func(ctx context.Context, lbId string, dropletIDs ...int) error
+	RemoveDropletsFn        func(ctx context.Context, lbId string, dropletIDs ...int) error
+	AddForwardingRulesFn    func(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error
+	RemoveForwardingRulesFn func(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error
+}
+
+func (mock *MockLoadBalancers) Create(ctx context.Context, name, region string, forwardingRules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
+	if mock.CreateFn != nil {
+		return mock.CreateFn(ctx, name, region, forwardingRules, opts...)
+	}
+
+	return mock.wrap.LoadBalancers().Create(ctx, name, region, forwardingRules, opts...)
+}
+
+func (mock *MockLoadBalancers) Get(ctx context.Context, id string) (loadbalancers.LoadBalancer, error) {
+	if mock.GetFn != nil {
+		return mock.GetFn(ctx, id)
+	}
+
+	return mock.wrap.LoadBalancers().Get(ctx, id)
+}
+
+func (mock *MockLoadBalancers) Update(ctx context.Context, id string, opts ...loadbalancers.UpdateOpt) (loadbalancers.LoadBalancer, error) {
+	if mock.UpdateFn != nil {
+		return mock.UpdateFn(ctx, id, opts...)
+	}
+
+	return mock.wrap.LoadBalancers().Update(ctx, id, opts...)
+}
+
+func (mock *MockLoadBalancers) Delete(ctx context.Context, id string) error {
+	if mock.DeleteFn != nil {
+		return mock.DeleteFn(ctx, id)
+	}
+
+	return mock.wrap.LoadBalancers().Delete(ctx, id)
+}
+
+func (mock *MockLoadBalancers) List(ctx context.Context) (<-chan loadbalancers.LoadBalancer, <-chan error) {
+	if mock.ListFn != nil {
+		return mock.ListFn(ctx)
+	}
+
+	return mock.wrap.LoadBalancers().List(ctx)
+}
+
+func (mock *MockLoadBalancers) AddDroplets(ctx context.Context, lbId string, dropletIDs ...int) error {
+	if mock.AddDropletsFn != nil {
+		return mock.AddDropletsFn(ctx, lbId, dropletIDs...)
+	}
+
+	return mock.wrap.LoadBalancers().AddDroplets(ctx, lbId, dropletIDs...)
+}
+
+func (mock *MockLoadBalancers) RemoveDroplets(ctx context.Context, lbId string, dropletIDs ...int) error {
+	if mock.RemoveDropletsFn != nil {
+		return mock.RemoveDropletsFn(ctx, lbId, dropletIDs...)
+	}
+
+	return mock.wrap.LoadBalancers().RemoveDroplets(ctx, lbId, dropletIDs...)
+}
+
+func (mock *MockLoadBalancers) AddForwardingRules(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error {
+	if mock.AddForwardingRulesFn != nil {
+		return mock.AddForwardingRulesFn(ctx, lbId, rules...)
+	}
+
+	return mock.wrap.LoadBalancers().AddForwardingRules(ctx, lbId, rules...)
+}
+
+func (mock *MockLoadBalancers) RemoveForwardingRules(ctx context.Context, lbId string, rules ...godo.ForwardingRule) error {
+	if mock.RemoveForwardingRulesFn != nil {
+		return mock.RemoveForwardingRulesFn(ctx, lbId, rules...)
+	}
+
+	return mock.wrap.LoadBalancers().RemoveForwardingRules(ctx, lbId, rules...)
 }
