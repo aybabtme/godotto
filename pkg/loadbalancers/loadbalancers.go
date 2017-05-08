@@ -108,7 +108,7 @@ func (svc *loadBalancersSvc) delete(all otto.FunctionCall) otto.Value {
 func (svc *loadBalancersSvc) list(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
 
-	lbs := make([]otto.Value, 0)
+	var lbs = make([]otto.Value, 0)
 	lbc, errc := svc.svc.List(svc.ctx)
 	for l := range lbc {
 		lbs = append(lbs, godojs.LoadBalancerToVM(vm, l.Struct()))

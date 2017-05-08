@@ -202,7 +202,7 @@ func ArgDropletIDs(vm *otto.Otto, v otto.Value) []int {
 }
 
 func ArgForwardingRules(vm *otto.Otto, v otto.Value) []godo.ForwardingRule {
-	rules := make([]godo.ForwardingRule, 0)
+	var rules = make([]godo.ForwardingRule, 0)
 	ottoutil.LoadArray(vm, v, func(v otto.Value) {
 		rule := ArgForwardingRule(vm, v)
 		rules = append(rules, godo.ForwardingRule{
