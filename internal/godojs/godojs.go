@@ -915,7 +915,7 @@ func ForwardingRulesToVM(vm *otto.Otto, g []godo.ForwardingRule) otto.Value {
 		return otto.NullValue()
 	}
 
-	var rules = make([]map[string]interface{}, 0)
+	rules := make([]map[string]interface{}, 0)
 	for _, rule := range g {
 		rules = append(rules, ForwardingRuleToVM(vm, rule))
 	}
