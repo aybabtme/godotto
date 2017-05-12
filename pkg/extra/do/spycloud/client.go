@@ -357,7 +357,7 @@ func (client *client) interceptTagDelete(ctx context.Context, name string) error
 }
 
 func (client *client) interceptLoadBalancerCreate(ctx context.Context, name, region string, rules []godo.ForwardingRule, opts ...loadbalancers.CreateOpt) (loadbalancers.LoadBalancer, error) {
-	l, err := client.real.LoadBalancers().Create(ctx, name, region, rules)
+	l, err := client.real.LoadBalancers().Create(ctx, name, region, rules, opts...)
 	if err == nil {
 		client.mu.Lock()
 		defer client.mu.Unlock()
