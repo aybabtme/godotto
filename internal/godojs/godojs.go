@@ -817,6 +817,7 @@ func DropletToVM(vm *otto.Otto, g *godo.Droplet) otto.Value {
 		return otto.NullValue()
 	}
 	publicIPv4, _ := g.PublicIPv4()
+	privateIPv4, _ := g.PrivateIPv4()
 	publicIPv6, _ := g.PublicIPv6()
 
 	return ottoutil.ToPkg(vm, map[string]interface{}{
@@ -842,8 +843,9 @@ func DropletToVM(vm *otto.Otto, g *godo.Droplet) otto.Value {
 
 		// extra
 
-		"public_ipv4": publicIPv4,
-		"public_ipv6": publicIPv6,
+		"public_ipv4":  publicIPv4,
+		"public_ipv6":  publicIPv6,
+		"private_ipv4": privateIPv4,
 	})
 }
 
