@@ -667,7 +667,6 @@ func (mock *MockVolumes) Actions() volumes.ActionClient {
 type MockVolumeActions struct {
 	wrap     cloud.Client
 	AttachFn func(ctx context.Context, volumeID string, dropletID int) error
-	DetachFn func(ctx context.Context, volumeID string) error
 }
 
 func (mock *MockVolumeActions) Attach(ctx context.Context, volumeID string, dropletID int) error {
@@ -675,13 +674,6 @@ func (mock *MockVolumeActions) Attach(ctx context.Context, volumeID string, drop
 		return mock.AttachFn(ctx, volumeID, dropletID)
 	}
 	return mock.wrap.Volumes().Actions().Attach(ctx, volumeID, dropletID)
-}
-
-func (mock *MockVolumeActions) Detach(ctx context.Context, volumeID string) error {
-	if mock.DetachFn != nil {
-		return mock.DetachFn(ctx, volumeID)
-	}
-	return mock.wrap.Volumes().Actions().Detach(ctx, volumeID)
 }
 
 // Tags

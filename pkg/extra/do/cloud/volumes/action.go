@@ -9,7 +9,6 @@ import (
 // An ActionClient can interact with the DigitalOcean StorageAction service.
 type ActionClient interface {
 	Attach(ctx context.Context, ip string, dropletID int) error
-	Detach(ctx context.Context, ip string) error
 }
 
 type actionClient struct {
@@ -18,10 +17,5 @@ type actionClient struct {
 
 func (svc *actionClient) Attach(ctx context.Context, driveID string, dropletID int) error {
 	_, _, err := svc.g.StorageActions.Attach(ctx, driveID, dropletID)
-	return err
-}
-
-func (svc *actionClient) Detach(ctx context.Context, driveID string) error {
-	_, _, err := svc.g.StorageActions.Detach(ctx, driveID)
 	return err
 }
