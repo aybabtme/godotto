@@ -19,7 +19,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		return q, err
 	}
 
-	svc := snpshotsSvc{
+	svc := snapshotsSvc{
 		ctx: ctx,
 		svc: client.Snapshots(),
 	}

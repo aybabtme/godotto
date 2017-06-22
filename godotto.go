@@ -15,6 +15,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/loadbalancers"
 	"github.com/aybabtme/godotto/pkg/regions"
 	"github.com/aybabtme/godotto/pkg/sizes"
+	"github.com/aybabtme/godotto/pkg/snapshots"
 	"github.com/aybabtme/godotto/pkg/tags"
 	"github.com/aybabtme/godotto/pkg/volumes"
 	"github.com/robertkrimen/otto"
@@ -44,6 +45,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"volumes", volumes.Apply},
 		{"tags", tags.Apply},
 		{"load_balancers", loadbalancers.Apply},
+		{"snapshots", snapshots.Apply},
 	} {
 		svc, err := applier.Apply(ctx, vm, client)
 		if err != nil {
