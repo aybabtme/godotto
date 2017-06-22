@@ -5,6 +5,7 @@ import (
 
 	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
+	pcontext "github.com/digitalocean/godo/context"
 )
 
 // A Client can interact with the DigitalOcean Images service.
@@ -102,7 +103,7 @@ func (svc *client) ListUser(ctx context.Context) (<-chan Image, <-chan error) {
 	return svc.listCommon(ctx, svc.g.Images.ListUser)
 }
 
-type listfunc func(context.Context, *godo.ListOptions) ([]godo.Image, *godo.Response, error)
+type listfunc func(pcontext.Context, *godo.ListOptions) ([]godo.Image, *godo.Response, error)
 
 func (svc *client) listCommon(ctx context.Context, listFn listfunc) (<-chan Image, <-chan error) {
 	outc := make(chan Image, 1)

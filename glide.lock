@@ -1,8 +1,10 @@
-hash: 638a88235b0313e1d41dd635cd156c8095c5cecd2ab677f5020cac10f1a222f8
-updated: 2017-03-14T12:11:08.38774126-04:00
+hash: aafe4be4f24742f32de032f48894f981eb12db47b34637f582bf0b1e1b84c390
+updated: 2017-06-21T17:57:32.429172773-04:00
 imports:
 - name: github.com/digitalocean/godo
-  version: 84099941ba2381607e1b05ffd4822781af86675e
+  version: 4fa9e9d999007b447089056a1c581b5594f0f851
+  subpackages:
+  - context
 - name: github.com/golang/protobuf
   version: 888eb0692c857ec880338addf316bd662d5e630e
   subpackages:
@@ -36,6 +38,7 @@ imports:
   version: 6a513affb38dc9788b449d59ffed099b8de18fa0
   subpackages:
   - context
+  - context/ctxhttp
 - name: golang.org/x/oauth2
   version: 1611bb46e67abc64a71ecc5c3ae67f1cbbc2b921
   subpackages:

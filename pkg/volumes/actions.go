@@ -26,7 +26,7 @@ func applyAction(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.
 		Method func(otto.FunctionCall) otto.Value
 	}{
 		{"attach", svc.attach},
-		{"detach", svc.detach},
+		{"detach_by_droplet_id", svc.detachByDropletID},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -52,10 +52,11 @@ func (svc *actionSvc) attach(all otto.FunctionCall) otto.Value {
 	return q
 }
 
-func (svc *actionSvc) detach(all otto.FunctionCall) otto.Value {
+func (svc *actionSvc) detachByDropletID(all otto.FunctionCall) otto.Value {
 	vm := all.Otto
-	dropletID := godojs.ArgVolumeID(vm, all.Argument(0))
-	err := svc.svc.Detach(svc.ctx, dropletID)
+	ip := godojs.ArgVolumeID(vm, all.Argument(0))
+	dropletID := godojs.ArgDropletID(vm, all.Argument(1))
+	err := svc.svc.DetachByDropletID(svc.ctx, ip, dropletID)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
