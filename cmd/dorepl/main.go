@@ -92,7 +92,7 @@ func main() {
 		vm.Set("ssh", s)
 	}
 
-	if len(os.Args[1:]) == 0 {
+	if len(flag.Args()) == 0 {
 		// run REPL
 		if !terminal.IsTerminal(0) {
 			prelude = ""
