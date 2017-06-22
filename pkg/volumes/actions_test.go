@@ -16,7 +16,7 @@ var pkg = cloud.volumes.actions;
 
 assert(pkg != null, "package should be loaded");
 assert(pkg.attach != null, "attach function should be defined");
-assert(pkg.detach_by_droplet_id != null, "detach function should be defined");
+assert(pkg.detach_by_droplet_id != null, "detach_by_droplet_id function should be defined");
     `)
 }
 
