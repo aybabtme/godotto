@@ -665,9 +665,9 @@ func (mock *MockVolumes) Actions() volumes.ActionClient {
 // Volume Actions
 
 type MockVolumeActions struct {
-	wrap     cloud.Client
-	AttachFn func(ctx context.Context, volumeID string, dropletID int) error
-	DetachFn func(ctx context.Context, volumeID string) error
+	wrap                cloud.Client
+	AttachFn            func(ctx context.Context, volumeID string, dropletID int) error
+	DetachByDropletIDFn func(ctx context.Context, volumeID string, dropletID int) error
 }
 
 func (mock *MockVolumeActions) Attach(ctx context.Context, volumeID string, dropletID int) error {
@@ -677,11 +677,11 @@ func (mock *MockVolumeActions) Attach(ctx context.Context, volumeID string, drop
 	return mock.wrap.Volumes().Actions().Attach(ctx, volumeID, dropletID)
 }
 
-func (mock *MockVolumeActions) Detach(ctx context.Context, volumeID string) error {
-	if mock.DetachFn != nil {
-		return mock.DetachFn(ctx, volumeID)
+func (mock *MockVolumeActions) DetachByDropletID(ctx context.Context, volumeID string, dropletID int) error {
+	if mock.DetachByDropletIDFn != nil {
+		return mock.DetachByDropletIDFn(ctx, volumeID, dropletID)
 	}
-	return mock.wrap.Volumes().Actions().Detach(ctx, volumeID)
+	return mock.wrap.Volumes().Actions().DetachByDropletID(ctx, volumeID, dropletID)
 }
 
 // Tags
