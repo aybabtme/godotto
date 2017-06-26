@@ -2,6 +2,7 @@ package snapshots_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/aybabtme/godotto/internal/vmtest"
@@ -18,15 +19,36 @@ func TestSnapshotApply(t *testing.T) {
 	vmtest.Run(t, cloud, `
 	var pkg = cloud.snapshots;
 	assert(pkg != null, "package should be loaded");
-	assert(pkg.delete != null, "delete function should be defined");
+	assert(pkg.list != null, "list function shouled be defined");
+	assert(pkg.listDroplet != null, "listDroplet function shouled be defined");
+	assert(pkg.listVolume != null, "listVolume function shouled be defined");
 	assert(pkg.get != null, "get function shouled be defined");
+	assert(pkg.delete != null, "delete function should be defined");
 	`)
 }
 
-/*func TestSnapshotThrows(t *testing.T) {
+func TestSnapshotThrows(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
 	cloud.MockSnapshots.ListFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
+		lc := make(chan snapshots.Snapshot)
+		close(lc)
+		ec := make(chan error, 1)
+		ec <- errors.New("throw me")
+		close(ec)
+		return lc, ec
+	}
+
+	cloud.MockSnapshots.ListDropletFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
+		lc := make(chan snapshots.Snapshot)
+		close(lc)
+		ec := make(chan error, 1)
+		ec <- errors.New("throw me")
+		close(ec)
+		return lc, ec
+	}
+
+	cloud.MockSnapshots.ListVolumeFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
 		lc := make(chan snapshots.Snapshot)
 		close(lc)
 		ec := make(chan error, 1)
@@ -62,7 +84,7 @@ func TestSnapshotApply(t *testing.T) {
 
 		[
 			{name: "get", fn: function() { pkg.get(ss.id) }},
-			{name: "delete", fn: function() { pkg.delete(ss) }},
+			{name: "delete", fn: function() { pkg.delete(ss.id) }},
 			{name: "list", fn: function() { pkg.list() }},
 			{name: "listDroplet", fn: function() { pkg.listDroplet() }},
 			{name: "listVolume", fn: function() { pkg.listVolume() }},
@@ -77,8 +99,9 @@ func TestSnapshotApply(t *testing.T) {
 			}
 		 });
 	`)
-}*/
+}
 
+/*
 var (
 	sd = &godo.Snapshot{ID: "11223344", Name: "example-server-007", ResourceID: "44332211", ResourceType: "droplet", Regions: []string{"nyc3"}, MinDiskSize: 20, SizeGigaBytes: 2.24, Created: "2017-06-08T09:11:06Z"}
 	sv = &godo.Snapshot{ID: "11223345", Name: "example-server-007", ResourceID: "44332210", ResourceType: "volume", Regions: []string{"nyc3"}, MinDiskSize: 20, SizeGigaBytes: 2.24, Created: "2017-06-08T09:11:06Z"}
@@ -92,7 +115,7 @@ func (k *snapshot) Struct() *godo.Snapshot { return k.Snapshot }
 
 func TestSnapshotsList(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockSnapshots.ListFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
+	cloud.MockSnapshots.ListDropletFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
 		sc := make(chan snapshots.Snapshot, 1)
 		sc <- &snapshot{sd}
 		close(sc)
@@ -103,7 +126,7 @@ func TestSnapshotsList(t *testing.T) {
 
 	vmtest.Run(t, cloud, `
 	var pkg = cloud.snapshots;
-	var list = pkg.list();
+	var list = pkg.listDroplet();
 	assert(list != null, "should have received a list");
 	assert(list.length > 0, "should have received some elements");
 
@@ -126,8 +149,8 @@ func TestSnapshotsList(t *testing.T) {
 	equals(s, want, "should have proper object");
 	`)
 }
-
-func TestSnapshotsListDroplet(t *testing.T) {
+*/
+/*func TestSnapshotsListDroplet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockSnapshots.ListDropletFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
 		sc := make(chan snapshots.Snapshot, 1)
@@ -162,7 +185,7 @@ func TestSnapshotsListDroplet(t *testing.T) {
 
 	equals(s, want, "should have proper object");
 	`)
-}
+}*/
 
 /*func TestSnapshotsListVolume(t *testing.T) {
 	cloud := mockcloud.Client(nil)
