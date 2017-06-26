@@ -312,7 +312,7 @@ func ArgOutboundRule(vm *otto.Otto, v otto.Value) *godo.OutboundRule {
 	return &godo.OutboundRule{
 		Protocol:     protocol,
 		PortRange:    ottoutil.String(vm, ottoutil.GetObject(vm, v, "ports", portsRequired)),
-		Destinations: ArgDestinations(vm, ottoutil.GetObject(vm, v, "sources", true)),
+		Destinations: ArgDestinations(vm, ottoutil.GetObject(vm, v, "destinations", true)),
 	}
 }
 
@@ -393,7 +393,7 @@ func ArgFirewallID(vm *otto.Otto, v otto.Value) string {
 	case v.IsString():
 		fwID = ottoutil.String(vm, v)
 	case v.IsObject():
-		fwID = ArgLoadBalancer(vm, v).ID
+		fwID = ArgFirewall(vm, v).ID
 	default:
 		ottoutil.Throw(vm, "argument must be a Firewall or FirewallID")
 	}
