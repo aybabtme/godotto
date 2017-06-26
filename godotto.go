@@ -9,6 +9,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/domains"
 	"github.com/aybabtme/godotto/pkg/droplets"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
+	"github.com/aybabtme/godotto/pkg/firewalls"
 	"github.com/aybabtme/godotto/pkg/floatingips"
 	"github.com/aybabtme/godotto/pkg/images"
 	"github.com/aybabtme/godotto/pkg/keys"
@@ -46,6 +47,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"tags", tags.Apply},
 		{"load_balancers", loadbalancers.Apply},
 		{"snapshots", snapshots.Apply},
+		{"firewalls", firewalls.Apply},
 	} {
 		svc, err := applier.Apply(ctx, vm, client)
 		if err != nil {

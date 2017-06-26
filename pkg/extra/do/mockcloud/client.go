@@ -19,6 +19,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/firewalls"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
@@ -48,6 +49,7 @@ type Mock struct {
 	MockTags          *MockTags
 	MockLoadBalancers *MockLoadBalancers
 	MockSnapshots     *MockSnapshots
+	MockFirewalls     *MockFirewalls
 }
 
 func Client(client cloud.Client) *Mock {
@@ -65,6 +67,7 @@ func Client(client cloud.Client) *Mock {
 		MockTags:          &MockTags{wrap: client},
 		MockLoadBalancers: &MockLoadBalancers{wrap: client},
 		MockSnapshots:     &MockSnapshots{wrap: client},
+		MockFirewalls:     &MockFirewalls{wrap: client},
 	}
 }
 
@@ -81,6 +84,7 @@ func (mock *Mock) Volumes() volumes.Client             { return mock.MockVolumes
 func (mock *Mock) Tags() tags.Client                   { return mock.MockTags }
 func (mock *Mock) LoadBalancers() loadbalancers.Client { return mock.MockLoadBalancers }
 func (mock *Mock) Snapshots() snapshots.Client         { return mock.MockSnapshots }
+func (mock *Mock) Firewalls() firewalls.Client         { return mock.MockFirewalls }
 
 // Droplets
 
@@ -883,4 +887,29 @@ func (mock *MockSnapshots) ListVolume(ctx context.Context) (<-chan snapshots.Sna
 	}
 
 	return mock.wrap.Snapshots().ListVolume(ctx)
+}
+
+// Firewalls
+
+type MockFirewalls struct {
+	wrap     cloud.Client
+	CreateFn func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
+	GetFn    func(ctx context.Context, id string) (firewalls.Firewall, error)
+}
+
+func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
+	if mock.CreateFn != nil {
+		return mock.CreateFn(ctx, name, inboundRules, outboundRules, opts...)
+
+	}
+
+	return mock.wrap.Firewalls().Create(ctx, name, inboundRules, outboundRules, opts...)
+}
+
+func (mock *MockFirewalls) Get(ctx context.Context, id string) (firewalls.Firewall, error) {
+	if mock.GetFn != nil {
+		return mock.GetFn(ctx, id)
+	}
+
+	return mock.wrap.Firewalls().Get(ctx, id)
 }
