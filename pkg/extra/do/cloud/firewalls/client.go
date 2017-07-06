@@ -9,6 +9,7 @@ import (
 type Client interface {
 	Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...CreateOpt) (Firewall, error)
 	Get(ctx context.Context, id string) (Firewall, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type Firewall interface {
@@ -70,6 +71,15 @@ func (svc *client) Get(ctx context.Context, id string) (Firewall, error) {
 	}
 
 	return &firewall{g: svc.g, f: f}, nil
+}
+
+func (svc *client) Delete(ctx context.Context, id string) error {
+	_, err := svc.g.Firewalls.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type firewall struct {

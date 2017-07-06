@@ -895,6 +895,7 @@ type MockFirewalls struct {
 	wrap     cloud.Client
 	CreateFn func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
 	GetFn    func(ctx context.Context, id string) (firewalls.Firewall, error)
+	DeleteFn func(ctx context.Context, id string) error
 }
 
 func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
@@ -912,4 +913,12 @@ func (mock *MockFirewalls) Get(ctx context.Context, id string) (firewalls.Firewa
 	}
 
 	return mock.wrap.Firewalls().Get(ctx, id)
+}
+
+func (mock *MockFirewalls) Delete(ctx context.Context, id string) error {
+	if mock.DeleteFn != nil {
+		return mock.DeleteFn(ctx, id)
+	}
+
+	return mock.wrap.Firewalls().Delete(ctx, id)
 }

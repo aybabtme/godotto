@@ -17,20 +17,20 @@ func TestFirewallApply(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 
 	vmtest.Run(t, cloud, `
-var pkg = cloud.firewalls;
-assert(pkg != null, "package should be loaded");
-assert(pkg.create != null, "create function should be defined");
-assert(pkg.get != null, "get function should be defined");
-assert(pkg.delete != null, "delete function should be defined");
-assert(pkg.update != null, "update function should be defined");
-assert(pkg.list != null, "list function should be defined");
-assert(pkg.add_tags != null, "add_tags function should be defined");
-assert(pkg.remove_tags != null, "remove_tags function should be defined");
-assert(pkg.add_droplets != null, "add_droplets function should be defined");
-assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
-assert(pkg.add_rules != null, "add_rules function should be defined");
-assert(pkg.remove_rules != null, "remove_rules function should be defined");
-`)
+	var pkg = cloud.firewalls;
+	assert(pkg != null, "package should be loaded");
+	assert(pkg.create != null, "create function should be defined");
+	assert(pkg.get != null, "get function should be defined");
+	assert(pkg.delete != null, "delete function should be defined");
+	assert(pkg.update != null, "update function should be defined");
+	assert(pkg.list != null, "list function should be defined");
+	assert(pkg.add_tags != null, "add_tags function should be defined");
+	assert(pkg.remove_tags != null, "remove_tags function should be defined");
+	assert(pkg.add_droplets != null, "add_droplets function should be defined");
+	assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
+	assert(pkg.add_rules != null, "add_rules function should be defined");
+	assert(pkg.remove_rules != null, "remove_rules function should be defined");
+	`)
 }
 
 func TestFirewallThrows(t *testing.T) {
@@ -42,6 +42,10 @@ func TestFirewallThrows(t *testing.T) {
 
 	cloud.MockFirewalls.GetFn = func(_ context.Context, _ string) (firewalls.Firewall, error) {
 		return nil, errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.DeleteFn = func(_ context.Context, _ string) error {
+		return errors.New("throw me")
 	}
 
 	vmtest.Run(t, cloud, `
@@ -291,4 +295,22 @@ func TestFirewallCreate(t *testing.T) {
 
 	equals(f, want, "should have proper object");
 	`)
+}
+
+func TestFirewallDelete(t *testing.T) {
+	wantId := "test-uuid"
+	cloud := mockcloud.Client(nil)
+
+	cloud.MockFirewalls.DeleteFn = func(_ context.Context, gotId string) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+pkg.delete("test-uuid");
+`)
 }
