@@ -45,76 +45,250 @@ func TestFirewallThrows(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-	 var pkg = cloud.firewalls;
-	 var fw = {
-		"id": "84d87802-df17-4f8f-a691-58e408570c12",
+	var pkg = cloud.firewalls;
+	var fw = {
+		"id": "test-uuid",
 		"name": "test-sg",
 		"inbound_rules": [
-		  {
+		{
 			"protocol": "icmp",
 			"ports": "0",
 			"sources": {
-			  "load_balancer_uids": [
-				"d2d3920a-9d45-41b0-b018-d15e18ec60a4"
-			  ],
-			  "tags": [
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
 				"haproxy"
-			  ]
+				]
 			}
-		  },
-		  {
+		},
+		{
 			"protocol": "tcp",
 			"ports": "8000-9000",
 			"sources": {
-			  "addresses": [
+				"addresses": [
 				"0.0.0.0/0"
-			  ]
+				]
 			}
-		  }
+		}
 		],
 		"outbound_rules": [
-		  {
+		{
 			"protocol": "icmp",
 			"ports": "0",
 			"destinations": {
-			  "tags": [
+				"tags": [
 				"haproxy"
-			  ]
+				]
 			}
-		  },
-		  {
+		},
+		{
 			"protocol": "tcp",
 			"ports": "8000-9000",
 			"destinations": {
-			  "addresses": [
+				"addresses": [
 				"::/1"
-			  ]
+				]
 			}
-		  }
+		}
 		],
 		"created_at": "2017-05-08T16:25:21Z",
 		"droplet_ids": [
-		  46298047
+		123456
 		],
 		"tags": [
-		  "haproxy"
+		"haproxy"
 		]
-	  };
+	};
 
 	var dropletId = 42;
 
-[
-  {name: "create", fn: function() { pkg.create(fw) }},
-  {name: "get", fn: function() { pkg.get(fw.id) }},
-].forEach(function(kv) {
-var name = kv.name;
-var fn = kv.fn;
-try {
-				fn(); throw "don't catch me";
-			} catch(e) {
-				equals("throw me", e.message, name + " should send the right exception!");
-			}
-});
+	[
+	{name: "create", fn: function() { pkg.create(fw) }},
+	{name: "get", fn: function() { pkg.get(fw.id) }},
+	].forEach(function(kv) {
+		var name = kv.name;
+		var fn = kv.fn;
+		try {
+			fn(); throw "don't catch me";
+		} catch(e) {
+			equals("throw me", e.message, name + " should send the right exception!");
+		}
+	});
+	`)
+}
 
-`)
+type firewall struct {
+	*godo.Firewall
+}
+
+func (k *firewall) Struct() *godo.Firewall { return k.Firewall }
+
+var (
+	f = &godo.Firewall{
+		ID:   "test-uuid",
+		Name: "test-sg",
+		InboundRules: []godo.InboundRule{
+			{
+				Protocol:  "icmp",
+				PortRange: "0",
+				Sources: &godo.Sources{
+					LoadBalancerUIDs: []string{"test-lb-uuid"},
+					Tags:             []string{"haproxy"},
+				},
+			},
+			{
+				Protocol:  "tcp",
+				PortRange: "8000-9000",
+				Sources: &godo.Sources{
+					Addresses: []string{"0.0.0.0/0"},
+				},
+			},
+		},
+		OutboundRules: []godo.OutboundRule{
+			{
+				Protocol:  "icmp",
+				PortRange: "0",
+				Destinations: &godo.Destinations{
+					Tags: []string{"haproxy"},
+				},
+			},
+			{
+				Protocol:  "tcp",
+				PortRange: "8000-9000",
+				Destinations: &godo.Destinations{
+					Addresses: []string{"::/1"},
+				},
+			},
+		},
+		DropletIDs: []int{123456},
+		Tags:       []string{"haproxy"},
+	}
+)
+
+func TestFirewallCreate(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+
+	cloud.MockFirewalls.CreateFn = func(_ context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
+		return &firewall{f}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+	var pkg = cloud.firewalls;
+
+	var f = pkg.create(
+		{
+			"id": "test-uuid",
+			"name": "test-sg",
+			"inbound_rules": [
+			{
+				"protocol": "icmp",
+				"ports": "0",
+				"sources": {
+					"load_balancer_uids": [
+					"test-lb-uuid",
+					],
+					"tags": [
+					"haproxy"
+					]
+				}
+			},
+			{
+				"protocol": "tcp",
+				"ports": "8000-9000",
+				"sources": {
+					"addresses": [
+					"0.0.0.0/0"
+					]
+				}
+			}
+			],
+			"outbound_rules": [
+			{
+				"protocol": "icmp",
+				"ports": "0",
+				"destinations": {
+					"tags": [
+					"haproxy"
+					],
+				}
+			},
+			{
+				"protocol": "tcp",
+				"ports": "8000-9000",
+				"destinations": {
+					"addresses": [
+					"::/1"
+					]
+				}
+			}
+			],
+			"created_at": "2017-05-08T16:25:21Z",
+			"droplet_ids": [
+			123456
+			],
+			"tags": [
+			"haproxy"
+			]
+		}
+	);
+
+	var want = {
+		"id": "test-uuid",
+		"name": "test-sg",
+		"inbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"sources": {
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"sources": {
+				"addresses": [
+				"0.0.0.0/0"
+				]
+			}
+		}
+		],
+		"outbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"destinations": {
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"destinations": {
+				"addresses": [
+				"::/1"
+				],
+			}
+		}
+		],
+		"created_at": "",
+		"droplet_ids": [
+		123456
+		],
+		"tags": [
+		"haproxy"
+		],
+		"status": "",
+	};
+
+	equals(f, want, "should have proper object");
+	`)
 }

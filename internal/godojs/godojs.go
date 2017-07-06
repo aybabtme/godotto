@@ -1172,12 +1172,24 @@ func InboundRuleToVM(vm *otto.Otto, g godo.InboundRule) map[string]interface{} {
 }
 
 func SourcesToVM(vm *otto.Otto, g *godo.Sources) map[string]interface{} {
-	return map[string]interface{}{
-		"addresses":          g.Addresses,
-		"tags":               g.Tags,
-		"droplet_ids":        g.DropletIDs,
-		"load_balancer_uids": g.LoadBalancerUIDs,
+	var sources = make(map[string]interface{})
+	if len(g.Addresses) > 0 {
+		sources["addresses"] = g.Addresses
 	}
+
+	if len(g.Tags) > 0 {
+		sources["tags"] = g.Tags
+	}
+
+	if len(g.DropletIDs) > 0 {
+		sources["droplet_ids"] = intsToInt64s(g.DropletIDs)
+	}
+
+	if len(g.LoadBalancerUIDs) > 0 {
+		sources["load_balancer_uids"] = g.LoadBalancerUIDs
+	}
+
+	return sources
 }
 
 func OutboundRulesToVM(vm *otto.Otto, g []godo.OutboundRule) otto.Value {
@@ -1207,12 +1219,25 @@ func OutboundRuleToVM(vm *otto.Otto, g godo.OutboundRule) map[string]interface{}
 }
 
 func DestinationsToVM(vm *otto.Otto, g *godo.Destinations) map[string]interface{} {
-	return map[string]interface{}{
-		"addresses":          g.Addresses,
-		"tags":               g.Tags,
-		"droplet_ids":        g.DropletIDs,
-		"load_balancer_uids": g.LoadBalancerUIDs,
+
+	var destinations = make(map[string]interface{})
+	if len(g.Addresses) > 0 {
+		destinations["addresses"] = g.Addresses
 	}
+
+	if len(g.Tags) > 0 {
+		destinations["tags"] = g.Tags
+	}
+
+	if len(g.DropletIDs) > 0 {
+		destinations["droplet_ids"] = intsToInt64s(g.DropletIDs)
+	}
+
+	if len(g.LoadBalancerUIDs) > 0 {
+		destinations["load_balancer_uids"] = g.LoadBalancerUIDs
+	}
+
+	return destinations
 }
 
 func LoadBalancerToVM(vm *otto.Otto, g *godo.LoadBalancer) otto.Value {
