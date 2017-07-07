@@ -32,6 +32,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"get", svc.get},
 		{"delete", svc.delete},
 		{"list", svc.list},
+		{"update", svc.update},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -105,4 +106,17 @@ func (svc *firewallsSvc) list(all otto.FunctionCall) otto.Value {
 	}
 
 	return v
+}
+
+func (svc *firewallsSvc) update(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	req := godojs.ArgFirewallUpdate(vm, all.Argument(1))
+	f, err := svc.svc.Update(svc.ctx, fwID, firewalls.UseGodoFirewall(req))
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return godojs.FirewallToVM(vm, f.Struct())
 }

@@ -12,6 +12,7 @@ type Client interface {
 	List(ctx context.Context) (<-chan Firewall, <-chan error)
 	Get(ctx context.Context, id string) (Firewall, error)
 	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, id string, opts ...UpdateOpt) (Firewall, error)
 }
 
 type Firewall interface {
@@ -110,6 +111,37 @@ func (svc *client) List(ctx context.Context) (<-chan Firewall, <-chan error) {
 	}()
 
 	return outc, errc
+}
+
+// UpdateOpt is an optional argument to firewalls.Update
+type UpdateOpt func(*updateOpt)
+
+type updateOpt struct {
+	req *godo.FirewallRequest
+}
+
+func (svc *client) defaultUpdateOpts() *updateOpt {
+	return &updateOpt{
+		req: &godo.FirewallRequest{},
+	}
+}
+
+func UseGodoFirewall(req *godo.FirewallRequest) UpdateOpt {
+	return func(opt *updateOpt) { opt.req = req }
+}
+
+func (svc *client) Update(ctx context.Context, id string, opts ...UpdateOpt) (Firewall, error) {
+	opt := svc.defaultUpdateOpts()
+	for _, fn := range opts {
+		fn(opt)
+	}
+
+	f, _, err := svc.g.Firewalls.Update(ctx, id, opt.req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &firewall{g: svc.g, f: f}, nil
 }
 
 type firewall struct {

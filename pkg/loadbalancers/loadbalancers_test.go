@@ -159,6 +159,7 @@ func TestLoadBalancerThrows(t *testing.T) {
 			{name: "get", fn: function() { pkg.get(lb.id) }},
 			{name: "delete", fn: function() { pkg.delete(lb) }},
 			{name: "list", fn: function() { pkg.list() }},
+            {name: "update", fn: function() { pkg.update(lb.id, lb) }}
 			{name: "add_droplets", fn: function() { pkg.add_droplets(lb, [ dropletId ]) }},
 			{name: "remove_droplets", fn: function() { pkg.remove_droplets(lb, [ dropletId ]) }},
 			{name: "add_forwarding_rules", fn: function() { pkg.add_forwarding_rules(lb, lb.forwarding_rules) }},

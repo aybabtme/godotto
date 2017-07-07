@@ -23,8 +23,8 @@ func TestFirewallApply(t *testing.T) {
 	assert(pkg.get != null, "get function should be defined");
 	assert(pkg.delete != null, "delete function should be defined");
 	assert(pkg.list != null, "list function should be defined");
-	/*assert(pkg.update != null, "update function should be defined");
-	assert(pkg.add_tags != null, "add_tags function should be defined");
+	assert(pkg.update != null, "update function should be defined");
+	/*assert(pkg.add_tags != null, "add_tags function should be defined");
 	assert(pkg.remove_tags != null, "remove_tags function should be defined");
 	assert(pkg.add_droplets != null, "add_droplets function should be defined");
 	assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
@@ -46,6 +46,19 @@ func TestFirewallThrows(t *testing.T) {
 
 	cloud.MockFirewalls.DeleteFn = func(_ context.Context, _ string) error {
 		return errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.ListFn = func(_ context.Context) (<-chan firewalls.Firewall, <-chan error) {
+		fc := make(chan firewalls.Firewall)
+		close(fc)
+		ec := make(chan error, 1)
+		ec <- errors.New("throw me")
+		close(ec)
+		return fc, ec
+	}
+
+	cloud.MockFirewalls.UpdateFn = func(_ context.Context, _ string, _ ...firewalls.UpdateOpt) (firewalls.Firewall, error) {
+		return nil, errors.New("throw me")
 	}
 
 	vmtest.Run(t, cloud, `
@@ -110,6 +123,9 @@ func TestFirewallThrows(t *testing.T) {
 	[
 	{name: "create", fn: function() { pkg.create(fw) }},
 	{name: "get", fn: function() { pkg.get(fw.id) }},
+    {name: "list", fn: function() { pkg.list() }},
+    {name: "delete", fn: function() { pkg.delete(fw.id) }},
+    {name: "update", fn: function() { pkg.update(fw.id, fw) }}
 	].forEach(function(kv) {
 		var name = kv.name;
 		var fn = kv.fn;
@@ -391,4 +407,81 @@ var fw = list[0];
 
 equals(fw, want, "should have proper object");
 `)
+}
+
+func TestFirewallUpdate(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantID := "test-uuid"
+
+	cloud.MockFirewalls.UpdateFn = func(_ context.Context, gotID string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error) {
+		if gotID != wantID {
+			t.Fatalf("want %v got %v", wantID, gotID)
+		}
+
+		return &firewall{f}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+
+var want = {
+		"id": "test-uuid",
+		"name": "test-sg",
+		"inbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"sources": {
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"sources": {
+				"addresses": [
+				"0.0.0.0/0"
+				]
+			}
+		}
+		],
+		"outbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"destinations": {
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"destinations": {
+				"addresses": [
+				"::/1"
+				],
+			}
+		}
+		],
+		"created_at": "",
+		"droplet_ids": [
+		123456
+		],
+		"tags": [
+		"haproxy"
+		],
+		"status": "",
+	};
+
+var f = pkg.update("test-uuid", want);
+equals(f, want, "should have proper object");
+`)
+
 }

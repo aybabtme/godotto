@@ -897,6 +897,7 @@ type MockFirewalls struct {
 	GetFn    func(ctx context.Context, id string) (firewalls.Firewall, error)
 	DeleteFn func(ctx context.Context, id string) error
 	ListFn   func(ctx context.Context) (<-chan firewalls.Firewall, <-chan error)
+	UpdateFn func(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error)
 }
 
 func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
@@ -930,4 +931,12 @@ func (mock *MockFirewalls) List(ctx context.Context) (<-chan firewalls.Firewall,
 	}
 
 	return mock.wrap.Firewalls().List(ctx)
+}
+
+func (mock *MockFirewalls) Update(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error) {
+	if mock.UpdateFn != nil {
+		return mock.UpdateFn(ctx, id, opts...)
+	}
+
+	return mock.wrap.Firewalls().Update(ctx, id, opts...)
 }

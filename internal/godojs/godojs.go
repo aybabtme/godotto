@@ -174,6 +174,18 @@ func ArgFirewallCreate(vm *otto.Otto, v otto.Value) *godo.FirewallRequest {
 	return req
 }
 
+func ArgFirewallUpdate(vm *otto.Otto, v otto.Value) *godo.FirewallRequest {
+	req := &godo.FirewallRequest{
+		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+		InboundRules:  ArgInboundRules(vm, ottoutil.GetObject(vm, v, "inbound_rules", true)),
+		OutboundRules: ArgOutboundRules(vm, ottoutil.GetObject(vm, v, "outbound_rules", true)),
+		DropletIDs:    ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		Tags:          ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+	}
+
+	return req
+}
+
 func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalancerRequest {
 	req := &godo.LoadBalancerRequest{
 		Name:                ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
