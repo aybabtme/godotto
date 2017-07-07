@@ -22,8 +22,8 @@ func TestFirewallApply(t *testing.T) {
 	assert(pkg.create != null, "create function should be defined");
 	assert(pkg.get != null, "get function should be defined");
 	assert(pkg.delete != null, "delete function should be defined");
-	/*assert(pkg.update != null, "update function should be defined");
 	assert(pkg.list != null, "list function should be defined");
+	/*assert(pkg.update != null, "update function should be defined");
 	assert(pkg.add_tags != null, "add_tags function should be defined");
 	assert(pkg.remove_tags != null, "remove_tags function should be defined");
 	assert(pkg.add_droplets != null, "add_droplets function should be defined");
@@ -312,5 +312,83 @@ func TestFirewallDelete(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.firewalls;
 pkg.delete("test-uuid");
+`)
+}
+
+func TestFirewallList(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockFirewalls.ListFn = func(_ context.Context) (<-chan firewalls.Firewall, <-chan error) {
+		fc := make(chan firewalls.Firewall, 1)
+		fc <- &firewall{f}
+		close(fc)
+		ec := make(chan error)
+		close(ec)
+		return fc, ec
+	}
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+var list = pkg.list();
+assert(list != null, "should have received a list");
+assert(list.length > 0, "should have received some elements");
+
+var want = {
+		"id": "test-uuid",
+		"name": "test-sg",
+		"inbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"sources": {
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"sources": {
+				"addresses": [
+				"0.0.0.0/0"
+				]
+			}
+		}
+		],
+		"outbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"destinations": {
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"destinations": {
+				"addresses": [
+				"::/1"
+				],
+			}
+		}
+		],
+		"created_at": "",
+		"droplet_ids": [
+		123456
+		],
+		"tags": [
+		"haproxy"
+		],
+		"status": "",
+	};
+
+var fw = list[0];
+
+equals(fw, want, "should have proper object");
 `)
 }

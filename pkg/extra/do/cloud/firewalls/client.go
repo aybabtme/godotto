@@ -3,11 +3,13 @@ package firewalls
 import (
 	"context"
 
+	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
 )
 
 type Client interface {
 	Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...CreateOpt) (Firewall, error)
+	List(ctx context.Context) (<-chan Firewall, <-chan error)
 	Get(ctx context.Context, id string) (Firewall, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -80,6 +82,34 @@ func (svc *client) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (svc *client) List(ctx context.Context) (<-chan Firewall, <-chan error) {
+	outc := make(chan Firewall, 1)
+	errc := make(chan error, 1)
+
+	go func() {
+		defer close(outc)
+		defer close(errc)
+		err := godoutil.IterateList(ctx, func(ctx context.Context, opt *godo.ListOptions) (*godo.Response, error) {
+			r, resp, err := svc.g.Firewalls.List(ctx, opt)
+			for _, f := range r {
+				ff := f
+				select {
+				case outc <- &firewall{g: svc.g, f: &ff}:
+				case <-ctx.Done():
+					return resp, err
+				}
+			}
+
+			return resp, err
+		})
+		if err != nil {
+			errc <- err
+		}
+	}()
+
+	return outc, errc
 }
 
 type firewall struct {

@@ -413,3 +413,14 @@ func (client *client) interceptFirewallCreate(ctx context.Context, name string, 
 
 	return f, err
 }
+
+func (client *client) interceptFirewallDelete(ctx context.Context, id string) error {
+	err := client.real.Firewalls().Delete(ctx, id)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		delete(client.firewalls, id)
+	}
+
+	return err
+}

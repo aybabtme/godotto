@@ -31,6 +31,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"create", svc.create},
 		{"get", svc.get},
 		{"delete", svc.delete},
+		{"list", svc.list},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -84,4 +85,24 @@ func (svc *firewallsSvc) delete(all otto.FunctionCall) otto.Value {
 	}
 
 	return q
+}
+
+func (svc *firewallsSvc) list(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	var fws = make([]otto.Value, 0)
+	fwc, errc := svc.svc.List(svc.ctx)
+	for f := range fwc {
+		fws = append(fws, godojs.FirewallToVM(vm, f.Struct()))
+	}
+	if err := <-errc; err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	v, err := vm.ToValue(fws)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
 }
