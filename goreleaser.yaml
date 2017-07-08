@@ -9,6 +9,10 @@ build:
   goarch:
     - amd64
 
+  format_overrides:
+  - goos: windows
+    format: zip
+
 brew:
   github:
     owner: aybabtme
