@@ -812,6 +812,22 @@ func VolumeSnapshotToVM(vm *otto.Otto, g *godo.Snapshot) otto.Value {
 	})
 }
 
+func SnapshotToVM(vm *otto.Otto, g *godo.Snapshot) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"id":            g.ID,
+		"resource_id":   g.ResourceID,
+		"resource_type": g.ResourceType,
+		"name":          g.Name,
+		"regions":       g.Regions,
+		"size":          float64(g.SizeGigaBytes),
+		"min_disk_size": int64(g.MinDiskSize),
+		"created_at":    g.Created,
+	})
+}
+
 func DropletToVM(vm *otto.Otto, g *godo.Droplet) otto.Value {
 	if g == nil {
 		return otto.NullValue()

@@ -160,7 +160,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock.MockVolumes.CreateVolumeFn = c.interceptVolumeCreate
 	mock.MockVolumes.DeleteVolumeFn = c.interceptVolumeDelete
 	mock.MockVolumes.CreateSnapshotFn = c.interceptSnapshotCreate
-	mock.MockVolumes.DeleteSnapshotFn = c.interceptSnapshotDelete
+	mock.MockVolumes.DeleteSnapshotFn = c.interceptVolumeSnapshotDelete
 	mock.MockDomains.CreateFn = c.interceptDomainCreate
 	mock.MockDomains.DeleteFn = c.interceptDomainDelete
 	mock.MockDomains.CreateRecordFn = c.interceptDomainRecordCreate
@@ -174,6 +174,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock.MockTags.DeleteFn = c.interceptTagDelete
 	mock.MockLoadBalancers.CreateFn = c.interceptLoadBalancerCreate
 	mock.MockLoadBalancers.DeleteFn = c.interceptLoadBalancerDelete
+	mock.MockSnapshots.DeleteFn = c.interceptSnapshotDelete
 	return c, mock
 }
 
@@ -227,7 +228,7 @@ func (client *client) interceptSnapshotCreate(ctx context.Context, volumeID, nam
 	return d, err
 }
 
-func (client *client) interceptSnapshotDelete(ctx context.Context, id string) error {
+func (client *client) interceptVolumeSnapshotDelete(ctx context.Context, id string) error {
 	err := client.real.Volumes().DeleteSnapshot(ctx, id)
 	if err == nil {
 		client.mu.Lock()
@@ -373,6 +374,17 @@ func (client *client) interceptLoadBalancerDelete(ctx context.Context, id string
 		client.mu.Lock()
 		defer client.mu.Unlock()
 		delete(client.loadbalancers, id)
+	}
+
+	return err
+}
+
+func (client *client) interceptSnapshotDelete(ctx context.Context, sId string) error {
+	err := client.real.Snapshots().Delete(ctx, sId)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		delete(client.snapshots, sId)
 	}
 
 	return err

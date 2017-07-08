@@ -25,6 +25,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/loadbalancers"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/sizes"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/snapshots"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/digitalocean/godo"
@@ -46,6 +47,7 @@ type Mock struct {
 	MockVolumes       *MockVolumes
 	MockTags          *MockTags
 	MockLoadBalancers *MockLoadBalancers
+	MockSnapshots     *MockSnapshots
 }
 
 func Client(client cloud.Client) *Mock {
@@ -62,6 +64,7 @@ func Client(client cloud.Client) *Mock {
 		MockVolumes:       &MockVolumes{wrap: client, MockVolumeActions: &MockVolumeActions{wrap: client}},
 		MockTags:          &MockTags{wrap: client},
 		MockLoadBalancers: &MockLoadBalancers{wrap: client},
+		MockSnapshots:     &MockSnapshots{wrap: client},
 	}
 }
 
@@ -77,6 +80,7 @@ func (mock *Mock) FloatingIPs() floatingips.Client     { return mock.MockFloatin
 func (mock *Mock) Volumes() volumes.Client             { return mock.MockVolumes }
 func (mock *Mock) Tags() tags.Client                   { return mock.MockTags }
 func (mock *Mock) LoadBalancers() loadbalancers.Client { return mock.MockLoadBalancers }
+func (mock *Mock) Snapshots() snapshots.Client         { return mock.MockSnapshots }
 
 // Droplets
 
@@ -829,4 +833,54 @@ func (mock *MockLoadBalancers) RemoveForwardingRules(ctx context.Context, lbId s
 	}
 
 	return mock.wrap.LoadBalancers().RemoveForwardingRules(ctx, lbId, rules...)
+}
+
+// Snapshots
+
+type MockSnapshots struct {
+	wrap          cloud.Client
+	GetFn         func(ctx context.Context, sId string) (snapshots.Snapshot, error)
+	DeleteFn      func(ctx context.Context, sId string) error
+	ListFn        func(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error)
+	ListDropletFn func(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error)
+	ListVolumeFn  func(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error)
+}
+
+func (mock *MockSnapshots) Get(ctx context.Context, sId string) (snapshots.Snapshot, error) {
+	if mock.GetFn != nil {
+		return mock.GetFn(ctx, sId)
+	}
+
+	return mock.wrap.Snapshots().Get(ctx, sId)
+}
+
+func (mock *MockSnapshots) Delete(ctx context.Context, sId string) error {
+	if mock.DeleteFn != nil {
+		return mock.DeleteFn(ctx, sId)
+	}
+
+	return mock.wrap.Snapshots().Delete(ctx, sId)
+}
+
+func (mock *MockSnapshots) List(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error) {
+	if mock.ListFn != nil {
+		return mock.ListFn(ctx)
+	}
+
+	return mock.wrap.Snapshots().List(ctx)
+}
+func (mock *MockSnapshots) ListDroplet(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error) {
+	if mock.ListDropletFn != nil {
+		return mock.ListDropletFn(ctx)
+	}
+
+	return mock.wrap.Snapshots().ListDroplet(ctx)
+}
+
+func (mock *MockSnapshots) ListVolume(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error) {
+	if mock.ListVolumeFn != nil {
+		return mock.ListVolumeFn(ctx)
+	}
+
+	return mock.wrap.Snapshots().ListVolume(ctx)
 }
