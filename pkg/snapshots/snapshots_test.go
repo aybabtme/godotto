@@ -75,7 +75,7 @@ func TestSnapshotThrows(t *testing.T) {
 		    "min_disk_size": 20,
 		    "name": "example-server-007",
 		    "regions": [
-		      "nyc3"
+		      "nyc1"
 		    ],
 		    "resource_id": "44332211",
 		    "resource_type": "droplet",
@@ -102,8 +102,8 @@ func TestSnapshotThrows(t *testing.T) {
 }
 
 var (
-	sd = &godo.Snapshot{ID: "11223344", Name: "example-server-007", ResourceID: "44332211", ResourceType: "droplet", Regions: []string{"nyc3"}, MinDiskSize: 20, SizeGigaBytes: 2.24, Created: "2017-06-08T09:11:06Z"}
-	sv = &godo.Snapshot{ID: "11223345", Name: "example-server-007", ResourceID: "44332210", ResourceType: "volume", Regions: []string{"nyc3"}, MinDiskSize: 20, SizeGigaBytes: 2.24, Created: "2017-06-08T09:11:06Z"}
+	sd = &godo.Snapshot{ID: "11223344", Name: "example-server-007", ResourceID: "44332211", ResourceType: "droplet", Regions: []string{"nyc1"}, MinDiskSize: 20, SizeGigaBytes: 2.24, Created: "2017-06-08T09:11:06Z"}
+	sv = &godo.Snapshot{ID: "11223345", Name: "example-server-007", ResourceID: "44332210", ResourceType: "volume", Regions: []string{"nyc1"}, MinDiskSize: 20, SizeGigaBytes: 2.24, Created: "2017-06-08T09:11:06Z"}
 )
 
 type snapshot struct {
@@ -135,12 +135,12 @@ func TestSnapshotsList(t *testing.T) {
 		    "min_disk_size": 20,
 		    "name": "example-server-007",
 		    "regions": [
-		      "nyc3"
+		      "nyc1"
 		    ],
 		    "resource_id": "44332211",
 		    "resource_type": "droplet",
 		    "size": 2.24
-		};
+	};
 
 
 	var s = list[0];
@@ -172,12 +172,12 @@ func TestSnapshotsListDroplet(t *testing.T) {
 		    "min_disk_size": 20,
 		    "name": "example-server-007",
 		    "regions": [
-		      "nyc3"
+		      "nyc1"
 		    ],
 		    "resource_id": "44332211",
 		    "resource_type": "droplet",
 		    "size": 2.24
-		};
+	};
 
 
 	var s = list_droplet[0];
@@ -209,12 +209,12 @@ func TestSnapshotsListVolume(t *testing.T) {
 		    "min_disk_size": 20,
 		    "name": "example-server-007",
 		    "regions": [
-		      "nyc3"
+		      "nyc1"
 		    ],
 		    "resource_id": "44332210",
 		    "resource_type": "volume",
 		    "size": 2.24
-		};
+	};
 
 
 	var s = list_volume[0];
@@ -222,12 +222,11 @@ func TestSnapshotsListVolume(t *testing.T) {
 	equals(s, want, "should have proper object");
 	`)
 }
-
-/*func TestLoadBalancerDelete(t *testing.T) {
-	wantId := "test-uuid"
+func TestSnapshotDelete(t *testing.T) {
+	wantId := "11223344"
 	cloud := mockcloud.Client(nil)
 
-	cloud.MockLoadBalancers.DeleteFn = func(_ context.Context, gotId string) error {
+	cloud.MockSnapshots.DeleteFn = func(_ context.Context, gotId string) error {
 		if gotId != wantId {
 			t.Fatalf("want %v got %v", wantId, gotId)
 		}
@@ -236,64 +235,36 @@ func TestSnapshotsListVolume(t *testing.T) {
 	}
 
 	vmtest.Run(t, cloud, `
-			var pkg = cloud.load_balancers;
-			pkg.delete("test-uuid");
+			var pkg = cloud.snapshots;
+			pkg.delete("11223344");
 	`)
 }
 
-func TestLoadBalancerGet(t *testing.T) {
+func TestSnapshotGet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
-	cloud.MockLoadBalancers.GetFn = func(_ context.Context, id string) (loadbalancers.LoadBalancer, error) {
-		return &loadBalancer{l}, nil
+	cloud.MockSnapshots.GetFn = func(_ context.Context, id string) (snapshots.Snapshot, error) {
+		return &snapshot{sd}, nil
 	}
 
 	vmtest.Run(t, cloud, `
-		var pkg = cloud.load_balancers;
-		var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
-
+		var pkg = cloud.snapshots;
+		
 		var want = {
-			"id": "test-uuid",
-			"name": "example-lb-01",
-			"ip": "",
-			"algorithm": "round_robin",
-			"status": "new",
-			"created_at": "",
-		"forwarding_rules": [
-			{
-				"entry_protocol": "http",
-				"entry_port": 80,
-				"target_protocol": "http",
-				"target_port": 80,
-				"certificate_id": "",
-				"tls_passthrough": false
-			}
-			],
-
-			"health_check": {
-				"protocol": "http",
-				"port": 80,
-				"path": "/",
-				"check_interval_seconds": 10,
-				"response_timeout_seconds": 5,
-				"healthy_threshold": 5,
-				"unhealthy_threshold": 3
-			},
-			"sticky_sessions": {
-				"type": "none",
-				cookie_name: "",
-				cookie_ttl_seconds: 0,
-			},
-			"region": region,
-			"tag": "",
-			"droplet_ids": [
-			3164444,
-			3164445
-			],
-			"redirect_http_to_https": false
+		    "created_at": "2017-06-08T09:11:06Z",
+		    "id": "11223344",
+		    "min_disk_size": 20,
+		    "name": "example-server-007",
+		    "regions": [
+		      "nyc1"
+		    ],
+		    "resource_id": "44332211",
+		    "resource_type": "droplet",
+		    "size": 2.24
 		};
 
-		var l = pkg.get('test-uuid');
+
+		var l = pkg.get('11223344');
 
 		equals(l, want, "should have proper object");
 	`)
-}*/
+}

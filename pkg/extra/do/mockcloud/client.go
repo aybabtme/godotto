@@ -855,7 +855,7 @@ func (mock *MockSnapshots) Get(ctx context.Context, sId string) (snapshots.Snaps
 }
 
 func (mock *MockSnapshots) Delete(ctx context.Context, sId string) error {
-	if mock.GetFn != nil {
+	if mock.DeleteFn != nil {
 		return mock.DeleteFn(ctx, sId)
 	}
 
