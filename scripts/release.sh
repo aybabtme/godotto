@@ -1,54 +1,40 @@
 #!/usr/bin/env bash
 
+basedir=$(git rev-parse --show-toplevel)
+
 usage() {
-    echo "USAGE: ./release.sh [version] [msg...]"
+    echo "USAGE: release.sh [version] [msg...]"
     exit 1
 }
 
-REVISION=$(git rev-parse HEAD)
-GIT_TAG=$(git name-rev --tags --name-only $REVISION)
-if [ "$GIT_TAG" = "" ]; then
-    GIT_TAG="devel"
-fi
+command -v goreleaser >/dev/null 2>&1 || { echo "Required: goreleaser. Install it https://github.com/goreleaser/goreleaser.  Aborting." >&2; exit 1; }
 
-
-VERSION=$1
-if [ "$VERSION" = "" ]; then
-    echo "Need to specify a version! Perhaps '$GIT_TAG'?"
+if [ "$GITHUB_TOKEN" = "" ]; then
+    echo "Need to specify a GITHUB_TOKEN!"
     usage
 fi
 
-set -u -e
+version=$1
+if [ "$version" = "" ]; then
+    echo "Need to specify a version!"
+    usage
+fi
 
-rm -rf /tmp/dorepl_build/
+shift
+msg=$@
+if [ "$msg" = "" ]; then
+    echo "Need to specify a message!"
+    usage
+fi
 
-mkdir -p /tmp/dorepl_build/linux
-GOOS=linux go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/linux/dorepl github.com/aybabtme/godotto/cmd/dorepl
-pushd /tmp/dorepl_build/linux/
-tar cvzf /tmp/dorepl_build/dorepl_linux.tar.gz dorepl
-popd
+set -e -u -x
 
-mkdir -p /tmp/dorepl_build/darwin
-GOOS=darwin go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/darwin/dorepl github.com/aybabtme/godotto/cmd/dorepl
-pushd /tmp/dorepl_build/darwin/
-tar cvzf /tmp/dorepl_build/dorepl_darwin.tar.gz dorepl
-popd
+temple file < $basedir/scripts/README.tmpl.md > $basedir/README.md -var "version=$version"
 
-mkdir -p /tmp/dorepl_build/windows
-GOOS=windows go build -ldflags "-X main.version=$VERSION" -o /tmp/dorepl_build/windows/dorepl.exe github.com/aybabtme/godotto/cmd/dorepl
-pushd /tmp/dorepl_build/windows/
-zip /tmp/dorepl_build/dorepl_windows.zip dorepl.exe
-popd
+git add $basedir/README.md
+git commit -m "$msg"
+git tag -a $version -m "$msg"
 
-
-temple file < README.tmpl.md > ../README.md -var "version=$VERSION"
-git add ../README.md
-git commit -m 'release bump'
-
-hub release create \
-    -a /tmp/dorepl_build/dorepl_linux.tar.gz \
-    -a /tmp/dorepl_build/dorepl_darwin.tar.gz \
-    -a /tmp/dorepl_build/dorepl_windows.zip \
-    $VERSION
+goreleaser --config $basedir/goreleaser.yaml
 
 git push origin master
