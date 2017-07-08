@@ -79,7 +79,7 @@ func TestSnapshotThrows(t *testing.T) {
 		    ],
 		    "resource_id": "44332211",
 		    "resource_type": "droplet",
-		    "size": 2
+		    "size": 2.24
 		};
 
 		[
@@ -139,7 +139,7 @@ func TestSnapshotsList(t *testing.T) {
 		    ],
 		    "resource_id": "44332211",
 		    "resource_type": "droplet",
-		    "size": 2
+		    "size": 2.24
 		};
 
 
@@ -176,7 +176,7 @@ func TestSnapshotsListDroplet(t *testing.T) {
 		    ],
 		    "resource_id": "44332211",
 		    "resource_type": "droplet",
-		    "size": 2
+		    "size": 2.24
 		};
 
 
@@ -213,7 +213,7 @@ func TestSnapshotsListVolume(t *testing.T) {
 		    ],
 		    "resource_id": "44332210",
 		    "resource_type": "volume",
-		    "size": 2
+		    "size": 2.24
 		};
 
 
