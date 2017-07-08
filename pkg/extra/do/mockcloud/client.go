@@ -870,7 +870,7 @@ func (mock *MockSnapshots) List(ctx context.Context) (<-chan snapshots.Snapshot,
 	return mock.wrap.Snapshots().List(ctx)
 }
 func (mock *MockSnapshots) ListDroplet(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error) {
-	if mock.ListFn != nil {
+	if mock.ListDropletFn != nil {
 		return mock.ListDropletFn(ctx)
 	}
 
@@ -878,7 +878,7 @@ func (mock *MockSnapshots) ListDroplet(ctx context.Context) (<-chan snapshots.Sn
 }
 
 func (mock *MockSnapshots) ListVolume(ctx context.Context) (<-chan snapshots.Snapshot, <-chan error) {
-	if mock.ListFn != nil {
+	if mock.ListVolumeFn != nil {
 		return mock.ListVolumeFn(ctx)
 	}
 
