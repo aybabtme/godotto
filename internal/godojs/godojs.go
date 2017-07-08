@@ -808,7 +808,7 @@ func VolumeSnapshotToVM(vm *otto.Otto, g *godo.Snapshot) otto.Value {
 		"volume_id": g.ResourceID,
 		"name":      g.Name,
 		"regions":   g.Regions,
-		"size":      float64(g.SizeGigaBytes),
+		"size":      int64(g.SizeGigaBytes),
 	})
 }
 
