@@ -20,8 +20,8 @@ func TestSnapshotApply(t *testing.T) {
 	var pkg = cloud.snapshots;
 	assert(pkg != null, "package should be loaded");
 	assert(pkg.list != null, "list function shouled be defined");
-	assert(pkg.listDroplet != null, "listDroplet function shouled be defined");
-	assert(pkg.listVolume != null, "listVolume function shouled be defined");
+	assert(pkg.list_droplet != null, "list_droplet function shouled be defined");
+	assert(pkg.list_volume != null, "list_volume function shouled be defined");
 	assert(pkg.get != null, "get function shouled be defined");
 	assert(pkg.delete != null, "delete function should be defined");
 	`)
@@ -86,8 +86,8 @@ func TestSnapshotThrows(t *testing.T) {
 			{name: "get", fn: function() { pkg.get(ss.id) }},
 			{name: "delete", fn: function() { pkg.delete(ss.id) }},
 			{name: "list", fn: function() { pkg.list() }},
-			{name: "listDroplet", fn: function() { pkg.listDroplet() }},
-			{name: "listVolume", fn: function() { pkg.listVolume() }},
+			{name: "list_droplet", fn: function() { pkg.list_droplet() }},
+			{name: "list_volume", fn: function() { pkg.list_volume() }},
 		 ].forEach(function(kv) {
 			var name = kv.name;
 			var fn = kv.fn;
@@ -149,7 +149,7 @@ func TestSnapshotsList(t *testing.T) {
 	`)
 }
 
-/*func TestSnapshotsListDroplet(t *testing.T) {
+func TestSnapshotsListDroplet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockSnapshots.ListDropletFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
 		sc := make(chan snapshots.Snapshot, 1)
@@ -162,9 +162,9 @@ func TestSnapshotsList(t *testing.T) {
 
 	vmtest.Run(t, cloud, `
 	var pkg = cloud.snapshots;
-	var listDroplet = pkg.listDroplet();
-	assert(listDroplet != null, "should have received a list");
-	assert(listDroplet.length > 0, "should have received some elements");
+	var list_droplet = pkg.list_droplet();
+	assert(list_droplet != null, "should have received a list");
+	assert(list_droplet.length > 0, "should have received some elements");
 
 	var want = {
 		    "created_at": "2017-06-08T09:11:06Z",
@@ -180,13 +180,13 @@ func TestSnapshotsList(t *testing.T) {
 		};
 
 
-	var s = listDroplet[0];
+	var s = list_droplet[0];
 
 	equals(s, want, "should have proper object");
 	`)
-}*/
+}
 
-/*func TestSnapshotsListVolume(t *testing.T) {
+func TestSnapshotsListVolume(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockSnapshots.ListVolumeFn = func(_ context.Context) (<-chan snapshots.Snapshot, <-chan error) {
 		sc := make(chan snapshots.Snapshot, 1)
@@ -199,9 +199,9 @@ func TestSnapshotsList(t *testing.T) {
 
 	vmtest.Run(t, cloud, `
 	var pkg = cloud.snapshots;
-	var list = pkg.listVolume();
-	assert(list != null, "should have received a list");
-	assert(list.length > 0, "should have received some elements");
+	var list_volume = pkg.list_volume();
+	assert(list_volume != null, "should have received a list");
+	assert(list_volume.length > 0, "should have received some elements");
 
 	var want = {
 		    "created_at": "2017-06-08T09:11:06Z",
@@ -217,11 +217,11 @@ func TestSnapshotsList(t *testing.T) {
 		};
 
 
-	var s = list[0];
+	var s = list_volume[0];
 
 	equals(s, want, "should have proper object");
 	`)
-}*/
+}
 
 /*func TestLoadBalancerDelete(t *testing.T) {
 	wantId := "test-uuid"

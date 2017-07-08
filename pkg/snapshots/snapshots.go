@@ -30,8 +30,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 	}{
 		{"get", svc.get},
 		{"list", svc.list},
-		{"listDroplet", svc.listDroplet},
-		{"listVolume", svc.listVolume},
+		{"list_droplet", svc.listDroplet},
+		{"list_volume", svc.listVolume},
 		{"delete", svc.delete},
 	} {
 
