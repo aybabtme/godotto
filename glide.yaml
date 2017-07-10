@@ -15,3 +15,5 @@ import:
   - context
 - package: golang.org/x/oauth2
 - package: gopkg.in/readline.v1
+- package: github.com/stretchr/testify
+  version: ^1.1.4
