@@ -37,6 +37,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"remove_tags", svc.removeTags},
 		{"add_droplets", svc.addDroplets},
 		{"remove_droplets", svc.removeDroplets},
+		{"add_rules", svc.addRules},
+		{"remove_rules", svc.removeRules},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -174,6 +176,36 @@ func (svc *firewallsSvc) removeDroplets(all otto.FunctionCall) otto.Value {
 	dropletIDs := godojs.ArgDropletIDs(vm, all.Argument(1))
 
 	err := svc.svc.RemoveDroplets(svc.ctx, fwID, dropletIDs...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *firewallsSvc) addRules(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	inboundRules := godojs.ArgInboundRules(vm, all.Argument(1))
+	outboundRules := godojs.ArgOutboundRules(vm, all.Argument(2))
+
+	err := svc.svc.AddRules(svc.ctx, fwID, inboundRules, outboundRules)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *firewallsSvc) removeRules(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	inboundRules := godojs.ArgInboundRules(vm, all.Argument(1))
+	outboundRules := godojs.ArgOutboundRules(vm, all.Argument(2))
+
+	err := svc.svc.RemoveRules(svc.ctx, fwID, inboundRules, outboundRules)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

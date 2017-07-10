@@ -17,6 +17,8 @@ type Client interface {
 	RemoveTags(ctx context.Context, id string, tags ...string) error
 	AddDroplets(ctx context.Context, id string, dropletIDs ...int) error
 	RemoveDroplets(ctx context.Context, id string, dropletIDs ...int) error
+	AddRules(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error
+	RemoveRules(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error
 }
 
 type Firewall interface {
@@ -187,6 +189,44 @@ func (svc *client) RemoveDroplets(ctx context.Context, fwID string, dids ...int)
 type firewall struct {
 	g *godo.Client
 	f *godo.Firewall
+}
+
+type RulesOpt func(*rulesOpt)
+
+type rulesOpt struct {
+	req *godo.FirewallRulesRequest
+}
+
+func (svc *client) defaultRulesOpts() *rulesOpt {
+	return &rulesOpt{
+		req: &godo.FirewallRulesRequest{},
+	}
+}
+
+func (svc *client) AddRules(ctx context.Context, fwID string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+	opt := svc.defaultRulesOpts()
+
+	opt.req.InboundRules = inboundRules
+	opt.req.OutboundRules = outboundRules
+	_, err := svc.g.Firewalls.AddRules(ctx, fwID, opt.req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) RemoveRules(ctx context.Context, fwID string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+	opt := svc.defaultRulesOpts()
+
+	opt.req.InboundRules = inboundRules
+	opt.req.OutboundRules = outboundRules
+	_, err := svc.g.Firewalls.RemoveRules(ctx, fwID, opt.req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (svc *firewall) Struct() *godo.Firewall { return svc.f }

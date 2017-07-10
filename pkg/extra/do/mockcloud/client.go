@@ -902,6 +902,8 @@ type MockFirewalls struct {
 	RemoveTagsFn     func(ctx context.Context, id string, tags ...string) error
 	AddDropletsFn    func(ctx context.Context, id string, dids ...int) error
 	RemoveDropletsFn func(ctx context.Context, id string, dids ...int) error
+	AddRulesFn       func(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error
+	RemoveRulesFn    func(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error
 }
 
 func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
@@ -975,4 +977,20 @@ func (mock *MockFirewalls) RemoveDroplets(ctx context.Context, id string, dids .
 	}
 
 	return mock.wrap.Firewalls().RemoveDroplets(ctx, id, dids...)
+}
+
+func (mock *MockFirewalls) AddRules(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+	if mock.AddRulesFn != nil {
+		return mock.AddRulesFn(ctx, id, inboundRules, outboundRules)
+	}
+
+	return mock.wrap.Firewalls().AddRules(ctx, id, inboundRules, outboundRules)
+}
+
+func (mock *MockFirewalls) RemoveRules(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+	if mock.RemoveRulesFn != nil {
+		return mock.RemoveRulesFn(ctx, id, inboundRules, outboundRules)
+	}
+
+	return mock.wrap.Firewalls().RemoveRules(ctx, id, inboundRules, outboundRules)
 }
