@@ -35,6 +35,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"update", svc.update},
 		{"add_tags", svc.addTags},
 		{"remove_tags", svc.removeTags},
+		{"add_droplets", svc.addDroplets},
+		{"remove_droplets", svc.removeDroplets},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -144,6 +146,34 @@ func (svc *firewallsSvc) removeTags(all otto.FunctionCall) otto.Value {
 	tags := godojs.ArgTags(vm, all.Argument(1))
 
 	err := svc.svc.RemoveTags(svc.ctx, fwID, tags...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *firewallsSvc) addDroplets(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	dropletIDs := godojs.ArgDropletIDs(vm, all.Argument(1))
+
+	err := svc.svc.AddDroplets(svc.ctx, fwID, dropletIDs...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *firewallsSvc) removeDroplets(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	dropletIDs := godojs.ArgDropletIDs(vm, all.Argument(1))
+
+	err := svc.svc.RemoveDroplets(svc.ctx, fwID, dropletIDs...)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

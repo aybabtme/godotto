@@ -26,9 +26,9 @@ func TestFirewallApply(t *testing.T) {
 	assert(pkg.update != null, "update function should be defined");
 	assert(pkg.add_tags != null, "add_tags function should be defined");
 	assert(pkg.remove_tags != null, "remove_tags function should be defined");
-	/*assert(pkg.add_droplets != null, "add_droplets function should be defined");
+	assert(pkg.add_droplets != null, "add_droplets function should be defined");
 	assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
-	assert(pkg.add_rules != null, "add_rules function should be defined");
+	/*assert(pkg.add_rules != null, "add_rules function should be defined");
 	assert(pkg.remove_rules != null, "remove_rules function should be defined");*/
 	`)
 }
@@ -66,6 +66,14 @@ func TestFirewallThrows(t *testing.T) {
 	}
 
 	cloud.MockFirewalls.RemoveTagsFn = func(_ context.Context, _ string, _ ...string) error {
+		return errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.AddDropletsFn = func(_ context.Context, _ string, _ ...int) error {
+		return errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.RemoveDropletsFn = func(_ context.Context, _ string, _ ...int) error {
 		return errors.New("throw me")
 	}
 
@@ -136,6 +144,8 @@ func TestFirewallThrows(t *testing.T) {
 	{name: "update", fn: function() { pkg.update(fw.id, fw) }},
 	{name: "add_tags", fn: function() { pkg.add_tags(fw.id, ["test"]) }},
 	{name: "remove_tags", fn: function() { pkg.remove_tags(fw.id, ["test"]) }},
+	{name: "add_droplets", fn: function() { pkg.add_droplets(fw.id, [42]) }},
+	{name: "remove_droplets", fn: function() { pkg.remove_droplets(fw.id, [42]) }},
 	].forEach(function(kv) {
 		var name = kv.name;
 		var fn = kv.fn;
@@ -611,5 +621,53 @@ func TestFirewallRemoveTags(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.firewalls;
 pkg.remove_tags("test-uuid", ["test"]);
+`)
+}
+
+func TestFirewallAddDroplets(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockFirewalls.AddDropletsFn = func(_ context.Context, gotId string, dids ...int) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantDropletID := 42
+		gotDropletID := dids[0]
+
+		if wantDropletID != gotDropletID {
+			t.Fatalf("want %v got %v", wantDropletID, gotDropletID)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+pkg.add_droplets("test-uuid", [42]);
+`)
+}
+
+func TestFirewallRemoveDroplets(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockFirewalls.RemoveDropletsFn = func(_ context.Context, gotId string, dids ...int) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantDropletID := 42
+		gotDropletID := dids[0]
+
+		if wantDropletID != gotDropletID {
+			t.Fatalf("want %v got %v", wantDropletID, gotDropletID)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+pkg.remove_droplets("test-uuid", [42]);
 `)
 }

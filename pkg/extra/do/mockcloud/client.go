@@ -892,14 +892,16 @@ func (mock *MockSnapshots) ListVolume(ctx context.Context) (<-chan snapshots.Sna
 // Firewalls
 
 type MockFirewalls struct {
-	wrap         cloud.Client
-	CreateFn     func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
-	GetFn        func(ctx context.Context, id string) (firewalls.Firewall, error)
-	DeleteFn     func(ctx context.Context, id string) error
-	ListFn       func(ctx context.Context) (<-chan firewalls.Firewall, <-chan error)
-	UpdateFn     func(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error)
-	AddTagsFn    func(ctx context.Context, id string, tags ...string) error
-	RemoveTagsFn func(ctx context.Context, id string, tags ...string) error
+	wrap             cloud.Client
+	CreateFn         func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
+	GetFn            func(ctx context.Context, id string) (firewalls.Firewall, error)
+	DeleteFn         func(ctx context.Context, id string) error
+	ListFn           func(ctx context.Context) (<-chan firewalls.Firewall, <-chan error)
+	UpdateFn         func(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error)
+	AddTagsFn        func(ctx context.Context, id string, tags ...string) error
+	RemoveTagsFn     func(ctx context.Context, id string, tags ...string) error
+	AddDropletsFn    func(ctx context.Context, id string, dids ...int) error
+	RemoveDropletsFn func(ctx context.Context, id string, dids ...int) error
 }
 
 func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
@@ -957,4 +959,20 @@ func (mock *MockFirewalls) RemoveTags(ctx context.Context, id string, tags ...st
 	}
 
 	return mock.wrap.Firewalls().RemoveTags(ctx, id, tags...)
+}
+
+func (mock *MockFirewalls) AddDroplets(ctx context.Context, id string, dids ...int) error {
+	if mock.AddDropletsFn != nil {
+		return mock.AddDropletsFn(ctx, id, dids...)
+	}
+
+	return mock.wrap.Firewalls().AddDroplets(ctx, id, dids...)
+}
+
+func (mock *MockFirewalls) RemoveDroplets(ctx context.Context, id string, dids ...int) error {
+	if mock.RemoveDropletsFn != nil {
+		return mock.RemoveDropletsFn(ctx, id, dids...)
+	}
+
+	return mock.wrap.Firewalls().RemoveDroplets(ctx, id, dids...)
 }

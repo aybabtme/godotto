@@ -15,6 +15,8 @@ type Client interface {
 	Update(ctx context.Context, id string, opts ...UpdateOpt) (Firewall, error)
 	AddTags(ctx context.Context, id string, tags ...string) error
 	RemoveTags(ctx context.Context, id string, tags ...string) error
+	AddDroplets(ctx context.Context, id string, dropletIDs ...int) error
+	RemoveDroplets(ctx context.Context, id string, dropletIDs ...int) error
 }
 
 type Firewall interface {
@@ -157,6 +159,24 @@ func (svc *client) AddTags(ctx context.Context, fwID string, tags ...string) err
 
 func (svc *client) RemoveTags(ctx context.Context, fwID string, tags ...string) error {
 	_, err := svc.g.Firewalls.RemoveTags(ctx, fwID, tags...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) AddDroplets(ctx context.Context, fwID string, dids ...int) error {
+	_, err := svc.g.Firewalls.AddDroplets(ctx, fwID, dids...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) RemoveDroplets(ctx context.Context, fwID string, dids ...int) error {
+	_, err := svc.g.Firewalls.RemoveDroplets(ctx, fwID, dids...)
 	if err != nil {
 		return err
 	}
