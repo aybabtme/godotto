@@ -131,11 +131,11 @@ func TestFirewallThrows(t *testing.T) {
 	[
 	{name: "create", fn: function() { pkg.create(fw) }},
 	{name: "get", fn: function() { pkg.get(fw.id) }},
-    {name: "list", fn: function() { pkg.list() }},
-    {name: "delete", fn: function() { pkg.delete(fw.id) }},
-    {name: "update", fn: function() { pkg.update(fw.id, fw) }},
-    {name: "add_tags", fn: function() { pkg.add_tags(fw.id, ["test"]) }},
-    {name: "remove_tags", fn: function() { pkg.remove_tags(fw.id, ["test"]) }},
+	{name: "list", fn: function() { pkg.list() }},
+	{name: "delete", fn: function() { pkg.delete(fw.id) }},
+	{name: "update", fn: function() { pkg.update(fw.id, fw) }},
+	{name: "add_tags", fn: function() { pkg.add_tags(fw.id, ["test"]) }},
+	{name: "remove_tags", fn: function() { pkg.remove_tags(fw.id, ["test"]) }},
 	].forEach(function(kv) {
 		var name = kv.name;
 		var fn = kv.fn;
@@ -491,6 +491,77 @@ var want = {
 	};
 
 var f = pkg.update("test-uuid", want);
+equals(f, want, "should have proper object");
+`)
+}
+
+func TestFirewallGet(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+
+	cloud.MockFirewalls.GetFn = func(_ context.Context, id string) (firewalls.Firewall, error) {
+		return &firewall{f}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+var want = {
+		"id": "test-uuid",
+		"name": "test-sg",
+		"inbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"sources": {
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"sources": {
+				"addresses": [
+				"0.0.0.0/0"
+				]
+			}
+		}
+		],
+		"outbound_rules": [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"destinations": {
+				"tags": [
+				"haproxy"
+				],
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"destinations": {
+				"addresses": [
+				"::/1"
+				],
+			}
+		}
+		],
+		"created_at": "",
+		"droplet_ids": [
+		123456
+		],
+		"tags": [
+		"haproxy"
+		],
+		"status": "",
+};
+
+var f = pkg.get('test-uuid');
+
 equals(f, want, "should have proper object");
 `)
 }
