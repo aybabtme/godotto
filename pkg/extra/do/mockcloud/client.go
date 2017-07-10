@@ -892,12 +892,14 @@ func (mock *MockSnapshots) ListVolume(ctx context.Context) (<-chan snapshots.Sna
 // Firewalls
 
 type MockFirewalls struct {
-	wrap     cloud.Client
-	CreateFn func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
-	GetFn    func(ctx context.Context, id string) (firewalls.Firewall, error)
-	DeleteFn func(ctx context.Context, id string) error
-	ListFn   func(ctx context.Context) (<-chan firewalls.Firewall, <-chan error)
-	UpdateFn func(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error)
+	wrap         cloud.Client
+	CreateFn     func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
+	GetFn        func(ctx context.Context, id string) (firewalls.Firewall, error)
+	DeleteFn     func(ctx context.Context, id string) error
+	ListFn       func(ctx context.Context) (<-chan firewalls.Firewall, <-chan error)
+	UpdateFn     func(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error)
+	AddTagsFn    func(ctx context.Context, id string, tags ...string) error
+	RemoveTagsFn func(ctx context.Context, id string, tags ...string) error
 }
 
 func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
@@ -939,4 +941,20 @@ func (mock *MockFirewalls) Update(ctx context.Context, id string, opts ...firewa
 	}
 
 	return mock.wrap.Firewalls().Update(ctx, id, opts...)
+}
+
+func (mock *MockFirewalls) AddTags(ctx context.Context, id string, tags ...string) error {
+	if mock.AddTagsFn != nil {
+		return mock.AddTagsFn(ctx, id, tags...)
+	}
+
+	return mock.wrap.Firewalls().AddTags(ctx, id, tags...)
+}
+
+func (mock *MockFirewalls) RemoveTags(ctx context.Context, id string, tags ...string) error {
+	if mock.RemoveTagsFn != nil {
+		return mock.RemoveTagsFn(ctx, id, tags...)
+	}
+
+	return mock.wrap.Firewalls().RemoveTags(ctx, id, tags...)
 }

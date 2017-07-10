@@ -216,6 +216,16 @@ func ArgLoadBalancerUpdate(vm *otto.Otto, v otto.Value) *godo.LoadBalancerReques
 	}
 }
 
+func ArgTags(vm *otto.Otto, v otto.Value) []string {
+	tags := make([]string, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		tag := ottoutil.String(vm, v)
+		tags = append(tags, tag)
+	})
+
+	return tags
+}
+
 func ArgDropletIDs(vm *otto.Otto, v otto.Value) []int {
 	ids := make([]int, 0)
 	ottoutil.LoadArray(vm, v, func(v otto.Value) {

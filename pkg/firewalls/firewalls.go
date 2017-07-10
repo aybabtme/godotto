@@ -33,6 +33,8 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"delete", svc.delete},
 		{"list", svc.list},
 		{"update", svc.update},
+		{"add_tags", svc.addTags},
+		{"remove_tags", svc.removeTags},
 	} {
 
 		if err := root.Set(applier.Name, applier.Method); err != nil {
@@ -119,4 +121,32 @@ func (svc *firewallsSvc) update(all otto.FunctionCall) otto.Value {
 	}
 
 	return godojs.FirewallToVM(vm, f.Struct())
+}
+
+func (svc *firewallsSvc) addTags(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	tags := godojs.ArgTags(vm, all.Argument(1))
+
+	err := svc.svc.AddTags(svc.ctx, fwID, tags...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
+}
+
+func (svc *firewallsSvc) removeTags(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	fwID := godojs.ArgFirewallID(vm, all.Argument(0))
+	tags := godojs.ArgTags(vm, all.Argument(1))
+
+	err := svc.svc.RemoveTags(svc.ctx, fwID, tags...)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return q
 }

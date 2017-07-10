@@ -13,6 +13,8 @@ type Client interface {
 	Get(ctx context.Context, id string) (Firewall, error)
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, id string, opts ...UpdateOpt) (Firewall, error)
+	AddTags(ctx context.Context, id string, tags ...string) error
+	RemoveTags(ctx context.Context, id string, tags ...string) error
 }
 
 type Firewall interface {
@@ -142,6 +144,24 @@ func (svc *client) Update(ctx context.Context, id string, opts ...UpdateOpt) (Fi
 	}
 
 	return &firewall{g: svc.g, f: f}, nil
+}
+
+func (svc *client) AddTags(ctx context.Context, fwID string, tags ...string) error {
+	_, err := svc.g.Firewalls.AddTags(ctx, fwID, tags...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *client) RemoveTags(ctx context.Context, fwID string, tags ...string) error {
+	_, err := svc.g.Firewalls.RemoveTags(ctx, fwID, tags...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type firewall struct {

@@ -24,9 +24,9 @@ func TestFirewallApply(t *testing.T) {
 	assert(pkg.delete != null, "delete function should be defined");
 	assert(pkg.list != null, "list function should be defined");
 	assert(pkg.update != null, "update function should be defined");
-	/*assert(pkg.add_tags != null, "add_tags function should be defined");
+	assert(pkg.add_tags != null, "add_tags function should be defined");
 	assert(pkg.remove_tags != null, "remove_tags function should be defined");
-	assert(pkg.add_droplets != null, "add_droplets function should be defined");
+	/*assert(pkg.add_droplets != null, "add_droplets function should be defined");
 	assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
 	assert(pkg.add_rules != null, "add_rules function should be defined");
 	assert(pkg.remove_rules != null, "remove_rules function should be defined");*/
@@ -59,6 +59,14 @@ func TestFirewallThrows(t *testing.T) {
 
 	cloud.MockFirewalls.UpdateFn = func(_ context.Context, _ string, _ ...firewalls.UpdateOpt) (firewalls.Firewall, error) {
 		return nil, errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.AddTagsFn = func(_ context.Context, _ string, _ ...string) error {
+		return errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.RemoveTagsFn = func(_ context.Context, _ string, _ ...string) error {
+		return errors.New("throw me")
 	}
 
 	vmtest.Run(t, cloud, `
@@ -125,7 +133,9 @@ func TestFirewallThrows(t *testing.T) {
 	{name: "get", fn: function() { pkg.get(fw.id) }},
     {name: "list", fn: function() { pkg.list() }},
     {name: "delete", fn: function() { pkg.delete(fw.id) }},
-    {name: "update", fn: function() { pkg.update(fw.id, fw) }}
+    {name: "update", fn: function() { pkg.update(fw.id, fw) }},
+    {name: "add_tags", fn: function() { pkg.add_tags(fw.id, ["test"]) }},
+    {name: "remove_tags", fn: function() { pkg.remove_tags(fw.id, ["test"]) }},
 	].forEach(function(kv) {
 		var name = kv.name;
 		var fn = kv.fn;
@@ -483,5 +493,4 @@ var want = {
 var f = pkg.update("test-uuid", want);
 equals(f, want, "should have proper object");
 `)
-
 }
