@@ -565,3 +565,51 @@ var f = pkg.get('test-uuid');
 equals(f, want, "should have proper object");
 `)
 }
+
+func TestFirewallAddTags(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockFirewalls.AddTagsFn = func(_ context.Context, gotId string, tags ...string) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantTag := "test"
+		gotTag := tags[0]
+
+		if wantTag != gotTag {
+			t.Fatalf("want %v got %v", wantTag, gotTag)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+pkg.add_tags("test-uuid", ["test"]);
+`)
+}
+
+func TestFirewallRemoveTags(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockFirewalls.RemoveTagsFn = func(_ context.Context, gotId string, tags ...string) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantTag := "test"
+		gotTag := tags[0]
+
+		if wantTag != gotTag {
+			t.Fatalf("want %v got %v", wantTag, gotTag)
+		}
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+pkg.remove_tags("test-uuid", ["test"]);
+`)
+}
