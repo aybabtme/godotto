@@ -9,6 +9,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/firewalls"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
+	"github.com/stretchr/testify/assert"
 )
 
 var testFw *godo.Firewall = &godo.Firewall{}
@@ -28,8 +29,8 @@ func TestFirewallApply(t *testing.T) {
 	assert(pkg.remove_tags != null, "remove_tags function should be defined");
 	assert(pkg.add_droplets != null, "add_droplets function should be defined");
 	assert(pkg.remove_droplets != null, "remove_droplets function should be defined");
-	/*assert(pkg.add_rules != null, "add_rules function should be defined");
-	assert(pkg.remove_rules != null, "remove_rules function should be defined");*/
+	assert(pkg.add_rules != null, "add_rules function should be defined");
+	assert(pkg.remove_rules != null, "remove_rules function should be defined");
 	`)
 }
 
@@ -75,6 +76,16 @@ func TestFirewallThrows(t *testing.T) {
 
 	cloud.MockFirewalls.RemoveDropletsFn = func(_ context.Context, _ string, _ ...int) error {
 		return errors.New("throw me")
+	}
+
+	cloud.MockFirewalls.AddRulesFn = func(_ context.Context, _ string, _ []godo.InboundRule, _ []godo.OutboundRule) error {
+		return errors.New("throw me")
+
+	}
+
+	cloud.MockFirewalls.RemoveRulesFn = func(_ context.Context, _ string, _ []godo.InboundRule, _ []godo.OutboundRule) error {
+		return errors.New("throw me")
+
 	}
 
 	vmtest.Run(t, cloud, `
@@ -146,6 +157,8 @@ func TestFirewallThrows(t *testing.T) {
 	{name: "remove_tags", fn: function() { pkg.remove_tags(fw.id, ["test"]) }},
 	{name: "add_droplets", fn: function() { pkg.add_droplets(fw.id, [42]) }},
 	{name: "remove_droplets", fn: function() { pkg.remove_droplets(fw.id, [42]) }},
+	{name: "add_rules", fn: function() { pkg.add_rules(fw.id, [], []) }},
+	{name: "remove_rules", fn: function() { pkg.remove_rules(fw.id, [], []) }},
 	].forEach(function(kv) {
 		var name = kv.name;
 		var fn = kv.fn;
@@ -165,44 +178,59 @@ type firewall struct {
 func (k *firewall) Struct() *godo.Firewall { return k.Firewall }
 
 var (
+	fwInboundRules = []godo.InboundRule{
+		{
+			Protocol:  "icmp",
+			PortRange: "0",
+			Sources: &godo.Sources{
+				LoadBalancerUIDs: []string{"test-lb-uuid"},
+				Tags:             []string{"haproxy"},
+				Addresses:        []string(nil),
+				DropletIDs:       []int{},
+			},
+		},
+		{
+			Protocol:  "tcp",
+			PortRange: "8000-9000",
+			Sources: &godo.Sources{
+				Addresses:        []string{"0.0.0.0/0"},
+				Tags:             []string{},
+				DropletIDs:       []int{},
+				LoadBalancerUIDs: []string{},
+			},
+		},
+	}
+
+	fwOutboundRules = []godo.OutboundRule{
+		{
+			Protocol:  "icmp",
+			PortRange: "0",
+			Destinations: &godo.Destinations{
+				Tags:             []string{"haproxy"},
+				Addresses:        []string(nil),
+				DropletIDs:       []int{},
+				LoadBalancerUIDs: []string{},
+			},
+		},
+		{
+			Protocol:  "tcp",
+			PortRange: "8000-9000",
+			Destinations: &godo.Destinations{
+				Addresses:        []string{"::/1"},
+				DropletIDs:       []int{},
+				LoadBalancerUIDs: []string{},
+				Tags:             []string{},
+			},
+		},
+	}
+
 	f = &godo.Firewall{
-		ID:   "test-uuid",
-		Name: "test-sg",
-		InboundRules: []godo.InboundRule{
-			{
-				Protocol:  "icmp",
-				PortRange: "0",
-				Sources: &godo.Sources{
-					LoadBalancerUIDs: []string{"test-lb-uuid"},
-					Tags:             []string{"haproxy"},
-				},
-			},
-			{
-				Protocol:  "tcp",
-				PortRange: "8000-9000",
-				Sources: &godo.Sources{
-					Addresses: []string{"0.0.0.0/0"},
-				},
-			},
-		},
-		OutboundRules: []godo.OutboundRule{
-			{
-				Protocol:  "icmp",
-				PortRange: "0",
-				Destinations: &godo.Destinations{
-					Tags: []string{"haproxy"},
-				},
-			},
-			{
-				Protocol:  "tcp",
-				PortRange: "8000-9000",
-				Destinations: &godo.Destinations{
-					Addresses: []string{"::/1"},
-				},
-			},
-		},
-		DropletIDs: []int{123456},
-		Tags:       []string{"haproxy"},
+		ID:            "test-uuid",
+		Name:          "test-sg",
+		InboundRules:  fwInboundRules,
+		OutboundRules: fwOutboundRules,
+		DropletIDs:    []int{123456},
+		Tags:          []string{"haproxy"},
 	}
 )
 
@@ -669,5 +697,147 @@ func TestFirewallRemoveDroplets(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.firewalls;
 pkg.remove_droplets("test-uuid", [42]);
+`)
+}
+
+func TestFirewallAddRules(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockFirewalls.AddRulesFn = func(_ context.Context, gotId string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantInboundRule := fwInboundRules[0]
+		gotInboundRule := inboundRules[0]
+		assert.Equal(t, wantInboundRule, gotInboundRule, "inbound rules should match")
+
+		wantOutboundRule := fwOutboundRules[0]
+		gotOutboundRule := outboundRules[0]
+		assert.Equal(t, wantOutboundRule, gotOutboundRule, "outbound rules should match")
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+
+var inbound_rules = [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"sources": {
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
+				"haproxy"
+				]
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"sources": {
+				"addresses": [
+				"0.0.0.0/0"
+				]
+			}
+		}
+	];
+
+var outbound_rules = [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"destinations": {
+				"tags": [
+				"haproxy"
+				]
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"destinations": {
+				"addresses": [
+				"::/1"
+				]
+			}
+		}
+	];
+
+pkg.add_rules("test-uuid", inbound_rules, outbound_rules);
+`)
+}
+
+func TestFirewallRemoveRules(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	wantId := "test-uuid"
+	cloud.MockFirewalls.RemoveRulesFn = func(_ context.Context, gotId string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+		if gotId != wantId {
+			t.Fatalf("want %v got %v", wantId, gotId)
+		}
+
+		wantInboundRule := fwInboundRules[0]
+		gotInboundRule := inboundRules[0]
+		assert.Equal(t, wantInboundRule, gotInboundRule, "inbound rules should match")
+
+		wantOutboundRule := fwOutboundRules[0]
+		gotOutboundRule := outboundRules[0]
+		assert.Equal(t, wantOutboundRule, gotOutboundRule, "outbound rules should match")
+
+		return nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.firewalls;
+
+var inbound_rules = [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"sources": {
+				"load_balancer_uids": [
+				"test-lb-uuid"
+				],
+				"tags": [
+				"haproxy"
+				]
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"sources": {
+				"addresses": [
+				"0.0.0.0/0"
+				]
+			}
+		}
+	];
+
+var outbound_rules = [
+		{
+			"protocol": "icmp",
+			"ports": "0",
+			"destinations": {
+				"tags": [
+				"haproxy"
+				]
+			}
+		},
+		{
+			"protocol": "tcp",
+			"ports": "8000-9000",
+			"destinations": {
+				"addresses": [
+				"::/1"
+				]
+			}
+		}
+	];
+
+pkg.remove_rules("test-uuid", inbound_rules, outbound_rules);
 `)
 }
