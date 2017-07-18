@@ -5,6 +5,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/firewalls"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
@@ -46,6 +47,7 @@ type Client interface {
 	Tags() tags.Client
 	LoadBalancers() loadbalancers.Client
 	Snapshots() snapshots.Client
+	Firewalls() firewalls.Client
 }
 
 // New creates a Client to the DigitalOcean cloud. Options are applied in order,
@@ -76,6 +78,7 @@ func New(opts ...ClientOpt) Client {
 		tags:          tags.New(opt.g),
 		loadbalancers: loadbalancers.New(opt.g),
 		snapshots:     snapshots.New(opt.g),
+		firewalls:     firewalls.New(opt.g),
 	}
 
 	return c
@@ -97,6 +100,7 @@ type client struct {
 	tags          tags.Client
 	loadbalancers loadbalancers.Client
 	snapshots     snapshots.Client
+	firewalls     firewalls.Client
 }
 
 func (svc *client) Droplets() droplets.Client           { return svc.droplets }
@@ -112,3 +116,4 @@ func (svc *client) Volumes() volumes.Client             { return svc.volumes }
 func (svc *client) Tags() tags.Client                   { return svc.tags }
 func (svc *client) LoadBalancers() loadbalancers.Client { return svc.loadbalancers }
 func (svc *client) Snapshots() snapshots.Client         { return svc.snapshots }
+func (svc *client) Firewalls() firewalls.Client         { return svc.firewalls }

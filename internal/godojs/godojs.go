@@ -2,6 +2,7 @@ package godojs
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aybabtme/godotto/internal/ottoutil"
@@ -161,6 +162,30 @@ func ArgTagUntagResourcesRequest(vm *otto.Otto, v otto.Value) *godo.UntagResourc
 	return req
 }
 
+func ArgFirewallCreate(vm *otto.Otto, v otto.Value) *godo.FirewallRequest {
+	req := &godo.FirewallRequest{
+		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+		InboundRules:  ArgInboundRules(vm, ottoutil.GetObject(vm, v, "inbound_rules", true)),
+		OutboundRules: ArgOutboundRules(vm, ottoutil.GetObject(vm, v, "outbound_rules", true)),
+		DropletIDs:    ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		Tags:          ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+	}
+
+	return req
+}
+
+func ArgFirewallUpdate(vm *otto.Otto, v otto.Value) *godo.FirewallRequest {
+	req := &godo.FirewallRequest{
+		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+		InboundRules:  ArgInboundRules(vm, ottoutil.GetObject(vm, v, "inbound_rules", true)),
+		OutboundRules: ArgOutboundRules(vm, ottoutil.GetObject(vm, v, "outbound_rules", true)),
+		DropletIDs:    ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		Tags:          ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+	}
+
+	return req
+}
+
 func ArgLoadBalancerCreateRequest(vm *otto.Otto, v otto.Value) *godo.LoadBalancerRequest {
 	req := &godo.LoadBalancerRequest{
 		Name:                ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
@@ -183,12 +208,22 @@ func ArgLoadBalancerUpdate(vm *otto.Otto, v otto.Value) *godo.LoadBalancerReques
 		Algorithm:           ottoutil.String(vm, ottoutil.GetObject(vm, v, "algorithm", false)),
 		Region:              ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
 		DropletIDs:          ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
-		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", true)),
+		HealthCheck:         ArgHealthCheck(vm, ottoutil.GetObject(vm, v, "health_check", false)),
 		StickySessions:      ArgStickySessions(vm, ottoutil.GetObject(vm, v, "sticky_sessions", false)),
 		ForwardingRules:     ArgForwardingRules(vm, ottoutil.GetObject(vm, v, "forwarding_rules", true)),
 		Tag:                 ottoutil.String(vm, ottoutil.GetObject(vm, v, "tag", false)),
 		RedirectHttpToHttps: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "redirect_http_to_https", false)),
 	}
+}
+
+func ArgTags(vm *otto.Otto, v otto.Value) []string {
+	tags := make([]string, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		tag := ottoutil.String(vm, v)
+		tags = append(tags, tag)
+	})
+
+	return tags
 }
 
 func ArgDropletIDs(vm *otto.Otto, v otto.Value) []int {
@@ -199,6 +234,124 @@ func ArgDropletIDs(vm *otto.Otto, v otto.Value) []int {
 	})
 
 	return ids
+}
+
+func ArgInboundRules(vm *otto.Otto, v otto.Value) []godo.InboundRule {
+	var rules = make([]godo.InboundRule, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		rule := ArgInboundRule(vm, v)
+		rules = append(rules, godo.InboundRule{
+			Protocol:  rule.Protocol,
+			PortRange: rule.PortRange,
+			Sources:   rule.Sources,
+		})
+	})
+
+	return rules
+}
+
+func ArgInboundRule(vm *otto.Otto, v otto.Value) *godo.InboundRule {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be an InboundRule, got a %q", v.Class())
+	}
+
+	protocol := ottoutil.String(vm, ottoutil.GetObject(vm, v, "protocol", true))
+	portsRequired := true
+
+	// If the protocol is ICMP, the ports shouldn't be a required field.
+	// Otherwise, it is.
+	if strings.ToLower(protocol) == "icmp" {
+		portsRequired = false
+	}
+	return &godo.InboundRule{
+		Protocol:  protocol,
+		PortRange: ottoutil.String(vm, ottoutil.GetObject(vm, v, "ports", portsRequired)),
+		Sources:   ArgSources(vm, ottoutil.GetObject(vm, v, "sources", true)),
+	}
+}
+
+func ArgSources(vm *otto.Otto, v otto.Value) *godo.Sources {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a Sources, got a %q", v.Class())
+	}
+
+	return &godo.Sources{
+		Addresses:        ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "addresses", false)),
+		Tags:             ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+		DropletIDs:       ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		LoadBalancerUIDs: ArgLoadBalancerUIDs(vm, ottoutil.GetObject(vm, v, "load_balancer_uids", false)),
+	}
+}
+
+func ArgLoadBalancerUIDs(vm *otto.Otto, v otto.Value) []string {
+	ids := make([]string, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		lbID := ArgLoadBalancerID(vm, v)
+		ids = append(ids, lbID)
+	})
+
+	return ids
+}
+
+func ArgOutboundRules(vm *otto.Otto, v otto.Value) []godo.OutboundRule {
+	var rules = make([]godo.OutboundRule, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		rule := ArgOutboundRule(vm, v)
+		rules = append(rules, godo.OutboundRule{
+			Protocol:     rule.Protocol,
+			PortRange:    rule.PortRange,
+			Destinations: rule.Destinations,
+		})
+	})
+
+	return rules
+}
+
+func ArgOutboundRule(vm *otto.Otto, v otto.Value) *godo.OutboundRule {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be an OutboundRule, got a %q", v.Class())
+	}
+
+	protocol := ottoutil.String(vm, ottoutil.GetObject(vm, v, "protocol", true))
+	portsRequired := true
+
+	// If the protocol is ICMP, the ports shouldn't be a required field.
+	// Otherwise, it is.
+	if strings.ToLower(protocol) == "icmp" {
+		portsRequired = false
+	}
+	return &godo.OutboundRule{
+		Protocol:     protocol,
+		PortRange:    ottoutil.String(vm, ottoutil.GetObject(vm, v, "ports", portsRequired)),
+		Destinations: ArgDestinations(vm, ottoutil.GetObject(vm, v, "destinations", true)),
+	}
+}
+
+func ArgDestinations(vm *otto.Otto, v otto.Value) *godo.Destinations {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a Destinations, got a %q", v.Class())
+	}
+
+	return &godo.Destinations{
+		Addresses:        ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "addresses", false)),
+		Tags:             ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+		DropletIDs:       ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		LoadBalancerUIDs: ArgLoadBalancerUIDs(vm, ottoutil.GetObject(vm, v, "load_balancer_uids", false)),
+	}
 }
 
 func ArgForwardingRules(vm *otto.Otto, v otto.Value) []godo.ForwardingRule {
@@ -254,6 +407,70 @@ func ArgLoadBalancerID(vm *otto.Otto, v otto.Value) string {
 	}
 
 	return lbID
+}
+
+func ArgFirewallID(vm *otto.Otto, v otto.Value) string {
+	var fwID string
+	switch {
+	case v.IsString():
+		fwID = ottoutil.String(vm, v)
+	case v.IsObject():
+		fwID = ArgFirewall(vm, v).ID
+	default:
+		ottoutil.Throw(vm, "argument must be a Firewall or FirewallID")
+	}
+
+	return fwID
+}
+
+func ArgFirewall(vm *otto.Otto, v otto.Value) *godo.Firewall {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a Firewall, got a %q", v.Class())
+	}
+
+	return &godo.Firewall{
+		ID:             ottoutil.String(vm, ottoutil.GetObject(vm, v, "id", false)),
+		Name:           ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", false)),
+		Status:         ottoutil.String(vm, ottoutil.GetObject(vm, v, "status", false)),
+		PendingChanges: ArgPendingChanges(vm, ottoutil.GetObject(vm, v, "pending_changes", false)),
+		InboundRules:   ArgInboundRules(vm, ottoutil.GetObject(vm, v, "inbound_rules", false)),
+		OutboundRules:  ArgOutboundRules(vm, ottoutil.GetObject(vm, v, "outbound_rules", false)),
+		DropletIDs:     ArgDropletIDs(vm, ottoutil.GetObject(vm, v, "droplet_ids", false)),
+		Tags:           ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+	}
+}
+
+func ArgPendingChanges(vm *otto.Otto, v otto.Value) []godo.PendingChange {
+	var changes = make([]godo.PendingChange, 0)
+	ottoutil.LoadArray(vm, v, func(v otto.Value) {
+		change := ArgPendingChange(vm, v)
+		changes = append(changes, godo.PendingChange{
+			DropletID: change.DropletID,
+			Removing:  change.Removing,
+			Status:    change.Status,
+		})
+	})
+
+	return changes
+}
+
+func ArgPendingChange(vm *otto.Otto, v otto.Value) *godo.PendingChange {
+	if !v.IsDefined() || v.IsNull() {
+		return nil
+	}
+
+	if !v.IsObject() {
+		ottoutil.Throw(vm, "argument must be a PendingChange, got a %q", v.Class())
+	}
+
+	return &godo.PendingChange{
+		DropletID: ArgDropletID(vm, ottoutil.GetObject(vm, v, "droplet_id", false)),
+		Removing:  ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "removing", false)),
+		Status:    ottoutil.String(vm, ottoutil.GetObject(vm, v, "status", false)),
+	}
 }
 
 func ArgHealthCheck(vm *otto.Otto, v otto.Value) *godo.HealthCheck {
@@ -904,6 +1121,145 @@ func TagToVM(vm *otto.Otto, g *godo.Tag) otto.Value {
 		"name":      g.Name,
 		"resources": g.Resources,
 	})
+}
+
+func FirewallToVM(vm *otto.Otto, g *godo.Firewall) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	return ottoutil.ToPkg(vm, map[string]interface{}{
+		"id":              g.ID,
+		"name":            g.Name,
+		"status":          g.Status,
+		"inbound_rules":   InboundRulesToVM(vm, g.InboundRules),
+		"outbound_rules":  OutboundRulesToVM(vm, g.OutboundRules),
+		"droplet_ids":     intsToInt64s(g.DropletIDs),
+		"tags":            g.Tags,
+		"created_at":      g.Created,
+		"pending_changes": PendingChangesToVM(vm, g.PendingChanges),
+	})
+}
+
+func PendingChangesToVM(vm *otto.Otto, g []godo.PendingChange) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	changes := make([]map[string]interface{}, 0)
+	for _, change := range g {
+		changes = append(changes, PendingChangeToVM(vm, change))
+	}
+
+	v, err := vm.ToValue(changes)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
+}
+
+func InboundRulesToVM(vm *otto.Otto, g []godo.InboundRule) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	rules := make([]map[string]interface{}, 0)
+	for _, rule := range g {
+		rules = append(rules, InboundRuleToVM(vm, rule))
+	}
+
+	v, err := vm.ToValue(rules)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
+}
+
+func PendingChangeToVM(vm *otto.Otto, g godo.PendingChange) map[string]interface{} {
+	return map[string]interface{}{
+		"droplet_id": g.DropletID,
+		"removing":   g.Removing,
+		"status":     g.Status,
+	}
+}
+
+func InboundRuleToVM(vm *otto.Otto, g godo.InboundRule) map[string]interface{} {
+	return map[string]interface{}{
+		"protocol": g.Protocol,
+		"ports":    g.PortRange,
+		"sources":  SourcesToVM(vm, g.Sources),
+	}
+}
+
+func SourcesToVM(vm *otto.Otto, g *godo.Sources) map[string]interface{} {
+	var sources = make(map[string]interface{})
+	if len(g.Addresses) > 0 {
+		sources["addresses"] = g.Addresses
+	}
+
+	if len(g.Tags) > 0 {
+		sources["tags"] = g.Tags
+	}
+
+	if len(g.DropletIDs) > 0 {
+		sources["droplet_ids"] = intsToInt64s(g.DropletIDs)
+	}
+
+	if len(g.LoadBalancerUIDs) > 0 {
+		sources["load_balancer_uids"] = g.LoadBalancerUIDs
+	}
+
+	return sources
+}
+
+func OutboundRulesToVM(vm *otto.Otto, g []godo.OutboundRule) otto.Value {
+	if g == nil {
+		return otto.NullValue()
+	}
+
+	rules := make([]map[string]interface{}, 0)
+	for _, rule := range g {
+		rules = append(rules, OutboundRuleToVM(vm, rule))
+	}
+
+	v, err := vm.ToValue(rules)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	return v
+}
+
+func OutboundRuleToVM(vm *otto.Otto, g godo.OutboundRule) map[string]interface{} {
+	return map[string]interface{}{
+		"protocol":     g.Protocol,
+		"ports":        g.PortRange,
+		"destinations": DestinationsToVM(vm, g.Destinations),
+	}
+}
+
+func DestinationsToVM(vm *otto.Otto, g *godo.Destinations) map[string]interface{} {
+
+	var destinations = make(map[string]interface{})
+	if len(g.Addresses) > 0 {
+		destinations["addresses"] = g.Addresses
+	}
+
+	if len(g.Tags) > 0 {
+		destinations["tags"] = g.Tags
+	}
+
+	if len(g.DropletIDs) > 0 {
+		destinations["droplet_ids"] = intsToInt64s(g.DropletIDs)
+	}
+
+	if len(g.LoadBalancerUIDs) > 0 {
+		destinations["load_balancer_uids"] = g.LoadBalancerUIDs
+	}
+
+	return destinations
 }
 
 func LoadBalancerToVM(vm *otto.Otto, g *godo.LoadBalancer) otto.Value {

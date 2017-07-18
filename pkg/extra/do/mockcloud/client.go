@@ -19,6 +19,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/actions"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/firewalls"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/images"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
@@ -48,6 +49,7 @@ type Mock struct {
 	MockTags          *MockTags
 	MockLoadBalancers *MockLoadBalancers
 	MockSnapshots     *MockSnapshots
+	MockFirewalls     *MockFirewalls
 }
 
 func Client(client cloud.Client) *Mock {
@@ -65,6 +67,7 @@ func Client(client cloud.Client) *Mock {
 		MockTags:          &MockTags{wrap: client},
 		MockLoadBalancers: &MockLoadBalancers{wrap: client},
 		MockSnapshots:     &MockSnapshots{wrap: client},
+		MockFirewalls:     &MockFirewalls{wrap: client},
 	}
 }
 
@@ -81,6 +84,7 @@ func (mock *Mock) Volumes() volumes.Client             { return mock.MockVolumes
 func (mock *Mock) Tags() tags.Client                   { return mock.MockTags }
 func (mock *Mock) LoadBalancers() loadbalancers.Client { return mock.MockLoadBalancers }
 func (mock *Mock) Snapshots() snapshots.Client         { return mock.MockSnapshots }
+func (mock *Mock) Firewalls() firewalls.Client         { return mock.MockFirewalls }
 
 // Droplets
 
@@ -883,4 +887,110 @@ func (mock *MockSnapshots) ListVolume(ctx context.Context) (<-chan snapshots.Sna
 	}
 
 	return mock.wrap.Snapshots().ListVolume(ctx)
+}
+
+// Firewalls
+
+type MockFirewalls struct {
+	wrap             cloud.Client
+	CreateFn         func(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error)
+	GetFn            func(ctx context.Context, id string) (firewalls.Firewall, error)
+	DeleteFn         func(ctx context.Context, id string) error
+	ListFn           func(ctx context.Context) (<-chan firewalls.Firewall, <-chan error)
+	UpdateFn         func(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error)
+	AddTagsFn        func(ctx context.Context, id string, tags ...string) error
+	RemoveTagsFn     func(ctx context.Context, id string, tags ...string) error
+	AddDropletsFn    func(ctx context.Context, id string, dids ...int) error
+	RemoveDropletsFn func(ctx context.Context, id string, dids ...int) error
+	AddRulesFn       func(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error
+	RemoveRulesFn    func(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error
+}
+
+func (mock *MockFirewalls) Create(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
+	if mock.CreateFn != nil {
+		return mock.CreateFn(ctx, name, inboundRules, outboundRules, opts...)
+
+	}
+
+	return mock.wrap.Firewalls().Create(ctx, name, inboundRules, outboundRules, opts...)
+}
+
+func (mock *MockFirewalls) Get(ctx context.Context, id string) (firewalls.Firewall, error) {
+	if mock.GetFn != nil {
+		return mock.GetFn(ctx, id)
+	}
+
+	return mock.wrap.Firewalls().Get(ctx, id)
+}
+
+func (mock *MockFirewalls) Delete(ctx context.Context, id string) error {
+	if mock.DeleteFn != nil {
+		return mock.DeleteFn(ctx, id)
+	}
+
+	return mock.wrap.Firewalls().Delete(ctx, id)
+}
+
+func (mock *MockFirewalls) List(ctx context.Context) (<-chan firewalls.Firewall, <-chan error) {
+	if mock.ListFn != nil {
+		return mock.ListFn(ctx)
+	}
+
+	return mock.wrap.Firewalls().List(ctx)
+}
+
+func (mock *MockFirewalls) Update(ctx context.Context, id string, opts ...firewalls.UpdateOpt) (firewalls.Firewall, error) {
+	if mock.UpdateFn != nil {
+		return mock.UpdateFn(ctx, id, opts...)
+	}
+
+	return mock.wrap.Firewalls().Update(ctx, id, opts...)
+}
+
+func (mock *MockFirewalls) AddTags(ctx context.Context, id string, tags ...string) error {
+	if mock.AddTagsFn != nil {
+		return mock.AddTagsFn(ctx, id, tags...)
+	}
+
+	return mock.wrap.Firewalls().AddTags(ctx, id, tags...)
+}
+
+func (mock *MockFirewalls) RemoveTags(ctx context.Context, id string, tags ...string) error {
+	if mock.RemoveTagsFn != nil {
+		return mock.RemoveTagsFn(ctx, id, tags...)
+	}
+
+	return mock.wrap.Firewalls().RemoveTags(ctx, id, tags...)
+}
+
+func (mock *MockFirewalls) AddDroplets(ctx context.Context, id string, dids ...int) error {
+	if mock.AddDropletsFn != nil {
+		return mock.AddDropletsFn(ctx, id, dids...)
+	}
+
+	return mock.wrap.Firewalls().AddDroplets(ctx, id, dids...)
+}
+
+func (mock *MockFirewalls) RemoveDroplets(ctx context.Context, id string, dids ...int) error {
+	if mock.RemoveDropletsFn != nil {
+		return mock.RemoveDropletsFn(ctx, id, dids...)
+	}
+
+	return mock.wrap.Firewalls().RemoveDroplets(ctx, id, dids...)
+}
+
+func (mock *MockFirewalls) AddRules(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+	if mock.AddRulesFn != nil {
+		return mock.AddRulesFn(ctx, id, inboundRules, outboundRules)
+	}
+
+	return mock.wrap.Firewalls().AddRules(ctx, id, inboundRules, outboundRules)
+}
+
+func (mock *MockFirewalls) RemoveRules(ctx context.Context, id string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule) error {
+	if mock.RemoveRulesFn != nil {
+		return mock.RemoveRulesFn(ctx, id, inboundRules, outboundRules)
+	}
+
+	return mock.wrap.Firewalls().RemoveRules(ctx, id, inboundRules, outboundRules)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/do/cloud/firewalls"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/floatingips"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/keys"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/loadbalancers"
@@ -109,6 +110,15 @@ func LoadBalancers(fn func(*godo.LoadBalancer)) Spy {
 	}
 }
 
+// Firewalls lets you visit all the firewalls that are still created by the spied upon client.
+func Firewalls(fn func(*godo.Firewall)) Spy {
+	return func(c *client) {
+		for _, v := range c.firewalls {
+			fn(v)
+		}
+	}
+}
+
 // Client wraps a client with a spy, which allows looking at
 // the resources that currently exist in the client.
 func Client(cloud cloud.Client) (cloud.Client, func(...Spy)) {
@@ -135,6 +145,7 @@ type client struct {
 	keys          map[int]*godo.Key
 	tags          map[string]*godo.Tag
 	loadbalancers map[string]*godo.LoadBalancer
+	firewalls     map[string]*godo.Firewall
 }
 
 func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
@@ -151,6 +162,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 		keys:          make(map[int]*godo.Key),
 		tags:          make(map[string]*godo.Tag),
 		loadbalancers: make(map[string]*godo.LoadBalancer),
+		firewalls:     make(map[string]*godo.Firewall),
 	}
 
 	// capture all create/delete actions
@@ -175,6 +187,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	mock.MockLoadBalancers.CreateFn = c.interceptLoadBalancerCreate
 	mock.MockLoadBalancers.DeleteFn = c.interceptLoadBalancerDelete
 	mock.MockSnapshots.DeleteFn = c.interceptSnapshotDelete
+	mock.MockFirewalls.CreateFn = c.interceptFirewallCreate
 	return c, mock
 }
 
@@ -385,6 +398,28 @@ func (client *client) interceptSnapshotDelete(ctx context.Context, sId string) e
 		client.mu.Lock()
 		defer client.mu.Unlock()
 		delete(client.snapshots, sId)
+	}
+
+	return err
+}
+
+func (client *client) interceptFirewallCreate(ctx context.Context, name string, inboundRules []godo.InboundRule, outboundRules []godo.OutboundRule, opts ...firewalls.CreateOpt) (firewalls.Firewall, error) {
+	f, err := client.real.Firewalls().Create(ctx, name, inboundRules, outboundRules, opts...)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		client.firewalls[f.Struct().ID] = f.Struct()
+	}
+
+	return f, err
+}
+
+func (client *client) interceptFirewallDelete(ctx context.Context, id string) error {
+	err := client.real.Firewalls().Delete(ctx, id)
+	if err == nil {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		delete(client.firewalls, id)
 	}
 
 	return err

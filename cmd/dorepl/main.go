@@ -189,5 +189,9 @@ func enumerateLeftover(spy func(...spycloud.Spy)) {
 			once.Do(print)
 			log.Printf("- Snapshot: %q", v.ID)
 		}),
+		spycloud.Firewalls(func(v *godo.Firewall) {
+			once.Do(print)
+			log.Printf("- Firewall: %q", v.Name)
+		}),
 	)
 }
