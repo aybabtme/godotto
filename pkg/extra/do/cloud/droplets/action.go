@@ -3,6 +3,7 @@ package droplets
 import (
 	"context"
 
+	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
 )
 
@@ -37,7 +38,7 @@ func (svc *actionClient) Shutdown(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) PowerOff(ctx context.Context, dropletID int) error {
@@ -45,7 +46,7 @@ func (svc *actionClient) PowerOff(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) PowerOn(ctx context.Context, dropletID int) error {
@@ -53,7 +54,7 @@ func (svc *actionClient) PowerOn(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) PowerCycle(ctx context.Context, dropletID int) error {
@@ -61,7 +62,7 @@ func (svc *actionClient) PowerCycle(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) Reboot(ctx context.Context, dropletID int) error {
@@ -69,7 +70,7 @@ func (svc *actionClient) Reboot(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) Restore(ctx context.Context, dropletID, imageID int) error {
@@ -77,7 +78,7 @@ func (svc *actionClient) Restore(ctx context.Context, dropletID, imageID int) er
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) Resize(ctx context.Context, dropletID int, sizeSlug string, resizeDisk bool) error {
@@ -85,7 +86,7 @@ func (svc *actionClient) Resize(ctx context.Context, dropletID int, sizeSlug str
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) Rename(ctx context.Context, dropletID int, name string) error {
@@ -93,7 +94,7 @@ func (svc *actionClient) Rename(ctx context.Context, dropletID int, name string)
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) Snapshot(ctx context.Context, dropletID int, name string) error {
@@ -101,7 +102,7 @@ func (svc *actionClient) Snapshot(ctx context.Context, dropletID int, name strin
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) EnableBackups(ctx context.Context, dropletID int) error {
@@ -109,7 +110,7 @@ func (svc *actionClient) EnableBackups(ctx context.Context, dropletID int) error
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) DisableBackups(ctx context.Context, dropletID int) error {
@@ -117,7 +118,7 @@ func (svc *actionClient) DisableBackups(ctx context.Context, dropletID int) erro
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) PasswordReset(ctx context.Context, dropletID int) error {
@@ -125,7 +126,7 @@ func (svc *actionClient) PasswordReset(ctx context.Context, dropletID int) error
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) RebuildByImageID(ctx context.Context, dropletID int, imageID int) error {
@@ -133,7 +134,7 @@ func (svc *actionClient) RebuildByImageID(ctx context.Context, dropletID int, im
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) RebuildByImageSlug(ctx context.Context, dropletID int, imageSlug string) error {
@@ -141,7 +142,7 @@ func (svc *actionClient) RebuildByImageSlug(ctx context.Context, dropletID int, 
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) ChangeKernel(ctx context.Context, dropletID int, kernelID int) error {
@@ -149,7 +150,7 @@ func (svc *actionClient) ChangeKernel(ctx context.Context, dropletID int, kernel
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) EnableIPv6(ctx context.Context, dropletID int) error {
@@ -157,7 +158,7 @@ func (svc *actionClient) EnableIPv6(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) EnablePrivateNetworking(ctx context.Context, dropletID int) error {
@@ -165,7 +166,7 @@ func (svc *actionClient) EnablePrivateNetworking(ctx context.Context, dropletID 
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *actionClient) Upgrade(ctx context.Context, dropletID int) error {
@@ -173,5 +174,5 @@ func (svc *actionClient) Upgrade(ctx context.Context, dropletID int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }

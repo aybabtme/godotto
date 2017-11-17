@@ -1,4 +1,4 @@
-package droplets
+package godoutil
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-// waitForActions loops through each actions in godo links and wait until they finish
-func waitForActions(ctx context.Context, cloud *godo.Client, links *godo.Links) error {
+// WaitForActions loops through each actions in godo links and wait until they finish
+func WaitForActions(ctx context.Context, cloud *godo.Client, links *godo.Links) error {
 	if links == nil {
 		return nil
 	}
@@ -25,15 +25,15 @@ func waitForActions(ctx context.Context, cloud *godo.Client, links *godo.Links) 
 		if err != nil {
 			return err
 		}
-		if err := waitForAction(ctx, cloud, action); err != nil {
+		if err := WaitForAction(ctx, cloud, action); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// waitForAction waits for a single action to finish.
-func waitForAction(ctx context.Context, cloud *godo.Client, action *godo.Action) error {
+// WaitForAction waits for a single action to finish.
+func WaitForAction(ctx context.Context, cloud *godo.Client, action *godo.Action) error {
 	if action == nil {
 		return nil
 	}

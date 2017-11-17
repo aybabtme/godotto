@@ -67,7 +67,7 @@ func (svc *client) Create(ctx context.Context, name, region, size, image string,
 		return nil, err
 	}
 
-	return &droplet{g: svc.g, d: d}, waitForActions(ctx, svc.g, resp.Links)
+	return &droplet{g: svc.g, d: d}, godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *client) Get(ctx context.Context, id int) (Droplet, error) {
@@ -83,7 +83,7 @@ func (svc *client) Delete(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-	return waitForActions(ctx, svc.g, resp.Links)
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *client) List(ctx context.Context) (<-chan Droplet, <-chan error) {
