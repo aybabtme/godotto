@@ -3,6 +3,7 @@ package volumes
 import (
 	"context"
 
+	"github.com/aybabtme/godotto/internal/godoutil"
 	"github.com/digitalocean/godo"
 )
 
@@ -17,11 +18,17 @@ type actionClient struct {
 }
 
 func (svc *actionClient) Attach(ctx context.Context, driveID string, dropletID int) error {
-	_, _, err := svc.g.StorageActions.Attach(ctx, driveID, dropletID)
-	return err
+	action, _, err := svc.g.StorageActions.Attach(ctx, driveID, dropletID)
+	if err != nil {
+		return err
+	}
+	return godoutil.WaitForAction(ctx, svc.g, action)
 }
 
 func (svc *actionClient) DetachByDropletID(ctx context.Context, volumeID string, dropletID int) error {
-	_, _, err := svc.g.StorageActions.DetachByDropletID(ctx, volumeID, dropletID)
-	return err
+	action, _, err := svc.g.StorageActions.DetachByDropletID(ctx, volumeID, dropletID)
+	if err != nil {
+		return err
+	}
+	return godoutil.WaitForAction(ctx, svc.g, action)
 }
