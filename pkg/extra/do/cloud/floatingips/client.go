@@ -57,11 +57,11 @@ func (svc *client) Create(ctx context.Context, region string, opts ...CreateOpt)
 	for _, fn := range opts {
 		fn(opt)
 	}
-	d, _, err := svc.g.FloatingIPs.Create(ctx, opt.req)
+	d, resp, err := svc.g.FloatingIPs.Create(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
-	return &floatingIP{g: svc.g, d: d}, nil
+	return &floatingIP{g: svc.g, d: d}, godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *client) Get(ctx context.Context, ip string) (FloatingIP, error) {
@@ -73,8 +73,12 @@ func (svc *client) Get(ctx context.Context, ip string) (FloatingIP, error) {
 }
 
 func (svc *client) Delete(ctx context.Context, ip string) error {
-	_, err := svc.g.FloatingIPs.Delete(ctx, ip)
-	return err
+	resp, err := svc.g.FloatingIPs.Delete(ctx, ip)
+	if err != nil {
+		return err
+	}
+
+	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *client) List(ctx context.Context) (<-chan FloatingIP, <-chan error) {
