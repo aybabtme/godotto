@@ -249,6 +249,68 @@ equals(d, want, "should have proper object");
 `)
 }
 
+func TestDropletCreateMultiple(t *testing.T) {
+	cloud := mockcloud.Client(nil)
+	cloud.MockDroplets.CreateMultipleFn = func(_ context.Context, names []string, region, size, image string, _ ...droplets.CreateMultipleOpt) ([]droplets.Droplet, error) {
+		return []droplets.Droplet{
+			&droplet{d},
+		}, nil
+	}
+
+	vmtest.Run(t, cloud, `
+var pkg = cloud.droplets;
+
+var droplets = pkg.create_multiple({
+	names:         ["my_name"],
+	memory:       20,
+	vcpus:        21,
+	disk:         22,
+	region:       "nyc1",
+	image:        {slug:"coreos-stable"},
+	size:         "4gb",
+	snapshot_ids: [42],
+	backups:      true,
+	ipv6:         true,
+	private_networking: true,
+	user_data:    "lolll",
+	monitoring:   true,
+	tags:         ["test"],
+});
+assert(droplets != null, "should have received a list of created droplets");
+assert(droplets.length > 0, "should have received some elements");
+
+var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true, features: ["all"] };
+var image = { id: 42, name: "derp", type: "herp", distribution: "coreos", slug: "coreos-stable", public: true, regions: ["atlantis"], min_disk_size: 0, };
+var size = { slug: "lol", memory: 1, vcpus: 2, disk: 2, price_monthly: 1.0, price_hourly: 0.1, regions: ["lol"], available: true, transfer: 1.0, };
+
+var want = {
+  backup_ids: [ 43 ],
+  disk: 22,
+  id: 42,
+  image: image,
+  locked: false,
+  memory: 20,
+  name: "my_name",
+  region: region,
+  size: size,
+  snapshot_ids: [ 42 ],
+  status: "loling",
+  vcpus: 21,
+  networks: {"v4":{}, "v6":{}},
+  tags: ["test"],
+  created_at: "",
+  volumes: [""],
+  size_slug: "",
+  public_ipv4: "",
+  public_ipv6: "",
+	private_ipv4: ""
+};
+
+var d = droplets[0];
+equals(d, want, "should have proper object");
+`)
+}
+
 func TestDropletDelete(t *testing.T) {
 	wantID := 42
 	cloud := mockcloud.Client(nil)
