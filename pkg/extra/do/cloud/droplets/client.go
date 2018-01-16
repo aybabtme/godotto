@@ -104,7 +104,7 @@ func (svc *client) CreateMultiple(ctx context.Context, names []string, region, s
 		return nil, err
 	}
 
-	droplets := make([]Droplet, 0)
+	droplets := make([]Droplet, 0, len(r))
 	for _, d := range r {
 		droplets = append(droplets, &droplet{g: svc.g, d: &d})
 	}

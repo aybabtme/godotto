@@ -125,7 +125,7 @@ func (svc *dropletSvc) createMultiple(all otto.FunctionCall) otto.Value {
 		ottoutil.Throw(vm, err.Error())
 	}
 
-	var d = make([]otto.Value, 0)
+	var d = make([]otto.Value, 0, len(droplets))
 	for _, droplet := range droplets {
 		d = append(d, godojs.DropletToVM(vm, droplet.Struct()))
 	}
