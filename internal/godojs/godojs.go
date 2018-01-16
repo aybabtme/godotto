@@ -547,6 +547,31 @@ func ArgResourceType(vm *otto.Otto, v otto.Value) godo.ResourceType {
 	return godo.ResourceType(ottoutil.String(vm, v))
 }
 
+func ArgDropletMultiCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletMultiCreateRequest {
+	image := ArgImage(vm, ottoutil.GetObject(vm, v, "image", true))
+	req := &godo.DropletMultiCreateRequest{
+		Names:             ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "names", true)),
+		Region:            ottoutil.String(vm, ottoutil.GetObject(vm, v, "region", true)),
+		Size:              ottoutil.String(vm, ottoutil.GetObject(vm, v, "size", true)),
+		Image:             godo.DropletCreateImage{ID: image.ID, Slug: image.Slug},
+		Backups:           ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "backups", false)),
+		IPv6:              ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "ipv6", false)),
+		PrivateNetworking: ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "private_networking", false)),
+		UserData:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "user_data", false)),
+		Monitoring:        ottoutil.Bool(vm, ottoutil.GetObject(vm, v, "monitoring", false)),
+		Tags:              ottoutil.StringSlice(vm, ottoutil.GetObject(vm, v, "tags", false)),
+	}
+	sshArgs := ottoutil.GetObject(vm, v, "ssh_keys", false)
+	ottoutil.LoadArray(vm, sshArgs, func(v otto.Value) {
+		key := ArgKey(vm, v)
+		req.SSHKeys = append(req.SSHKeys, godo.DropletCreateSSHKey{
+			ID:          key.ID,
+			Fingerprint: key.Fingerprint,
+		})
+	})
+	return req
+}
+
 func ArgDropletCreateRequest(vm *otto.Otto, v otto.Value) *godo.DropletCreateRequest {
 	image := ArgImage(vm, ottoutil.GetObject(vm, v, "image", true))
 	req := &godo.DropletCreateRequest{

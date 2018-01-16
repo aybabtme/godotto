@@ -91,6 +91,7 @@ func (mock *Mock) Firewalls() firewalls.Client         { return mock.MockFirewal
 type MockDroplets struct {
 	wrap               cloud.Client
 	CreateFn           func(ctx context.Context, name, region, size, image string, opts ...droplets.CreateOpt) (droplets.Droplet, error)
+	CreateMultipleFn   func(ctx context.Context, names []string, region, size, image string, opts ...droplets.CreateMultipleOpt) ([]droplets.Droplet, error)
 	GetFn              func(ctx context.Context, id int) (droplets.Droplet, error)
 	DeleteFn           func(ctx context.Context, id int) error
 	ListFn             func(ctx context.Context) (<-chan droplets.Droplet, <-chan error)
@@ -103,6 +104,14 @@ func (mock *MockDroplets) Create(ctx context.Context, name, region, size, image 
 	}
 	return mock.wrap.Droplets().Create(ctx, name, region, size, image, opts...)
 }
+func (mock *MockDroplets) CreateMultiple(ctx context.Context, names []string, region, size, image string, opts ...droplets.CreateMultipleOpt) ([]droplets.Droplet, error) {
+	if mock.CreateMultipleFn != nil {
+		return mock.CreateMultipleFn(ctx, names, region, size, image, opts...)
+	}
+
+	return mock.wrap.Droplets().CreateMultiple(ctx, names, region, size, image, opts...)
+}
+
 func (mock *MockDroplets) Get(ctx context.Context, id int) (droplets.Droplet, error) {
 	if mock.GetFn != nil {
 		return mock.GetFn(ctx, id)

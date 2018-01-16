@@ -20,6 +20,7 @@ assert(pkg != null, "package should be loaded");
 assert(pkg.list != null, "list function should be defined");
 assert(pkg.get != null, "get function should be defined");
 assert(pkg.create != null, "create function should be defined");
+assert(pkg.create_multiple != null, "create_multiple function should be defined");
 assert(pkg.delete != null, "delete function should be defined");
     `)
 }

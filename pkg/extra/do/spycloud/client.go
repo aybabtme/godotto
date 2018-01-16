@@ -168,6 +168,7 @@ func newClient(cloud cloud.Client) (*client, *mockcloud.Mock) {
 	// capture all create/delete actions
 
 	mock.MockDroplets.CreateFn = c.interceptDropletCreate
+	mock.MockDroplets.CreateMultipleFn = c.interceptDropletCreateMultiple
 	mock.MockDroplets.DeleteFn = c.interceptDropletDelete
 	mock.MockVolumes.CreateVolumeFn = c.interceptVolumeCreate
 	mock.MockVolumes.DeleteVolumeFn = c.interceptVolumeDelete
@@ -199,6 +200,19 @@ func (client *client) interceptDropletCreate(ctx context.Context, name, region, 
 		client.droplets[d.Struct().ID] = d.Struct()
 	}
 	return d, err
+}
+
+func (client *client) interceptDropletCreateMultiple(ctx context.Context, names []string, region, size, image string, opts ...droplets.CreateMultipleOpt) ([]droplets.Droplet, error) {
+	droplets, err := client.real.Droplets().CreateMultiple(ctx, names, region, size, image, opts...)
+	if err == nil {
+		for _, d := range droplets {
+			client.mu.Lock()
+			defer client.mu.Unlock()
+			client.droplets[d.Struct().ID] = d.Struct()
+		}
+	}
+
+	return droplets, err
 }
 
 func (client *client) interceptDropletDelete(ctx context.Context, id int) error {
