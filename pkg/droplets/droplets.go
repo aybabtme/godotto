@@ -37,6 +37,7 @@ func Apply(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.Value,
 		{"list", svc.list},
 		{"get", svc.get},
 		{"create", svc.create},
+		{"create_multiple", svc.createMultiple},
 		{"delete", svc.delete},
 		{"actions", actions},
 	} {
@@ -109,5 +110,30 @@ func (svc *dropletSvc) list(all otto.FunctionCall) otto.Value {
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}
+	return v
+}
+
+func (svc *dropletSvc) createMultiple(all otto.FunctionCall) otto.Value {
+	vm := all.Otto
+
+	arg := all.Argument(0)
+
+	req := godojs.ArgDropletMultiCreateRequest(vm, arg)
+
+	droplets, err := svc.svc.CreateMultiple(svc.ctx, req.Names, req.Region, req.Size, req.Image.Slug, droplets.UseGodoMultiCreate(req))
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
+	var d = make([]otto.Value, 0, len(droplets))
+	for _, droplet := range droplets {
+		d = append(d, godojs.DropletToVM(vm, droplet.Struct()))
+	}
+
+	v, err := vm.ToValue(d)
+	if err != nil {
+		ottoutil.Throw(vm, err.Error())
+	}
+
 	return v
 }

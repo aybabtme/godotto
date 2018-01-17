@@ -10,6 +10,7 @@ import (
 // A Client can interact with the DigitalOcean Droplets service.
 type Client interface {
 	Create(ctx context.Context, name, region, size, image string, opts ...CreateOpt) (Droplet, error)
+	CreateMultiple(ctx context.Context, names []string, region, size, image string, opts ...CreateMultipleOpt) ([]Droplet, error)
 	Get(ctx context.Context, id int) (Droplet, error)
 	Delete(ctx context.Context, id int) error
 	List(ctx context.Context) (<-chan Droplet, <-chan error)
@@ -52,6 +53,24 @@ func (svc *client) defaultCreateOpts() *createOpt {
 	}
 }
 
+type CreateMultipleOpt func(*createMultipleOpt)
+
+func UseGodoMultiCreate(req *godo.DropletMultiCreateRequest) CreateMultipleOpt {
+	return func(opt *createMultipleOpt) { opt.req = req }
+}
+
+type createMultipleOpt struct {
+	req *godo.DropletMultiCreateRequest
+}
+
+func (svc *client) defaultCreateMultipleOpts() *createMultipleOpt {
+	return &createMultipleOpt{
+		req: &godo.DropletMultiCreateRequest{
+			Image: godo.DropletCreateImage{},
+		},
+	}
+}
+
 func (svc *client) Create(ctx context.Context, name, region, size, image string, opts ...CreateOpt) (Droplet, error) {
 	opt := svc.defaultCreateOpts()
 	for _, fn := range opts {
@@ -68,6 +87,29 @@ func (svc *client) Create(ctx context.Context, name, region, size, image string,
 	}
 
 	return &droplet{g: svc.g, d: d}, godoutil.WaitForActions(ctx, svc.g, resp.Links)
+}
+
+func (svc *client) CreateMultiple(ctx context.Context, names []string, region, size, image string, opts ...CreateMultipleOpt) ([]Droplet, error) {
+	opt := svc.defaultCreateMultipleOpts()
+	for _, fn := range opts {
+		fn(opt)
+	}
+	opt.req.Names = names
+	opt.req.Size = size
+	opt.req.Region = region
+	opt.req.Image.Slug = image
+
+	r, resp, err := svc.g.Droplets.CreateMultiple(ctx, opt.req)
+	if err != nil {
+		return nil, err
+	}
+
+	droplets := make([]Droplet, 0, len(r))
+	for _, d := range r {
+		droplets = append(droplets, &droplet{g: svc.g, d: &d})
+	}
+
+	return droplets, godoutil.WaitForActions(ctx, svc.g, resp.Links)
 }
 
 func (svc *client) Get(ctx context.Context, id int) (Droplet, error) {
