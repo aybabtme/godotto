@@ -16,6 +16,7 @@ import (
 	"github.com/aybabtme/godotto/internal/repl"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/spycloud"
+	"github.com/aybabtme/godotto/pkg/extra/godoos"
 	jsssh "github.com/aybabtme/godotto/pkg/extra/ssh"
 
 	"github.com/digitalocean/godo"
@@ -82,6 +83,12 @@ func main() {
 		log.Fatal(err)
 	}
 	vm.Set("cloud", pkg)
+
+	ospkg, err := godoos.Apply(vm)
+	if err != nil {
+		log.Fatal(err)
+	}
+	vm.Set("os", ospkg)
 
 	auth, done := sshAgent()
 	defer done()
