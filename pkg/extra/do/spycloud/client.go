@@ -207,8 +207,8 @@ func (client *client) interceptDropletCreateMultiple(ctx context.Context, names 
 	if err == nil {
 		for _, d := range droplets {
 			client.mu.Lock()
-			defer client.mu.Unlock()
 			client.droplets[d.Struct().ID] = d.Struct()
+			client.mu.Unlock()
 		}
 	}
 
