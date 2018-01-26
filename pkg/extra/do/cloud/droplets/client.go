@@ -99,17 +99,18 @@ func (svc *client) CreateMultiple(ctx context.Context, names []string, region, s
 	opt.req.Region = region
 	opt.req.Image.Slug = image
 
-	r, resp, err := svc.g.Droplets.CreateMultiple(ctx, opt.req)
+	r, _, err := svc.g.Droplets.CreateMultiple(ctx, opt.req)
 	if err != nil {
 		return nil, err
 	}
 
 	droplets := make([]Droplet, 0, len(r))
 	for _, d := range r {
-		droplets = append(droplets, &droplet{g: svc.g, d: &d})
+		dd := d
+		droplets = append(droplets, &droplet{g: svc.g, d: &dd})
 	}
 
-	return droplets, godoutil.WaitForActions(ctx, svc.g, resp.Links)
+	return droplets, nil
 }
 
 func (svc *client) Get(ctx context.Context, id int) (Droplet, error) {
