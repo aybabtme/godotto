@@ -1009,6 +1009,21 @@ func TestPosition(t *testing.T) {
 		is(err, nil)
 		node = program.Body[0].(*ast.ExpressionStatement).Expression.(*ast.FunctionLiteral)
 		is(node.(*ast.FunctionLiteral).Source, "function(){ return abc; }")
+
+		parser = _newParser("", "this.style", 1, nil)
+		program, err = parser.parse()
+		node = program.Body[0].(*ast.ExpressionStatement).Expression.(*ast.DotExpression).Left.(*ast.ThisExpression)
+		is(node.Idx0(), file.Idx(1))
+		is(node.Idx1(), file.Idx(5))
+
+		parser = _newParser("", "(function(){ if (abc) { throw 'failed'; } })", 1, nil)
+		program, err = parser.parse()
+		is(err, nil)
+		block := program.Body[0].(*ast.ExpressionStatement).Expression.(*ast.FunctionLiteral).Body.(*ast.BlockStatement)
+		node = block.List[0].(*ast.IfStatement)
+		is(node.Idx0(), 21)
+		node = node.(*ast.IfStatement).Consequent.(*ast.BlockStatement).List[0].(*ast.ThrowStatement)
+		is(node.Idx0(), 39)
 	})
 }
 
