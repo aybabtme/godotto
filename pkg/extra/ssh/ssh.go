@@ -102,8 +102,9 @@ func (svc *sshSvc) connectArgs(vm *otto.Otto, v otto.Value) *connectOpts {
 		Hostname: host,
 		Port:     "22",
 		Cfg: &ssh.ClientConfig{
-			User: user,
-			Auth: []ssh.AuthMethod{svc.auth},
+			User:            user,
+			Auth:            []ssh.AuthMethod{svc.auth},
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		},
 	}
 }

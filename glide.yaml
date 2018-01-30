@@ -7,9 +7,9 @@ import:
   - underscore
 - package: golang.org/x/crypto
   subpackages:
-  - ssh
   - ssh/agent
   - ssh/terminal
+  - ssh
 - package: golang.org/x/net
   subpackages:
   - context
