@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aybabtme/godotto/internal/godojs"
-	"github.com/aybabtme/godotto/internal/ottoutil"
+	"github.com/aybabtme/godotto/pkg/extra/godojs"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/domains"
 

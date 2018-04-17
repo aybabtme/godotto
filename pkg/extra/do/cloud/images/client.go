@@ -3,7 +3,7 @@ package images
 import (
 	"context"
 
-	"github.com/aybabtme/godotto/internal/godoutil"
+	"github.com/aybabtme/godotto/pkg/extra/godoutil"
 	"github.com/digitalocean/godo"
 	pcontext "github.com/digitalocean/godo/context"
 )

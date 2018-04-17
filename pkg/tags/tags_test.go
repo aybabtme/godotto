@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/tags"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
@@ -68,7 +68,7 @@ func TestTagThrows(t *testing.T) {
 		var name = "test";
 
 		var tag = {
-			name: name	
+			name: name
 		};
 
 		var testTag = {
@@ -77,7 +77,7 @@ func TestTagThrows(t *testing.T) {
 		};
 
 		[
-		{ name: "create", fn: function() { pkg.create(tag) } },	
+		{ name: "create", fn: function() { pkg.create(tag) } },
 		{ name: "get", fn: function() { pkg.get(name) } },
 		{ name: "list", fn: function() { pkg.list() } },
 		{ name: "delete", fn: function() { pkg.delete() } },
@@ -89,7 +89,7 @@ func TestTagThrows(t *testing.T) {
 			try {
 				fn(); throw "dont catch me";
 			} catch (e) {
-				equals("throw me", e.message, name + " should send the right exception");	
+				equals("throw me", e.message, name + " should send the right exception");
 			}
 		});
 	`)
@@ -111,7 +111,7 @@ func TestTagCreate(t *testing.T) {
 		var pkg = cloud.tags;
 
 		var tag = pkg.create({
-			name: "test"	
+			name: "test"
 		});
 
 		var want = {
@@ -132,7 +132,7 @@ func TestTagGet(t *testing.T) {
 		var pkg = cloud.tags;
 
 		var tag = pkg.get({
-			name: "test"	
+			name: "test"
 		});
 
 		var want = {
@@ -162,7 +162,7 @@ func TestTagList(t *testing.T) {
 		assert(list.length > 0, "should have received some elements")
 
 		var want = {
-			name: "test"	
+			name: "test"
 		};
 
 		var t = list[0];
@@ -217,7 +217,7 @@ func TestTagTagResources(t *testing.T) {
 				{
 					id: "1234567",
 					type: "droplet"
-				}	
+				}
 			]
 		});
 	`)
@@ -252,7 +252,7 @@ func TestTagUntagResources(t *testing.T) {
 				{
 					id: "1234567",
 					type: "droplet"
-				}	
+				}
 			]
 		});
 	`)

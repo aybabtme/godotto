@@ -12,8 +12,8 @@ import (
 	"sync"
 
 	"github.com/aybabtme/godotto"
-	"github.com/aybabtme/godotto/internal/ottoutil/jsvendor/corejs"
-	"github.com/aybabtme/godotto/internal/repl"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil/jsvendor/corejs"
+	"github.com/aybabtme/godotto/pkg/extra/repl"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/spycloud"
 	"github.com/aybabtme/godotto/pkg/extra/godoos"

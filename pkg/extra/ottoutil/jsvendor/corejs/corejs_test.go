@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/robertkrimen/otto"
 )
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/loadbalancers"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
@@ -358,7 +358,7 @@ func TestLoadBalancersList(t *testing.T) {
 		3164445
 		],
 		"redirect_http_to_https": false
-	};	
+	};
 
 	var l = list[0];
 
@@ -531,9 +531,9 @@ func TestLoadBalancerAddForwardingRules(t *testing.T) {
 	vmtest.Run(t, cloud, `
 		var pkg = cloud.load_balancers;
 		pkg.add_forwarding_rules("test-uuid", [{
-			entry_protocol: "http", 
-			entry_port: 81, 
-			target_protocol: "http", 
+			entry_protocol: "http",
+			entry_port: 81,
+			target_protocol: "http",
 			target_port: 81
 		}
 		]);
@@ -569,9 +569,9 @@ func TestLoadBalancerRemoveForwardingRules(t *testing.T) {
 	vmtest.Run(t, cloud, `
 		var pkg = cloud.load_balancers;
 		pkg.remove_forwarding_rules("test-uuid", [{
-			entry_protocol: "http", 
-			entry_port: 81, 
-			target_protocol: "http", 
+			entry_protocol: "http",
+			entry_port: 81,
+			target_protocol: "http",
 			target_port: 81
 		}
 		]);
