@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/snapshots"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"
@@ -248,7 +248,7 @@ func TestSnapshotGet(t *testing.T) {
 
 	vmtest.Run(t, cloud, `
 		var pkg = cloud.snapshots;
-		
+
 		var want = {
 		    "created_at": "2017-06-08T09:11:06Z",
 		    "id": "11223344",

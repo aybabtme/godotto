@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aybabtme/godotto/internal/ottoutil"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil"
 	"github.com/digitalocean/godo"
 	"github.com/robertkrimen/otto"
 )

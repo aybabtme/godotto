@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/regions"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 	"github.com/digitalocean/godo"

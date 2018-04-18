@@ -8,9 +8,9 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/aybabtme/godotto"
-	"github.com/aybabtme/godotto/internal/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil"
 	"github.com/robertkrimen/otto"
 )
 

@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/robertkrimen/otto"
 )
 

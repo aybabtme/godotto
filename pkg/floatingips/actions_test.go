@@ -5,7 +5,7 @@ import (
 	"testing"
 	"context"
 
-	"github.com/aybabtme/godotto/internal/vmtest"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
 )
 

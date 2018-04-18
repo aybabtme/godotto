@@ -11,8 +11,8 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 
-	"github.com/aybabtme/godotto/internal/godojs"
-	"github.com/aybabtme/godotto/internal/ottoutil"
+	"github.com/aybabtme/godotto/pkg/extra/godojs"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil"
 	"github.com/robertkrimen/otto"
 )
 
