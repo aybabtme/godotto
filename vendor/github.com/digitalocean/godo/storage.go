@@ -1,10 +1,10 @@
 package godo
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
-
-	"github.com/digitalocean/godo/context"
 )
 
 const (
@@ -44,13 +44,15 @@ var _ StorageService = &StorageServiceOp{}
 
 // Volume represents a Digital Ocean block store volume.
 type Volume struct {
-	ID            string    `json:"id"`
-	Region        *Region   `json:"region"`
-	Name          string    `json:"name"`
-	SizeGigaBytes int64     `json:"size_gigabytes"`
-	Description   string    `json:"description"`
-	DropletIDs    []int     `json:"droplet_ids"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID              string    `json:"id"`
+	Region          *Region   `json:"region"`
+	Name            string    `json:"name"`
+	SizeGigaBytes   int64     `json:"size_gigabytes"`
+	Description     string    `json:"description"`
+	DropletIDs      []int     `json:"droplet_ids"`
+	CreatedAt       time.Time `json:"created_at"`
+	FilesystemType  string    `json:"filesystem_type"`
+	FilesystemLabel string    `json:"filesystem_label"`
 }
 
 func (f Volume) String() string {
@@ -70,11 +72,13 @@ type storageVolumeRoot struct {
 // VolumeCreateRequest represents a request to create a block store
 // volume.
 type VolumeCreateRequest struct {
-	Region        string `json:"region"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	SizeGigaBytes int64  `json:"size_gigabytes"`
-	SnapshotID    string `json:"snapshot_id"`
+	Region          string `json:"region"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	SizeGigaBytes   int64  `json:"size_gigabytes"`
+	SnapshotID      string `json:"snapshot_id"`
+	FilesystemType  string `json:"filesystem_type"`
+	FilesystemLabel string `json:"filesystem_label"`
 }
 
 // ListVolumes lists all storage volumes.
@@ -83,6 +87,10 @@ func (svc *StorageServiceOp) ListVolumes(ctx context.Context, params *ListVolume
 	if params != nil {
 		if params.Region != "" && params.Name != "" {
 			path = fmt.Sprintf("%s?name=%s&region=%s", path, params.Name, params.Region)
+		} else if params.Region != "" {
+			path = fmt.Sprintf("%s?region=%s", path, params.Region)
+		} else if params.Name != "" {
+			path = fmt.Sprintf("%s?name=%s", path, params.Name)
 		}
 
 		if params.ListOptions != nil {
@@ -94,7 +102,7 @@ func (svc *StorageServiceOp) ListVolumes(ctx context.Context, params *ListVolume
 		}
 	}
 
-	req, err := svc.client.NewRequest(ctx, "GET", path, nil)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -116,7 +124,7 @@ func (svc *StorageServiceOp) ListVolumes(ctx context.Context, params *ListVolume
 func (svc *StorageServiceOp) CreateVolume(ctx context.Context, createRequest *VolumeCreateRequest) (*Volume, *Response, error) {
 	path := storageAllocPath
 
-	req, err := svc.client.NewRequest(ctx, "POST", path, createRequest)
+	req, err := svc.client.NewRequest(ctx, http.MethodPost, path, createRequest)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -133,7 +141,7 @@ func (svc *StorageServiceOp) CreateVolume(ctx context.Context, createRequest *Vo
 func (svc *StorageServiceOp) GetVolume(ctx context.Context, id string) (*Volume, *Response, error) {
 	path := fmt.Sprintf("%s/%s", storageAllocPath, id)
 
-	req, err := svc.client.NewRequest(ctx, "GET", path, nil)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -151,7 +159,7 @@ func (svc *StorageServiceOp) GetVolume(ctx context.Context, id string) (*Volume,
 func (svc *StorageServiceOp) DeleteVolume(ctx context.Context, id string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", storageAllocPath, id)
 
-	req, err := svc.client.NewRequest(ctx, "DELETE", path, nil)
+	req, err := svc.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +182,7 @@ func (svc *StorageServiceOp) ListSnapshots(ctx context.Context, volumeID string,
 		return nil, nil, err
 	}
 
-	req, err := svc.client.NewRequest(ctx, "GET", path, nil)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -196,7 +204,7 @@ func (svc *StorageServiceOp) ListSnapshots(ctx context.Context, volumeID string,
 func (svc *StorageServiceOp) CreateSnapshot(ctx context.Context, createRequest *SnapshotCreateRequest) (*Snapshot, *Response, error) {
 	path := fmt.Sprintf("%s/%s/snapshots", storageAllocPath, createRequest.VolumeID)
 
-	req, err := svc.client.NewRequest(ctx, "POST", path, createRequest)
+	req, err := svc.client.NewRequest(ctx, http.MethodPost, path, createRequest)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -213,7 +221,7 @@ func (svc *StorageServiceOp) CreateSnapshot(ctx context.Context, createRequest *
 func (svc *StorageServiceOp) GetSnapshot(ctx context.Context, id string) (*Snapshot, *Response, error) {
 	path := fmt.Sprintf("%s/%s", storageSnapPath, id)
 
-	req, err := svc.client.NewRequest(ctx, "GET", path, nil)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -231,7 +239,7 @@ func (svc *StorageServiceOp) GetSnapshot(ctx context.Context, id string) (*Snaps
 func (svc *StorageServiceOp) DeleteSnapshot(ctx context.Context, id string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", storageSnapPath, id)
 
-	req, err := svc.client.NewRequest(ctx, "DELETE", path, nil)
+	req, err := svc.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err
 	}

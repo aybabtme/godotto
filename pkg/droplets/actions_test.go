@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 )
 
 func TestDropletActionsApply(t *testing.T) {
@@ -30,7 +30,6 @@ assert(pkg.password_reset != null, "password_reset function should be defined");
 assert(pkg.change_kernel != null, "change_kernel function should be defined");
 assert(pkg.enable_ipv6 != null, "enable_ipv6 function should be defined");
 assert(pkg.enable_private_networking != null, "enable_private_networking function should be defined");
-assert(pkg.upgrade != null, "upgrade function should be defined");
     `)
 }
 
@@ -89,9 +88,6 @@ func TestDropletActionsThrows(t *testing.T) {
 	mock.EnablePrivateNetworkingFn = func(ctx context.Context, dropletID int) error {
 		return errors.New("throw me")
 	}
-	mock.UpgradeFn = func(ctx context.Context, dropletID int) error {
-		return errors.New("throw me")
-	}
 
 	vmtest.Run(t, cloud, `
 var pkg = cloud.droplets.actions;
@@ -113,7 +109,6 @@ var pkg = cloud.droplets.actions;
 	{ name: "change_kernel",			  fn: function() { pkg.change_kernel(42, 44) } },
 	{ name: "enable_ipv6",				  fn: function() { pkg.enable_ipv6(42) } },
 	{ name: "enable_private_networking",  fn: function() { pkg.enable_private_networking(42) } },
-	{ name: "upgrade",					  fn: function() { pkg.upgrade(42) } },
 
 ].forEach(function(kv) {
 	var name = kv.name;
@@ -381,21 +376,5 @@ func TestDropletActionEnablePrivateNetworking(t *testing.T) {
 	vmtest.Run(t, cloud, `
 var pkg = cloud.droplets.actions;
 pkg.enable_private_networking(42);
-	`)
-}
-
-func TestDropletActionUpgrade(t *testing.T) {
-	cloud := mockcloud.Client(nil)
-	mock := cloud.MockDroplets.MockDropletActions
-
-	mock.UpgradeFn = func(ctx context.Context, dropletID int) error {
-		if want, got := 42, dropletID; got != want {
-			t.Fatalf("want %v got %v", want, got)
-		}
-		return nil
-	}
-	vmtest.Run(t, cloud, `
-var pkg = cloud.droplets.actions;
-pkg.upgrade(42);
 	`)
 }

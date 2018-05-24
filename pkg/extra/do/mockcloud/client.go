@@ -158,7 +158,6 @@ type MockDropletActions struct {
 	ChangeKernelFn            func(ctx context.Context, dropletID int, kernelID int) error
 	EnableIPv6Fn              func(ctx context.Context, dropletID int) error
 	EnablePrivateNetworkingFn func(ctx context.Context, dropletID int) error
-	UpgradeFn                 func(ctx context.Context, dropletID int) error
 }
 
 func (mock *MockDropletActions) Shutdown(ctx context.Context, dropletID int) error {
@@ -262,12 +261,6 @@ func (mock *MockDropletActions) EnablePrivateNetworking(ctx context.Context, dro
 		return mock.EnablePrivateNetworkingFn(ctx, dropletID)
 	}
 	return mock.wrap.Droplets().Actions().EnablePrivateNetworking(ctx, dropletID)
-}
-func (mock *MockDropletActions) Upgrade(ctx context.Context, dropletID int) error {
-	if mock.UpgradeFn != nil {
-		return mock.UpgradeFn(ctx, dropletID)
-	}
-	return mock.wrap.Droplets().Actions().Upgrade(ctx, dropletID)
 }
 
 // Accounts
