@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/volumes"
 	"github.com/aybabtme/godotto/pkg/extra/do/mockcloud"
+	"github.com/aybabtme/godotto/pkg/extra/vmtest"
 	"github.com/digitalocean/godo"
 )
 
@@ -128,12 +128,14 @@ func TestVolumeList(t *testing.T) {
 	cloud.MockVolumes.ListVolumesFn = func(_ context.Context) (<-chan volumes.Volume, <-chan error) {
 		lc := make(chan volumes.Volume, 1)
 		lc <- &volume{&godo.Volume{
-			ID:            "lol",
-			Region:        region,
-			Name:          "my_name",
-			SizeGigaBytes: 100,
-			Description:   "lolz",
-			DropletIDs:    []int{42},
+			ID:              "lol",
+			Region:          region,
+			Name:            "my_name",
+			SizeGigaBytes:   100,
+			Description:     "lolz",
+			FilesystemType:  "ext4",
+			FilesystemLabel: "",
+			DropletIDs:      []int{42},
 		}}
 		close(lc)
 		ec := make(chan error)
@@ -151,12 +153,14 @@ var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true
 
 var d = list[0];
 var want = {
-	id:          "lol",
-	region:      region,
-	name:        "my_name",
-	size:        100,
-	description: "lolz",
-	droplet_ids: [42],
+	id:               "lol",
+	region:           region,
+	name:             "my_name",
+	size:             100,
+	description:      "lolz",
+	filesystem_type:  "ext4",
+	filesystem_label: "",
+	droplet_ids:      [42],
 };
 equals(d, want, "should have proper object");
 `)
@@ -166,12 +170,14 @@ func TestVolumeGet(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockVolumes.GetVolumeFn = func(_ context.Context, _ string) (volumes.Volume, error) {
 		return &volume{&godo.Volume{
-			ID:            "lol",
-			Region:        region,
-			Name:          "my_name",
-			SizeGigaBytes: 100,
-			Description:   "lolz",
-			DropletIDs:    []int{42},
+			ID:              "lol",
+			Region:          region,
+			Name:            "my_name",
+			SizeGigaBytes:   100,
+			Description:     "lolz",
+			FilesystemType:  "ext4",
+			FilesystemLabel: "",
+			DropletIDs:      []int{42},
 		}}, nil
 	}
 
@@ -182,12 +188,14 @@ var region = { name: "newyork3", slug: "nyc3", sizes: ["small"], available: true
 
 var d = pkg.get_volume("my_name")
 var want = {
-	id:          "lol",
-	region:      region,
-	name:        "my_name",
-	size:        100,
-	description: "lolz",
-	droplet_ids: [42],
+	id:               "lol",
+	region:           region,
+	name:             "my_name",
+	size:             100,
+	description:      "lolz",
+	filesystem_type:  "ext4",
+	filesystem_label: "",
+	droplet_ids:      [42],
 };
 equals(d, want, "should have proper object");
 `)
@@ -197,12 +205,14 @@ func TestVolumeCreate(t *testing.T) {
 	cloud := mockcloud.Client(nil)
 	cloud.MockVolumes.CreateVolumeFn = func(_ context.Context, _, _ string, _ int64, _ ...volumes.CreateOpt) (volumes.Volume, error) {
 		return &volume{&godo.Volume{
-			ID:            "lol",
-			Region:        region,
-			Name:          "my_name",
-			SizeGigaBytes: 100,
-			Description:   "lolz",
-			DropletIDs:    []int{42},
+			ID:              "lol",
+			Region:          region,
+			Name:            "my_name",
+			SizeGigaBytes:   100,
+			Description:     "lolz",
+			FilesystemType:  "",
+			FilesystemLabel: "",
+			DropletIDs:      []int{42},
 		}}, nil
 	}
 
@@ -217,12 +227,14 @@ var d = pkg.create_volume({
 	region: region
 });
 var want = {
-	id:          "lol",
-	region:      region,
-	name:        "my_name",
-	size:        100,
-	description: "lolz",
-	droplet_ids: [42],
+	id:               "lol",
+	region:           region,
+	name:             "my_name",
+	size:             100,
+	description:      "lolz",
+	filesystem_type:  "",
+	filesystem_label: "",
+	droplet_ids:      [42],
 };
 equals(d, want, "should have proper object");
 `)

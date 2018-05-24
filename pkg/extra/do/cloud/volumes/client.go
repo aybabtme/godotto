@@ -52,6 +52,16 @@ func SetVolumeDescription(desc string) CreateOpt {
 	return func(opt *createOpt) { opt.req.Description = desc }
 }
 
+// SetVolumeFilesystemType does what it says on the tin.
+func SetVolumeFilesystemType(fs string) CreateOpt {
+	return func(opt *createOpt) { opt.req.FilesystemType = fs }
+}
+
+// SetVolumeFilesystemLabel does what it says on the tin.
+func SetVolumeFilesystemLabel(label string) CreateOpt {
+	return func(opt *createOpt) { opt.req.FilesystemLabel = label }
+}
+
 type createOpt struct {
 	req *godo.VolumeCreateRequest
 }
