@@ -67,6 +67,8 @@ func (svc *volumeSvc) createVolume(all otto.FunctionCall) otto.Value {
 		svc.ctx,
 		req.Name, req.Region, req.SizeGigaBytes,
 		volumes.SetVolumeDescription(req.Description),
+		volumes.SetVolumeFilesystemType(req.FilesystemType),
+		volumes.SetVolumeFilesystemLabel(req.FilesystemLabel),
 	)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())

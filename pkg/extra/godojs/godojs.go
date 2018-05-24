@@ -803,10 +803,12 @@ func ArgVolumeCreateRequest(vm *otto.Otto, v otto.Value) *godo.VolumeCreateReque
 		ottoutil.Throw(vm, "argument must be a Volume, got a %q", v.Class())
 	}
 	return &godo.VolumeCreateRequest{
-		Name:          ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
-		Region:        ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
-		SizeGigaBytes: int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", true))),
-		Description:   ottoutil.String(vm, ottoutil.GetObject(vm, v, "desc", false)),
+		Name:            ottoutil.String(vm, ottoutil.GetObject(vm, v, "name", true)),
+		Region:          ArgRegionSlug(vm, ottoutil.GetObject(vm, v, "region", true)),
+		SizeGigaBytes:   int64(ottoutil.Int(vm, ottoutil.GetObject(vm, v, "size", true))),
+		Description:     ottoutil.String(vm, ottoutil.GetObject(vm, v, "desc", false)),
+		FilesystemType:  ottoutil.String(vm, ottoutil.GetObject(vm, v, "filesystem_type", false)),
+		FilesystemLabel: ottoutil.String(vm, ottoutil.GetObject(vm, v, "filesystem_label", false)),
 	}
 }
 
@@ -1032,12 +1034,14 @@ func VolumeToVM(vm *otto.Otto, g *godo.Volume) otto.Value {
 		return otto.NullValue()
 	}
 	return ottoutil.ToPkg(vm, map[string]interface{}{
-		"id":          g.ID,
-		"name":        g.Name,
-		"region":      RegionToVM(vm, g.Region),
-		"size":        int64(g.SizeGigaBytes),
-		"description": g.Description,
-		"droplet_ids": intsToInt64s(g.DropletIDs),
+		"id":               g.ID,
+		"name":             g.Name,
+		"region":           RegionToVM(vm, g.Region),
+		"size":             int64(g.SizeGigaBytes),
+		"description":      g.Description,
+		"filesystem_type":  g.FilesystemType,
+		"filesystem_label": g.FilesystemLabel,
+		"droplet_ids":      intsToInt64s(g.DropletIDs),
 	})
 }
 
