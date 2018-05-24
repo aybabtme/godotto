@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aybabtme/godotto/pkg/extra/godojs"
-	"github.com/aybabtme/godotto/pkg/extra/ottoutil"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud/droplets"
+	"github.com/aybabtme/godotto/pkg/extra/godojs"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil"
 	"github.com/robertkrimen/otto"
 )
 
@@ -40,7 +40,6 @@ func applyAction(ctx context.Context, vm *otto.Otto, client cloud.Client) (otto.
 		{"change_kernel", svc.changeKernel},
 		{"enable_ipv6", svc.enableIPv6},
 		{"enable_private_networking", svc.enablePrivateNetworking},
-		{"upgrade", svc.upgrade},
 	} {
 		if err := root.Set(applier.Name, applier.Method); err != nil {
 			return q, fmt.Errorf("preparing method %q, %v", applier.Name, err)
@@ -205,16 +204,6 @@ func (svc *actionSvc) enablePrivateNetworking(all otto.FunctionCall) otto.Value 
 	vm := all.Otto
 	dropletID := godojs.ArgDropletID(vm, all.Argument(0))
 	err := svc.svc.EnablePrivateNetworking(svc.ctx, dropletID)
-	if err != nil {
-		ottoutil.Throw(vm, err.Error())
-	}
-	return q
-}
-
-func (svc *actionSvc) upgrade(all otto.FunctionCall) otto.Value {
-	vm := all.Otto
-	dropletID := godojs.ArgDropletID(vm, all.Argument(0))
-	err := svc.svc.Upgrade(svc.ctx, dropletID)
 	if err != nil {
 		ottoutil.Throw(vm, err.Error())
 	}

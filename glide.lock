@@ -1,12 +1,10 @@
-hash: 2a4f42e2d1af0ec3547aed657ddabf3b85aa8381eb060b94b5cc7058ff4ebc30
-updated: 2018-01-30T17:32:31.690570592-05:00
+hash: 687baa0fbb28928f70a7a58e1dc3d97902a1154394a679d20a692b25e5c314ce
+updated: 2018-05-24T10:52:44.393450079-06:00
 imports:
 - name: github.com/digitalocean/godo
-  version: 4fa9e9d999007b447089056a1c581b5594f0f851
-  subpackages:
-  - context
+  version: 51f18c0e42941703dc13d15bc0ad69aef6a49830
 - name: github.com/golang/protobuf
-  version: 925541529c1fa6821df4e44ce2723319eb2be768
+  version: 3a3da3a4e26776cc22a79ef46d5d58477532dede
   subpackages:
   - proto
 - name: github.com/google/go-querystring
@@ -14,7 +12,7 @@ imports:
   subpackages:
   - query
 - name: github.com/robertkrimen/otto
-  version: 3b44b4dcb6c00477273595c312908e2412d07da6
+  version: 03d472dc43abece8691e609a23d295ab732abba6
   subpackages:
   - ast
   - dbg
@@ -24,13 +22,13 @@ imports:
   - token
   - underscore
 - name: github.com/stretchr/testify
-  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
+  version: 12b6f73e6084dad08a7c6e575284b177ecafbc71
   subpackages:
   - assert
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
-  version: 1875d0a70c90e57f11972aefd42276df65e895b9
+  version: 159ae71589f303f9fbfd7528413e0fe944b9c1cb
   subpackages:
   - curve25519
   - ed25519
@@ -41,21 +39,21 @@ imports:
   - ssh/agent
   - ssh/terminal
 - name: golang.org/x/net
-  version: 0ed95abb35c445290478a5348a7b38bb154135fd
+  version: 9ef9f5bb98a1fdc41f8cf6c250a4404b4085e389
   subpackages:
   - context
   - context/ctxhttp
 - name: golang.org/x/oauth2
-  version: a032972e28060ca4f5644acffae3dfc268cc09db
+  version: 770e5ebd4ab27c4d70b0983674d138217f5e2c72
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 3dbebcf8efb6a5011a60c2b4591c1022a759af8a
+  version: 04b83988a018ef3ebffe1485df79d6499b76a4b4
   subpackages:
   - unix
   - windows
 - name: google.golang.org/appengine
-  version: 5bee14b453b4c71be47ec1781b0fa61c2ea182db
+  version: b1f26356af11148e710935ed1ac8a7f5702c7612
   subpackages:
   - internal
   - internal/base
@@ -72,7 +70,7 @@ imports:
   - base64vlq
 testImports:
 - name: github.com/davecgh/go-spew
-  version: db69d09d2c587e9b9677f991dfcab1fc24d9086e
+  version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib

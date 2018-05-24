@@ -26,7 +26,6 @@ type ActionClient interface {
 	ChangeKernel(ctx context.Context, dropletID int, kernelID int) error
 	EnableIPv6(ctx context.Context, dropletID int) error
 	EnablePrivateNetworking(ctx context.Context, dropletID int) error
-	Upgrade(ctx context.Context, dropletID int) error
 }
 
 type actionClient struct {
@@ -163,14 +162,6 @@ func (svc *actionClient) EnableIPv6(ctx context.Context, dropletID int) error {
 
 func (svc *actionClient) EnablePrivateNetworking(ctx context.Context, dropletID int) error {
 	_, resp, err := svc.g.DropletActions.EnablePrivateNetworking(ctx, dropletID)
-	if err != nil {
-		return err
-	}
-	return godoutil.WaitForActions(ctx, svc.g, resp.Links)
-}
-
-func (svc *actionClient) Upgrade(ctx context.Context, dropletID int) error {
-	_, resp, err := svc.g.DropletActions.Upgrade(ctx, dropletID)
 	if err != nil {
 		return err
 	}
