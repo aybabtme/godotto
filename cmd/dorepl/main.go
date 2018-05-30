@@ -51,6 +51,7 @@ var defaultToken = func() string {
 
 func main() {
 	apiToken := flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
+	apiURL := flag.String("api.url", "", "uses a different endpoint to send API requests")
 	flag.Parse()
 
 	log.SetFlags(0)
@@ -60,10 +61,16 @@ func main() {
 		flag.PrintDefaults()
 		log.Fatalf("At this time, the REPL requires you to provide an API token")
 	}
-
-	gc := godo.NewClient(oauth2.NewClient(oauth2.NoContext,
+	var opts []godo.ClientOpt
+	if *apiURL != "" {
+		opts = append(opts, godo.SetBaseURL(*apiURL))
+	}
+	gc, err := godo.New(oauth2.NewClient(oauth2.NoContext,
 		oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *apiToken}),
-	))
+	), opts...)
+	if err != nil {
+		log.Fatalf("can't query DigitalOcean account, is your token valid?\n%v", err)
+	}
 	acc, _, err := gc.Account.Get(context.TODO())
 	if err != nil {
 		log.Fatalf("can't query DigitalOcean account, is your token valid?\n%v", err)
