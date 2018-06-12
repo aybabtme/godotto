@@ -62,7 +62,7 @@ var defaultAPIUrl = func() string {
 		}
 	}
 	return ""
-}
+}()
 
 func main() {
 	apiToken := flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
