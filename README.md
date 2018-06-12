@@ -60,13 +60,13 @@ Automated CI status:
 On debian and children:
 
 ```bash
-wget https://github.com/aybabtme/godotto/releases/download/0.5/dorepl_Linux_x86_64.deb
+wget https://github.com/aybabtme/godotto/releases/download/0.5.1/dorepl_Linux_x86_64.deb
 sudo dpkg -i dorepl_Linux_x86_64.deb
 ```
 
 Or pull the binary directly:
 ```bash
-wget -qO- https://github.com/aybabtme/godotto/releases/download/0.5/dorepl_Linux_x86_64.tar.gz | tar xvz
+wget -qO- https://github.com/aybabtme/godotto/releases/download/0.5.1/dorepl_Linux_x86_64.tar.gz | tar xvz
 ```
 
 ### darwin
@@ -80,7 +80,7 @@ brew install dorepl
 
 unzip this file somewhere, i guess!
 ```bash
-https://github.com/aybabtme/godotto/releases/download/0.5/dorepl_Windows_x86_64.zip
+https://github.com/aybabtme/godotto/releases/download/0.5.1/dorepl_Windows_x86_64.zip
 ```
 
 ## not implemented
