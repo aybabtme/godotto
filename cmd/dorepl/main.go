@@ -12,11 +12,11 @@ import (
 	"sync"
 
 	"github.com/aybabtme/godotto"
-	"github.com/aybabtme/godotto/pkg/extra/ottoutil/jsvendor/corejs"
-	"github.com/aybabtme/godotto/pkg/extra/repl"
 	"github.com/aybabtme/godotto/pkg/extra/do/cloud"
 	"github.com/aybabtme/godotto/pkg/extra/do/spycloud"
 	"github.com/aybabtme/godotto/pkg/extra/godoos"
+	"github.com/aybabtme/godotto/pkg/extra/ottoutil/jsvendor/corejs"
+	"github.com/aybabtme/godotto/pkg/extra/repl"
 	jsssh "github.com/aybabtme/godotto/pkg/extra/ssh"
 
 	"github.com/digitalocean/godo"
@@ -49,9 +49,24 @@ var defaultToken = func() string {
 	return ""
 }()
 
+var defaultAPIUrl = func() string {
+	for _, env := range []string{
+		"DIGITALOCEAN_API_URL",
+		"DIGITALOCEAN_API_URL",
+		"DIGITAL_OCEAN_API_URL",
+		"DIGITAL_OCEAN_API_URL",
+		"DO_API_URL",
+	} {
+		if s := os.Getenv(env); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
 func main() {
 	apiToken := flag.String("api.token", defaultToken, "token to use to communicate with the DO API")
-	apiURL := flag.String("api.url", "", "uses a different endpoint to send API requests")
+	apiURL := flag.String("api.url", defaultAPIUrl, "uses a different endpoint to send API requests")
 	flag.Parse()
 
 	log.SetFlags(0)
